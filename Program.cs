@@ -26,10 +26,124 @@ class Program
         connectionString = baseConnectionString.Replace("@pass", password);
     }
 
+    static List<Products> LoadProducts(string connectionString)
+    {
+        List<Products> ListProduct = new List<Products>();
+
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {   
+            string query = "SELECT * FROM products"; 
+            MySqlCommand command = new MySqlCommand(query, connection);
+            connection.Open();
+            MySqlDataReader read = command.ExecuteReader();
+            while (read.Read())
+            {
+                Products sp = new Products();
+                // Nạp các thuộc tính 
+                sp.ProductID = read.GetInt32("product_id");
+                sp.ProductName = read.GetString("product_name");
+                sp.ProductDescription = read.GetString("product_description");
+                sp.ProductPrice = read.GetDecimal("product_price");
+                sp.ProductStockQuantity = read.GetInt32("product_stock_quantity");
+                sp.ProductBrand = read.GetString("product_brand");
+                sp.ProductCategoryID = read.GetInt32("product_category_id");
+                sp.ProductImage = read.GetString("product_image");
+
+                ListProduct.Add(sp);
+            }
+        }
+        return ListProduct;
+    }
+
+    static List<Categories> LoadCategory(string connectionString)
+    {
+        List<Categories> ListCategory = new List<Categories>();
+
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {   
+            string query = "SELECT * FROM categories"; 
+            MySqlCommand command = new MySqlCommand(query, connection);
+            connection.Open();
+            MySqlDataReader read = command.ExecuteReader();
+            while (read.Read())
+            {
+                Categories c = new Categories();
+                // Nạp các thuộc tính 
+                c.CategoryID = read.GetInt32("category_id");
+                c.CategoryName = read.GetString("category_name");
+                c.CategoryDescription = read.GetString("category_description");
+
+                ListCategory.Add(c);
+            }
+        }
+        return ListCategory;
+    }
+
     static void Main()
     {
         DisplayProduct(ListProducts);
     }
+
+    static void MainMenu()
+    {
+        while (true)
+        {
+            Console.Clear();
+            Console.WriteLine("==== MAIN MENU ====");
+            Console.WriteLine("1. Customers");
+            Console.WriteLine("2. Products");
+            Console.WriteLine("3. Categories");
+            Console.WriteLine("4. Orders");
+            Console.WriteLine("0. Quit");
+            Console.Write("Please pick a function: ");
+
+            string choice = Console.ReadLine();
+
+            switch (choice)
+            {
+                case "2":
+                    ProductMenu();
+                    break;
+                case "0":
+                    return;
+                default:
+                    Console.WriteLine("Invalid option, please choose again.");
+                    Console.ReadKey();
+                    break;
+            }
+        }
+    }
+
+    static void ProductMenu()
+    {
+        while (true)
+        {
+            Console.WriteLine("\n=== PRODUCT MENU ===");
+            Console.WriteLine("1. Product List");
+            Console.WriteLine("2. Add a new product");
+            Console.WriteLine("3. Find product");
+            Console.WriteLine("4. Delete product");
+            Console.WriteLine("5. Edit product informations");
+            Console.WriteLine("0. Return to the Main Menu");
+            Console.Write("Please pick a function: ");
+
+            string choice = Console.ReadLine();
+
+            switch (choice)
+            {
+                case "1":
+                    DisplayProduct(ListProducts);
+                    break;
+                case "0":
+                    return;
+                default:
+                    Console.WriteLine("Invalid option, please choose again.");
+                    Console.ReadKey();
+                    break;
+            }
+        }
+    }
+
     static void DisplayProduct(List<Products> ListProducts)
     {
         ListProducts = LoadProducts(connectionString);
@@ -44,7 +158,7 @@ class Program
                         p.product_description, 
                         p.product_price, 
                         c.category_name, 
-                        p.product_brand, 
+                        p.product_brand,
                         p.product_image
                     FROM products p
                     INNER JOIN categories c ON p.product_category_id = c.category_id;";
@@ -78,56 +192,4 @@ class Program
             Console.ReadKey();
         }
     }
-    static List<Products> LoadProducts(string connectionString)
-    {
-        List<Products> ListProduct = new List<Products>();
-
-        using (MySqlConnection connection = new MySqlConnection(connectionString))
-        {   
-            string query = "SELECT * FROM products"; 
-            MySqlCommand command = new MySqlCommand(query, connection);
-            connection.Open();
-            MySqlDataReader read = command.ExecuteReader();
-            while (read.Read())
-            {
-                Products sp = new Products();
-                // Nạp các thuộc tính 
-                sp.ProductID = read.GetInt32("product_id");
-                sp.ProductName = read.GetString("product_name");
-                sp.ProductDescription = read.GetString("product_description");
-                sp.ProductPrice = read.GetDecimal("product_price");
-                sp.ProductStockQuantity = read.GetInt32("product_stock_quantity");
-                sp.ProductBrand = read.GetString("product_brand");
-                sp.ProductCategoryID = read.GetInt32("product_category_id");
-                sp.ProductImage = read.GetString("product_image");
-
-                ListProduct.Add(sp);
-            }
-        }
-        return ListProduct;
-    }
-    static List<Categories> LoadCategory(string connectionString)
-    {
-        List<Categories> ListCategory = new List<Categories>();
-
-        using (MySqlConnection connection = new MySqlConnection(connectionString))
-        {   
-            string query = "SELECT * FROM categories"; 
-            MySqlCommand command = new MySqlCommand(query, connection);
-            connection.Open();
-            MySqlDataReader read = command.ExecuteReader();
-            while (read.Read())
-            {
-                Categories c = new Categories();
-                // Nạp các thuộc tính 
-                c.CategoryID = read.GetInt32("category_id");
-                c.CategoryName = read.GetString("category_name");
-                c.CategoryDescription = read.GetString("category_description");
-
-                ListCategory.Add(c);
-            }
-        }
-        return ListCategory;
-    }
-    
 }
