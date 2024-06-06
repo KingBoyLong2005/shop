@@ -1,132 +1,133 @@
 ﻿using System;
+using System.Text;
+using System.Data;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using MySql.Data.MySqlClient;
+using Spectre.Console;
+using System.Security.Cryptography.X509Certificates;
 
-namespace AuthApp
+class Program
 {
-    class Program
+    public static string connectionString;
+    public static List<Products> ListProducts = new List<Products>();
+    public static List<Categories> ListCategories = new List<Categories>();
+    static Program()
     {
-        static Dictionary<string, (string Password, string Role)> users = new Dictionary<string, (string Password, string Role)>
-        {
-            { "admin", ("admin123", "admin") },
-            { "user1", ("user123", "customer") },
-        };
+        // Hỏi mật khẩu từ người dùng
+        Console.Write("Enter the database password: ");
+       string password = Console.ReadLine();
 
-        static void Main(string[] args)
-        {
-            Console.WriteLine("Welcome to the AuthApp");
-            Console.Write("Enter username: ");
-            string username = Console.ReadLine();
-            Console.Write("Enter password: ");
-            string password = Console.ReadLine();
+        // Gốc chuỗi kết nối với placeholder @pass
+        string baseConnectionString = "Server=localhost;Database=shop;Uid=root;Pwd=@pass";
 
-            if (Authenticate(username, password, out string role))
+        // Thay thế @pass bằng mật khẩu thực
+        connectionString = baseConnectionString.Replace("@pass", password);
+    }
+
+    static void Main()
+    {
+        DisplayProduct(ListProducts);
+    }
+    static void DisplayProduct(List<Products> ListProducts)
+    {
+        ListProducts = LoadProducts(connectionString);
+        ListCategories = LoadCategory(connectionString);
+        var table = new Table();
+        Console.OutputEncoding = Encoding.UTF8;
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {   
+            string query = @"SELECT 
+                        p.product_name, 
+                        p.product_stock_quantity, 
+                        p.product_description, 
+                        p.product_price, 
+                        c.category_name, 
+                        p.product_brand, 
+                        p.product_image
+                    FROM products p
+                    INNER JOIN categories c ON p.product_category_id = c.category_id;";
+            MySqlCommand command = new MySqlCommand(query, connection);
+            connection.Open();
+            MySqlDataReader read = command.ExecuteReader();
+            Console.WriteLine("=== List Product ===");
+            table.AddColumn(new TableColumn("Product's name").Centered());
+            table.AddColumn(new TableColumn("Stock quantity").Centered());
+            table.AddColumn(new TableColumn("Description").Centered());
+            table.AddColumn(new TableColumn("Price").Centered());
+            table.AddColumn(new TableColumn("Category's name").Centered());
+            table.AddColumn(new TableColumn("Brand").Centered());
+            table.AddColumn(new TableColumn("Image").Centered());
+
+            while (read.Read())
             {
-                Console.WriteLine($"Login successful! Role: {role}");
-                if (role == "admin")
-                {
-                    AdminMenu();
-                }
-                else if (role == "customer")
-                {
-                    CustomerMenu();
-                }
+                table.AddRow(new string[] {
+                    read["product_name"].ToString(),
+                    read["product_stock_quantity"].ToString(),
+                    read["product_description"].ToString(),
+                    read["product_price"].ToString(),
+                    read["category_name"].ToString(),
+                    read["product_brand"].ToString(),
+                    read["product_image"].ToString()
+                });
             }
-            else
-            {
-                Console.WriteLine("Invalid username or password.");
-            }
-        }
-
-        static bool Authenticate(string username, string password, out string role)
-        {
-            role = null;
-            if (users.ContainsKey(username) && users[username].Password == password)
-            {
-                role = users[username].Role;
-                return true;
-            }
-            return false;
-        }
-
-        static void AdminMenu()
-        {
-            Console.WriteLine("Welcome to the Admin Menu!");
-            Console.WriteLine("1. View all users");
-            Console.WriteLine("2. Add a user");
-            Console.WriteLine("3. Exit");
-            string choice = Console.ReadLine();
-            switch (choice)
-            {
-                case "1":
-                    ViewAllUsers();
-                    break;
-                case "2":
-                    AddUser();
-                    break;
-                case "3":
-                    Environment.Exit(0);
-                    break;
-                default:
-                    Console.WriteLine("Invalid choice. Exiting.");
-                    Environment.Exit(0);
-                    break;
-            }
-        }
-
-        static void CustomerMenu()
-        {
-            Console.WriteLine("Welcome to the Customer Menu!");
-            Console.WriteLine("1. View profile");
-            Console.WriteLine("2. Exit");
-            string choice = Console.ReadLine();
-            switch (choice)
-            {
-                case "1":
-                    ViewProfile();
-                    break;
-                case "2":
-                    Environment.Exit(0);
-                    break;
-                default:
-                    Console.WriteLine("Invalid choice. Exiting.");
-                    Environment.Exit(0);
-                    break;
-            }
-        }
-
-        static void ViewAllUsers()
-        {
-Console.WriteLine("List of all users:");
-            foreach (var user in users)
-            {
-                Console.WriteLine($"Username: {user.Key}, Role: {user.Value.Role}");
-            }
-        }
-
-        static void AddUser()
-        {
-            Console.Write("Enter new username: ");
-            string newUsername = Console.ReadLine();
-            Console.Write("Enter password for new user: ");
-            string newPassword = Console.ReadLine();
-            Console.Write("Enter role for new user (admin/customer): ");
-            string newRole = Console.ReadLine();
-
-            if (newRole == "admin" || newRole == "customer")
-            {
-                users[newUsername] = (newPassword, newRole);
-                Console.WriteLine("New user added successfully!");
-            }
-            else
-            {
-                Console.WriteLine("Invalid role. User not added.");
-            }
-        }
-
-        static void ViewProfile()
-        {
-            Console.WriteLine("This is your profile.");
-            // Implement profile viewing logic here
+            read.Close();
+            AnsiConsole.Write(table);
+            Console.WriteLine("Ấn bất kì để tiếp tục");
+            Console.ReadKey();
         }
     }
+    static List<Products> LoadProducts(string connectionString)
+    {
+        List<Products> ListProduct = new List<Products>();
+
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {   
+            string query = "SELECT * FROM products"; 
+            MySqlCommand command = new MySqlCommand(query, connection);
+            connection.Open();
+            MySqlDataReader read = command.ExecuteReader();
+            while (read.Read())
+            {
+                Products sp = new Products();
+                // Nạp các thuộc tính 
+                sp.ProductID = read.GetInt32("product_id");
+                sp.ProductName = read.GetString("product_name");
+                sp.ProductDescription = read.GetString("product_description");
+                sp.ProductPrice = read.GetDecimal("product_price");
+                sp.ProductStockQuantity = read.GetInt32("product_stock_quantity");
+                sp.ProductBrand = read.GetString("product_brand");
+                sp.ProductCategoryID = read.GetInt32("product_category_id");
+                sp.ProductImage = read.GetString("product_image");
+
+                ListProduct.Add(sp);
+            }
+        }
+        return ListProduct;
+    }
+    static List<Categories> LoadCategory(string connectionString)
+    {
+        List<Categories> ListCategory = new List<Categories>();
+
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {   
+            string query = "SELECT * FROM categories"; 
+            MySqlCommand command = new MySqlCommand(query, connection);
+            connection.Open();
+            MySqlDataReader read = command.ExecuteReader();
+            while (read.Read())
+            {
+                Categories c = new Categories();
+                // Nạp các thuộc tính 
+                c.CategoryID = read.GetInt32("category_id");
+                c.CategoryName = read.GetString("category_name");
+                c.CategoryDescription = read.GetString("category_description");
+
+                ListCategory.Add(c);
+            }
+        }
+        return ListCategory;
+    }
+    
 }
