@@ -81,7 +81,7 @@ class Program
 
     static void Main()
     {
-        ProductMenu();
+        MainMenu();
     }
 
     static void MainMenu()
