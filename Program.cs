@@ -116,19 +116,40 @@ class Program
 
     static void ProductMenu()
     {
+        Console.Clear();
+        Console.OutputEncoding = Encoding.UTF8;
         while (true)
         {
-            var choice = AnsiConsole.Prompt(
-            new SelectionPrompt<string>()
-            .Title("=== PRODUCT MENU ===")
-            .PageSize(10)
-            .MoreChoicesText("[grey](Move up and down to reveal more choice)[/]")
-            .AddChoices(new[] {
-                "Product List", "Add a new product", "Find product", 
-                "Delete product", "Edit product informations", "Return to the Main Menu",
-            }));
+            var table = new Table();
+            table.Border(TableBorder.Rounded);
+            table.AddColumn(new TableColumn("Menu"));
 
-            // Check if the selected fruit is "Apple" and print "Hello"
+            // Create the menu prompt
+            var menuPrompt = new SelectionPrompt<string>()
+                .Title("=== PRODUCT MENU ===")
+                .PageSize(20)
+                .MoreChoicesText("[grey](Move up and down to reveal more choice)[/]")
+                .AddChoices(new[] {
+                    "Product List", "Add a new product", "Find product", 
+                    "Delete product", "Edit product informations", "Return to the Main Menu",
+                });
+
+            // Prompt the user for a choice and store it
+            var choice = AnsiConsole.Prompt(menuPrompt);
+
+            // Create a panel for the selected choice
+            var panel = new Panel($"You selected: [bold yellow]{choice}[/]")
+                .Header("[bold yellow]Product Menu[/]")
+                .Expand()
+                .Border(BoxBorder.Rounded)
+                .BorderStyle(Style.Parse("green"));
+
+            // Add the menu and the choice result to the table
+            table.AddRow(panel);
+
+            // Display the updated table
+            AnsiConsole.Clear();
+            AnsiConsole.Write(table);
             if (choice == "Product List")
             {
                 DisplayProduct(ListProducts);
@@ -159,7 +180,6 @@ class Program
 
     static void DisplayProduct(List<Products> ListProducts)
     {
-        Console.Clear();
         ListProducts = LoadProducts(connectionString);
         ListCategories = LoadCategory(connectionString);
         var table = new Table();
@@ -180,13 +200,13 @@ class Program
             connection.Open();
             MySqlDataReader read = command.ExecuteReader();
             Console.WriteLine("=== List Product ===");
-            table.AddColumn(new TableColumn("Product's name").Centered());
-            table.AddColumn(new TableColumn("Stock quantity").Centered());
-            table.AddColumn(new TableColumn("Description").Centered());
-            table.AddColumn(new TableColumn("Price").Centered());
-            table.AddColumn(new TableColumn("Category's name").Centered());
-            table.AddColumn(new TableColumn("Brand").Centered());
-            table.AddColumn(new TableColumn("Image").Centered());
+            table.AddColumns(new TableColumn("Product's name").Centered());
+            table.AddColumns(new TableColumn("Stock quantity").Centered());
+            table.AddColumns(new TableColumn("Description").Centered());
+            table.AddColumns(new TableColumn("Price").Centered());
+            table.AddColumns(new TableColumn("Category's name").Centered());
+            table.AddColumns(new TableColumn("Brand").Centered());
+            table.AddColumns(new TableColumn("Image").Centered());
 
             while (read.Read())
             {
