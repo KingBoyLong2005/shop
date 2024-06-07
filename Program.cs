@@ -81,7 +81,7 @@ class Program
 
     static void Main()
     {
-        DisplayProduct(ListProducts);
+        ProductMenu();
     }
 
     static void MainMenu()
@@ -118,34 +118,48 @@ class Program
     {
         while (true)
         {
-            Console.WriteLine("\n=== PRODUCT MENU ===");
-            Console.WriteLine("1. Product List");
-            Console.WriteLine("2. Add a new product");
-            Console.WriteLine("3. Find product");
-            Console.WriteLine("4. Delete product");
-            Console.WriteLine("5. Edit product informations");
-            Console.WriteLine("0. Return to the Main Menu");
-            Console.Write("Please pick a function: ");
+            var choice = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+            .Title("=== PRODUCT MENU ===")
+            .PageSize(10)
+            .MoreChoicesText("[grey](Move up and down to reveal more choice)[/]")
+            .AddChoices(new[] {
+                "Product List", "Add a new product", "Find product", 
+                "Delete product", "Edit product informations", "Return to the Main Menu",
+            }));
 
-            string choice = Console.ReadLine();
-
-            switch (choice)
+            // Check if the selected fruit is "Apple" and print "Hello"
+            if (choice == "Product List")
             {
-                case "1":
-                    DisplayProduct(ListProducts);
-                    break;
-                case "0":
-                    return;
-                default:
-                    Console.WriteLine("Invalid option, please choose again.");
-                    Console.ReadKey();
-                    break;
+                DisplayProduct(ListProducts);
+            }
+            else if (choice == "Add a new product")
+            {
+               
+            }
+            else if (choice == "Find product")
+            {
+
+            }
+            else if (choice == "Delete product")
+            {
+
+            }
+            else if (choice == "Edit product informations")
+            {
+
+            }
+            else if (choice == "Return to the Main Menu")
+            {
+                return;
+            }
             }
         }
-    }
+    
 
     static void DisplayProduct(List<Products> ListProducts)
     {
+        Console.Clear();
         ListProducts = LoadProducts(connectionString);
         ListCategories = LoadCategory(connectionString);
         var table = new Table();
@@ -188,7 +202,7 @@ class Program
             }
             read.Close();
             AnsiConsole.Write(table);
-            Console.WriteLine("Ấn bất kì để tiếp tục");
+            Console.WriteLine("Press any to continue");
             Console.ReadKey();
         }
     }
