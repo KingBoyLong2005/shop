@@ -156,7 +156,7 @@ class Program
             }
             else if (choice == "Add a new product")
             {
-               
+               AddProduct(ListProducts);
             }
             else if (choice == "Find product")
             {
@@ -225,5 +225,41 @@ class Program
             Console.WriteLine("Press any to continue");
             Console.ReadKey();
         }
+    }
+
+ 
+static void AddProduct(List<Products> ListProducts)
+    {
+        Console.WriteLine("New product information: ");
+        Products sp = new Products();
+        Console.Write("Product ID: ");
+        sp.ProductID = int.Parse(Console.ReadLine());
+        Console.Write("Product name: ");
+        sp.ProductName = Console.ReadLine();
+        Console.Write("Product category ID: ");
+        sp.ProductCategoryID = int.Parse(Console.ReadLine());
+        Console.Write("Product price: ");
+        sp.ProductPrice = decimal.Parse(Console.ReadLine());
+        Console.Write("Product description: ");
+        sp.ProductDescription = Console.ReadLine();
+        Console.Write("Product brand: ");
+        sp.ProductBrand = Console.ReadLine();
+
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {
+            connection.Open();
+            string query = "INSERT INTO products (product_id, product_name, product_category_id, product_price, product_description, product_brand) VALUES (@ProductID, @ProductName, @ProductCategoryID, @ProductPrice, @ProductDescription, @ProductBrand)";
+            MySqlCommand command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@ProductID", sp.ProductID);
+            command.Parameters.AddWithValue("@ProductName", sp.ProductName);
+            command.Parameters.AddWithValue("@ProductCategoryID", sp.ProductCategoryID);
+            command.Parameters.AddWithValue("@ProductPrice", sp.ProductPrice);
+            command.Parameters.AddWithValue("@ProductDescription", sp.ProductDescription);
+            command.Parameters.AddWithValue("@ProductBrand", sp.ProductBrand);
+            command.ExecuteNonQuery();
+        }
+
+        ListProducts.Add(sp);
+        Console.WriteLine("Successfully added new product!");
     }
 }
