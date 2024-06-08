@@ -160,11 +160,11 @@ class Program
             }
             else if (choice == "Find product")
             {
-
+                Findproduct(ListProducts);
             }
             else if (choice == "Delete product")
             {
-                DeleteProduct(ListProducts);
+                Deleteproduct(ListProducts);
             }
             else if (choice == "Edit product informations")
             {
@@ -270,7 +270,7 @@ class Program
 
         Console.WriteLine("Enter the correct product code:");
         int ProductID= int.Parse(Console.ReadLine());
-        Products sp = ListProducts.Find(x => x.ProductID == ProductID);
+        Products sp = ListProducts.Find(s => s.ProductID == ProductID);
         if(sp != null)
         {
             Console.WriteLine("New product information: ");
@@ -306,13 +306,13 @@ class Program
             Console.WriteLine("Product not found!");
         }
     }
-    static void DeleteProduct(List<Products> ListProducts)
+    static void Deleteproduct(List<Products> ListProducts)
     {
         ListProducts = LoadProducts(connectionString);
         Console.Clear();
         Console.WriteLine("Enter the correct product code:");
         int ProductID = int.Parse(Console.ReadLine());
-        Products sp = ListProducts.Find(x => x.ProductID == ProductID);
+        Products sp = ListProducts.Find(s => s.ProductID == ProductID);
 
         if (sp!= null)
         {
@@ -329,6 +329,26 @@ class Program
         }
         else
         {
+            Console.WriteLine("Product not found!");
+        }
+    }
+
+    static void Findproduct (List<Products> ListProducts)
+    {
+        ListProducts = LoadProducts(connectionString);
+        Console.Clear();
+        Console.WriteLine("Enter the correct product code:");
+        int ProductID = int.Parse(Console.ReadLine());
+        Products sp = ListProducts.Find(s => s.ProductID == ProductID);
+        if (sp!= null)
+        {
+            Console.WriteLine("Product name: " + sp.ProductName);
+            Console.WriteLine("Product category ID: " + sp.ProductCategoryID);
+            Console.WriteLine("Product price: " + sp.ProductPrice);
+            Console.WriteLine("Product description: " + sp.ProductDescription);
+            Console.WriteLine("Product brand: " + sp.ProductBrand);
+            Console.WriteLine("Product image: " + sp.ProductImage);
+        }else{
             Console.WriteLine("Product not found!");
         }
     }
