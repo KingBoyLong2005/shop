@@ -164,11 +164,11 @@ class Program
             }
             else if (choice == "Delete product")
             {
-
+                DeleteProduct(ListProducts);
             }
             else if (choice == "Edit product informations")
             {
-
+                Editproductinformations(ListProducts);
             }
             else if (choice == "Return to the Main Menu")
             {
@@ -228,38 +228,109 @@ class Program
     }
 
  
-static void AddProduct(List<Products> ListProducts)
-    {
-        Console.WriteLine("New product information: ");
-        Products sp = new Products();
-        Console.Write("Product ID: ");
-        sp.ProductID = int.Parse(Console.ReadLine());
-        Console.Write("Product name: ");
-        sp.ProductName = Console.ReadLine();
-        Console.Write("Product category ID: ");
-        sp.ProductCategoryID = int.Parse(Console.ReadLine());
-        Console.Write("Product price: ");
-        sp.ProductPrice = decimal.Parse(Console.ReadLine());
-        Console.Write("Product description: ");
-        sp.ProductDescription = Console.ReadLine();
-        Console.Write("Product brand: ");
-        sp.ProductBrand = Console.ReadLine();
-
-        using (MySqlConnection connection = new MySqlConnection(connectionString))
+    static void AddProduct(List<Products> ListProducts)
         {
-            connection.Open();
-            string query = "INSERT INTO products (product_id, product_name, product_category_id, product_price, product_description, product_brand) VALUES (@ProductID, @ProductName, @ProductCategoryID, @ProductPrice, @ProductDescription, @ProductBrand)";
-            MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@ProductID", sp.ProductID);
-            command.Parameters.AddWithValue("@ProductName", sp.ProductName);
-            command.Parameters.AddWithValue("@ProductCategoryID", sp.ProductCategoryID);
-            command.Parameters.AddWithValue("@ProductPrice", sp.ProductPrice);
-            command.Parameters.AddWithValue("@ProductDescription", sp.ProductDescription);
-            command.Parameters.AddWithValue("@ProductBrand", sp.ProductBrand);
-            command.ExecuteNonQuery();
+            Console.WriteLine("New product information: ");
+            Products sp = new Products();
+            Console.Write("Product ID: ");
+            sp.ProductID = int.Parse(Console.ReadLine());
+            Console.Write("Product name: ");
+            sp.ProductName = Console.ReadLine();
+            Console.Write("Product category ID: ");
+            sp.ProductCategoryID = int.Parse(Console.ReadLine());
+            Console.Write("Product price: ");
+            sp.ProductPrice = decimal.Parse(Console.ReadLine());
+            Console.Write("Product description: ");
+            sp.ProductDescription = Console.ReadLine();
+            Console.Write("Product brand: ");
+            sp.ProductBrand = Console.ReadLine();
+
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = "INSERT INTO products (product_id, product_name, product_category_id, product_price, product_description, product_brand) VALUES (@ProductID, @ProductName, @ProductCategoryID, @ProductPrice, @ProductDescription, @ProductBrand)";
+                MySqlCommand command = new MySqlCommand(query, connection);
+                command.Parameters.AddWithValue("@ProductID", sp.ProductID);
+                command.Parameters.AddWithValue("@ProductName", sp.ProductName);
+                command.Parameters.AddWithValue("@ProductCategoryID", sp.ProductCategoryID);
+                command.Parameters.AddWithValue("@ProductPrice", sp.ProductPrice);
+                command.Parameters.AddWithValue("@ProductDescription", sp.ProductDescription);
+                command.Parameters.AddWithValue("@ProductBrand", sp.ProductBrand);
+                command.ExecuteNonQuery();
+            }
+
+            ListProducts.Add(sp);
+            Console.WriteLine("Successfully added new product!");
         }
 
-        ListProducts.Add(sp);
-        Console.WriteLine("Successfully added new product!");
+    static void Editproductinformations (List<Products> ListProducts) 
+    {
+        ListProducts = LoadProducts(connectionString);
+        Console.Clear();
+
+        Console.WriteLine("Enter the correct product code:");
+        int ProductID= int.Parse(Console.ReadLine());
+        Products sp = ListProducts.Find(x => x.ProductID == ProductID);
+        if(sp != null)
+        {
+            Console.WriteLine("New product information: ");
+            Console.Write("Product name: ");
+            sp.ProductName = Console.ReadLine();
+            Console.Write("Product category ID: ");
+            sp.ProductCategoryID = int.Parse(Console.ReadLine());
+            Console.Write("Product price: ");
+            sp.ProductPrice = decimal.Parse(Console.ReadLine());
+            Console.Write("Product description: ");
+            sp.ProductDescription = Console.ReadLine();
+            Console.Write("Product brand: ");
+            sp.ProductBrand = Console.ReadLine();
+            Console.Write("Product image: ");
+            sp.ProductImage = Console.ReadLine();
+
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = "UPDATE products SET product_name = @ProductName, product_category_id = @ProductCategoryID, product_price = @ProductPrice, product_description = @ProductDescription, product_brand = @ProductBrand, product_image = @ProductImage WHERE product_id = @ProductID";
+                MySqlCommand command = new MySqlCommand(query, connection);
+                command.Parameters.AddWithValue("@ProductID", sp.ProductID);
+                command.Parameters.AddWithValue("@ProductName", sp.ProductName);
+                command.Parameters.AddWithValue("@ProductCategoryID", sp.ProductCategoryID);
+                command.Parameters.AddWithValue("@ProductPrice", sp.ProductPrice);
+                command.Parameters.AddWithValue("@ProductDescription", sp.ProductDescription);
+                command.Parameters.AddWithValue("@ProductBrand", sp.ProductBrand);
+                command.Parameters.AddWithValue("@ProductImage", sp.ProductImage);
+                command.ExecuteNonQuery();
+            }
+            Console.WriteLine("Successfully edited product informations!");
+        }else{
+            Console.WriteLine("Product not found!");
+        }
     }
+    static void DeleteProduct(List<Products> ListProducts)
+    {
+        ListProducts = LoadProducts(connectionString);
+        Console.Clear();
+        Console.WriteLine("Enter the correct product code:");
+        int ProductID = int.Parse(Console.ReadLine());
+        Products sp = ListProducts.Find(x => x.ProductID == ProductID);
+
+        if (sp!= null)
+        {
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = "DELETE FROM products WHERE product_id = @ProductID";
+                MySqlCommand command = new MySqlCommand(query, connection);
+                command.Parameters.AddWithValue("@ProductID", sp.ProductID);
+                command.ExecuteNonQuery();
+            }
+            ListProducts.Remove(sp);
+            Console.WriteLine("Successfully deleted product!");
+        }
+        else
+        {
+            Console.WriteLine("Product not found!");
+        }
+    }
+
 }
