@@ -16,7 +16,7 @@ public class Products
     public decimal ProductPrice { get; set; }
     public int ProductCategoryID { get; set; }
     public string ProductBrand { get; set; }
-    public string ProductImage { get; set; }
+
 
    
 }

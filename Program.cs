@@ -5,11 +5,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
-using Spectre.Console;
 using System.Security.Cryptography.X509Certificates;
+using Terminal.Gui;
+using Google.Protobuf;
+using Org.BouncyCastle.Asn1.Tsp;
+
 
 class Program
 {
+    static Window MenuMain;
+    static Window menuProduct;
     public static string connectionString;
     public static List<Products> ListProducts = new List<Products>();
     public static List<Categories> ListCategories = new List<Categories>();
@@ -47,7 +52,7 @@ class Program
                 sp.ProductStockQuantity = read.GetInt32("product_stock_quantity");
                 sp.ProductBrand = read.GetString("product_brand");
                 sp.ProductCategoryID = read.GetInt32("product_category_id");
-                sp.ProductImage = read.GetString("product_image");
+
 
                 ListProduct.Add(sp);
             }
@@ -81,100 +86,217 @@ class Program
 
     static void Main()
     {
-        MainMenu();
+        Application.Init();
+        Colors.Base.Normal = Application.Driver.MakeAttribute(Color.BrightGreen, Color.Black);
+        Colors.Base.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
+
+        AddProduct(ListProducts);
     }
 
     static void MainMenu()
     {
-        while (true)
+        Application.Init();
+        var top = Application.Top;
+        MenuMain = new Window("Main Menu")
         {
-            Console.Clear();
-            Console.WriteLine("==== MAIN MENU ====");
-            Console.WriteLine("1. Customers");
-            Console.WriteLine("2. Products");
-            Console.WriteLine("3. Categories");
-            Console.WriteLine("4. Orders");
-            Console.WriteLine("0. Quit");
-            Console.Write("Please pick a function: ");
-
-            string choice = Console.ReadLine();
-
-            switch (choice)
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        }; 
+        top.Add(MenuMain);
+        var btnCustomer = new Button("Cutomers")
+        {
+            X = 2,
+            Y = 2,
+        };
+        btnCustomer.Clicked += () =>
+        {
+            try
             {
-                case "2":
-                    ProductMenu();
-                    break;
-                case "0":
-                    return;
-                default:
-                    Console.WriteLine("Invalid option, please choose again.");
-                    Console.ReadKey();
-                    break;
+
             }
-        }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+        var btnProduct = new Button("Products")
+        {
+            X = 2,
+            Y = 3
+        };
+        btnProduct.Clicked += () =>
+        {
+            try
+            {
+                ProductMenu();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+        var btnCategories = new Button("Categories")
+        {
+            X = 2,
+            Y = 4
+        };
+        btnCategories.Clicked += () =>
+        {
+            try
+            {
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+        var btnOrder = new Button("Orders")
+        {
+            X = 2,
+            Y = 5,
+        };
+        btnOrder.Clicked += () =>
+        {
+            try
+            {
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+        var btnClose = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = Pos.Percent(100) - 1
+        };
+        btnClose.Clicked += () =>
+        {
+            Application.RequestStop();
+            MenuMain.Dispose();
+            Application.Run(/*quay lại menu chính*/);    
+        };
+
     }
 
     static void ProductMenu()
     {
-        Console.Clear();
-        Console.OutputEncoding = Encoding.UTF8;
-        while (true)
+        Application.Init();
+
+        var top = Application.Top;
+
+        // Cửa sổ chính
+        menuProduct = new Window("Main Menu")
         {
-            var table = new Table();
-            table.Border(TableBorder.Rounded);
-            table.AddColumn(new TableColumn("Menu"));
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(menuProduct);
 
-            // Create the menu prompt
-            var menuPrompt = new SelectionPrompt<string>()
-                .Title("=== PRODUCT MENU ===")
-                .PageSize(20)
-                .MoreChoicesText("[grey](Move up and down to reveal more choice)[/]")
-                .AddChoices(new[] {
-                    "Product List", "Add a new product", "Find product", 
-                    "Delete product", "Edit product informations", "Return to the Main Menu",
-                });
-
-            // Prompt the user for a choice and store it
-            var choice = AnsiConsole.Prompt(menuPrompt);
-
-            // Create a panel for the selected choice
-            var panel = new Panel($"You selected: [bold yellow]{choice}[/]")
-                .Header("[bold yellow]Product Menu[/]")
-                .Expand()
-                .Border(BoxBorder.Rounded)
-                .BorderStyle(Style.Parse("green"));
-
-            // Add the menu and the choice result to the table
-            table.AddRow(panel);
-
-            // Display the updated table
-            AnsiConsole.Clear();
-            AnsiConsole.Write(table);
-            if (choice == "Product List")
+        // Tạo nút Display
+        var btnDisplayProduct = new Button("Display Product")
+        {
+            X = 2,
+            Y = 2 
+        };
+        btnDisplayProduct.Clicked += () =>
+        {
+            try
             {
                 DisplayProduct(ListProducts);
             }
-            else if (choice == "Add a new product")
+            catch (Exception ex)
             {
-               AddProduct(ListProducts);
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
             }
-            else if (choice == "Find product")
+        };
+        var btnAddProduct = new Button("Add product")
+        {
+            X = 2,
+            Y = 3
+        };
+        btnAddProduct.Clicked += () =>
+        {
+            try
             {
-                Findproduct(ListProducts);
+                
             }
-            else if (choice == "Delete product")
+            catch (Exception ex)
             {
-                Deleteproduct(ListProducts);
+                MessageBox.ErrorQuery("Error",ex.Message,"OK");
             }
-            else if (choice == "Edit product informations")
+        };
+        var btnFindProduct = new Button("Find Product")
+        {
+            X = 2,
+            Y = 4
+        };
+        btnFindProduct.Clicked += () =>
+        {
+            try
             {
-                Editproductinformations(ListProducts);
+                
             }
-            else if (choice == "Return to the Main Menu")
+            catch (Exception ex)
             {
-                return;
+                MessageBox.ErrorQuery("Error",ex.Message,"OK");
             }
+        };
+        var btnDeleteProduct = new Button("Delete Product")
+        {
+            X = 2,
+            Y = 5
+        };
+        btnDeleteProduct.Clicked += () =>
+        {
+            try
+            {
+                
             }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error",ex.Message,"OK");
+            }
+        };
+        var btnEditProduct = new Button("Edit Product")
+        {
+            X = 2,
+            Y = 6
+        };
+        btnEditProduct.Clicked += () =>
+        {
+            try
+            {
+                
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error",ex.Message,"OK");
+            }
+        };
+        var btnClose = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = Pos.Percent(100) - 1
+        };
+        btnClose.Clicked += () =>
+        {
+            Application.RequestStop();
+            menuProduct.Dispose();
+            Application.Run(MenuMain);    
+        };
+
+        // Thêm nút Display vào bảng 
+        menuProduct.Add(btnDisplayProduct, btnAddProduct,btnFindProduct, btnDeleteProduct, btnEditProduct, btnClose);
+
+        // Chạy ứng dụng
+        Application.Run();
         }
     
 
@@ -182,91 +304,203 @@ class Program
     {
         ListProducts = LoadProducts(connectionString);
         ListCategories = LoadCategory(connectionString);
-        var table = new Table();
-        Console.OutputEncoding = Encoding.UTF8;
+        List<string[]> products = new List<string[]>();
+        var DisplayListProduct = new Window()
+        {
+            Title = "List's Product",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {   
             string query = @"SELECT 
-                        p.product_name, 
-                        p.product_stock_quantity, 
-                        p.product_description, 
-                        p.product_price, 
-                        c.category_name, 
-                        p.product_brand,
-                        p.product_image
-                    FROM products p
-                    INNER JOIN categories c ON p.product_category_id = c.category_id;";
+                                p.product_name, 
+                                p.product_stock_quantity, 
+                                p.product_description, 
+                                p.product_price, 
+                                c.category_name, 
+                                p.product_brand
+                            FROM products p
+                            INNER JOIN categories c ON p.product_category_id = c.category_id;";
             MySqlCommand command = new MySqlCommand(query, connection);
             connection.Open();
             MySqlDataReader read = command.ExecuteReader();
-            Console.WriteLine("=== List Product ===");
-            table.AddColumns(new TableColumn("Product's name").Centered());
-            table.AddColumns(new TableColumn("Stock quantity").Centered());
-            table.AddColumns(new TableColumn("Description").Centered());
-            table.AddColumns(new TableColumn("Price").Centered());
-            table.AddColumns(new TableColumn("Category's name").Centered());
-            table.AddColumns(new TableColumn("Brand").Centered());
-            table.AddColumns(new TableColumn("Image").Centered());
-
+            var columnDisplayListProduct = new string[]
+            {
+                "Product's name", "Stock quantity", "Description", "Price", "Category's name", "Brand"
+            };
             while (read.Read())
             {
-                table.AddRow(new string[] {
+                products.Add( new string[]{
                     read["product_name"].ToString(),
                     read["product_stock_quantity"].ToString(),
                     read["product_description"].ToString(),
                     read["product_price"].ToString(),
                     read["category_name"].ToString(),
-                    read["product_brand"].ToString(),
-                    read["product_image"].ToString()
+                    read["product_brand"].ToString()                                                
+
+            });
+            }
+            for (int i = 0; i < columnDisplayListProduct.Length; i++)
+            {
+                DisplayListProduct.Add(new Label(columnDisplayListProduct[i])
+                {
+                    X = i * 15,
+                    Y = 0,
+                    Width = 15,
+                    Height = 1
                 });
             }
-            read.Close();
-            AnsiConsole.Write(table);
-            Console.WriteLine("Press any to continue");
-            Console.ReadKey();
+            for (int i = 0; i < products.Count; i++)
+            {
+                for (int j = 0; j < products[i].Length; j++)
+                {
+                    DisplayListProduct.Add(new Label(products[i][j])
+                    {
+                        X = j * 15,
+                        Y = i + 1,
+                        Width = 15,
+                        Height = 1
+                    });
+                }
+            }
         }
+        var btnClose = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = Pos.Percent(100) - 1
+        };
+        btnClose.Clicked += () =>
+        {
+            Application.RequestStop();
+            DisplayListProduct.Dispose();
+            Application.Run(menuProduct);    
+        };
+        Application.Top.Add(DisplayListProduct,btnClose);
+        Application.Run(DisplayListProduct);
     }
 
  
     static void AddProduct(List<Products> ListProducts)
+    {
+        Products sp = new Products();
+        var addProductWin = new Window("Add Product")
         {
-            Console.WriteLine("New product information: ");
-            Products sp = new Products();
-            Console.Write("Product ID: ");
-            sp.ProductID = int.Parse(Console.ReadLine());
-            Console.Write("Product name: ");
-            sp.ProductName = Console.ReadLine();
-            Console.Write("Product category ID: ");
-            sp.ProductCategoryID = int.Parse(Console.ReadLine());
-            Console.Write("Product price: ");
-            sp.ProductPrice = decimal.Parse(Console.ReadLine());
-            Console.Write("Product description: ");
-            sp.ProductDescription = Console.ReadLine();
-            Console.Write("Product brand: ");
-            sp.ProductBrand = Console.ReadLine();
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
 
-            using (MySqlConnection connection = new MySqlConnection(connectionString))
+        // Tạo các nhãn và trường nhập liệu
+        var productNameLabel = new Label("Product name:")
+        {
+            X = 1,
+            Y = 1
+        };
+        var productNameField = new TextField("")
+        {
+            X = 20,
+            Y = 1,
+            Width = Dim.Fill() - 21
+        };
+
+        var productCategoryIDLabel = new Label("Product category ID:")
+        {
+            X = 1,
+            Y = 3
+        };
+        var productCategoryIDField = new TextField("")
+        {
+            X = 20,
+            Y = 3,
+            Width = Dim.Fill() - 21
+        };
+
+        var productPriceLabel = new Label("Product price:")
+        {
+            X = 1,
+            Y = 5
+        };
+        var productPriceField = new TextField("")
+        {
+            X = 20,
+            Y = 5,
+            Width = Dim.Fill() - 21
+        };
+
+        var productDescriptionLabel = new Label("Product description:")
+        {
+            X = 1,
+            Y = 7
+        };
+        var productDescriptionField = new TextField("")
+        {
+            X = 20,
+            Y = 7,
+            Width = Dim.Fill() - 21
+        };
+
+        var productBrandLabel = new Label("Product brand:")
+        {
+            X = 1,
+            Y = 9
+        };
+        var productBrandField = new TextField("")
+        {
+            X = 20,
+            Y = 9,
+            Width = Dim.Fill() - 21
+        };
+
+        var saveButton = new Button("Save")
+        {
+            X = Pos.Center(),
+            Y = 11
+        };
+        saveButton.Clicked += () =>
+        {
+            try
             {
-                connection.Open();
-                string query = "INSERT INTO products (product_id, product_name, product_category_id, product_price, product_description, product_brand) VALUES (@ProductID, @ProductName, @ProductCategoryID, @ProductPrice, @ProductDescription, @ProductBrand)";
-                MySqlCommand command = new MySqlCommand(query, connection);
-                command.Parameters.AddWithValue("@ProductID", sp.ProductID);
-                command.Parameters.AddWithValue("@ProductName", sp.ProductName);
-                command.Parameters.AddWithValue("@ProductCategoryID", sp.ProductCategoryID);
-                command.Parameters.AddWithValue("@ProductPrice", sp.ProductPrice);
-                command.Parameters.AddWithValue("@ProductDescription", sp.ProductDescription);
-                command.Parameters.AddWithValue("@ProductBrand", sp.ProductBrand);
-                command.ExecuteNonQuery();
+                sp.ProductName = productNameField.Text.ToString();
+                sp.ProductCategoryID = int.Parse(productCategoryIDField.Text.ToString());
+                sp.ProductPrice = decimal.Parse(productPriceField.Text.ToString());
+                sp.ProductDescription = productDescriptionField.Text.ToString();
+                sp.ProductBrand = productBrandField.Text.ToString();
+
+                using (MySqlConnection connection = new MySqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string query = "INSERT INTO products (product_name, product_category_id, product_price, product_description, product_brand) VALUES (@ProductName, @ProductCategoryID, @ProductPrice, @ProductDescription, @ProductBrand)";
+                    MySqlCommand command = new MySqlCommand(query, connection);
+                    command.Parameters.AddWithValue("@ProductName", sp.ProductName);
+                    command.Parameters.AddWithValue("@ProductCategoryID", sp.ProductCategoryID);
+                    command.Parameters.AddWithValue("@ProductPrice", sp.ProductPrice);
+                    command.Parameters.AddWithValue("@ProductDescription", sp.ProductDescription);
+                    command.Parameters.AddWithValue("@ProductBrand", sp.ProductBrand);
+                    command.ExecuteNonQuery();
+                }
+
+                ListProducts.Add(sp);
+                MessageBox.Query("Success", "Successfully added new product!", "OK");
+                Application.RequestStop();
             }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
 
-            ListProducts.Add(sp);
-            Console.WriteLine("Successfully added new product!");
-        }
+        addProductWin.Add(productNameLabel, productNameField, productCategoryIDLabel, productCategoryIDField,
+                          productPriceLabel, productPriceField, productDescriptionLabel, productDescriptionField,
+                          productBrandLabel, productBrandField, saveButton);
 
-    static void Editproductinformations (List<Products> ListProducts) 
+        Application.Run(addProductWin);
+    }    static void Editproductinformations (List<Products> ListProducts) 
     {
         ListProducts = LoadProducts(connectionString);
-        Console.Clear();
 
         Console.WriteLine("Enter the correct product code:");
         int ProductID= int.Parse(Console.ReadLine());
@@ -284,13 +518,12 @@ class Program
             sp.ProductDescription = Console.ReadLine();
             Console.Write("Product brand: ");
             sp.ProductBrand = Console.ReadLine();
-            Console.Write("Product image: ");
-            sp.ProductImage = Console.ReadLine();
+
 
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 connection.Open();
-                string query = "UPDATE products SET product_name = @ProductName, product_category_id = @ProductCategoryID, product_price = @ProductPrice, product_description = @ProductDescription, product_brand = @ProductBrand, product_image = @ProductImage WHERE product_id = @ProductID";
+                string query = "UPDATE products SET product_name = @ProductName, product_category_id = @ProductCategoryID, product_price = @ProductPrice, product_description = @ProductDescription, product_brand = @ProductBrand WHERE product_id = @ProductID";
                 MySqlCommand command = new MySqlCommand(query, connection);
                 command.Parameters.AddWithValue("@ProductID", sp.ProductID);
                 command.Parameters.AddWithValue("@ProductName", sp.ProductName);
@@ -298,7 +531,7 @@ class Program
                 command.Parameters.AddWithValue("@ProductPrice", sp.ProductPrice);
                 command.Parameters.AddWithValue("@ProductDescription", sp.ProductDescription);
                 command.Parameters.AddWithValue("@ProductBrand", sp.ProductBrand);
-                command.Parameters.AddWithValue("@ProductImage", sp.ProductImage);
+
                 command.ExecuteNonQuery();
             }
             Console.WriteLine("Successfully edited product informations!");
@@ -347,7 +580,7 @@ class Program
             Console.WriteLine("Product price: " + sp.ProductPrice);
             Console.WriteLine("Product description: " + sp.ProductDescription);
             Console.WriteLine("Product brand: " + sp.ProductBrand);
-            Console.WriteLine("Product image: " + sp.ProductImage);
+
         }else{
             Console.WriteLine("Product not found!");
         }
