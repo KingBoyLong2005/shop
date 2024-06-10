@@ -89,14 +89,14 @@ class Program
         Application.Init();
         Colors.Base.Normal = Application.Driver.MakeAttribute(Color.BrightGreen, Color.Black);
         Colors.Base.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
-
+        
         AddProduct(ListProducts);
     }
 
     static void MainMenu()
     {
         Application.Init();
-        var top = Application.Top;
+
         MenuMain = new Window("Main Menu")
         {
             X = 0,
@@ -104,7 +104,7 @@ class Program
             Width = Dim.Fill(),
             Height = Dim.Fill()
         }; 
-        top.Add(MenuMain);
+
         var btnCustomer = new Button("Cutomers")
         {
             X = 2,
@@ -180,7 +180,7 @@ class Program
             MenuMain.Dispose();
             Application.Run(/*quay lại menu chính*/);    
         };
-
+        Application.Run();
     }
 
     static void ProductMenu()
@@ -383,7 +383,7 @@ class Program
     }
 
  
-    static void AddProduct(List<Products> ListProducts)
+   static void AddProduct(List<Products> ListProducts)
     {
         Products sp = new Products();
         var addProductWin = new Window("Add Product")
@@ -391,7 +391,7 @@ class Program
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
-            Height = Dim.Fill()
+            Height = Dim.Fill() 
         };
 
         // Tạo các nhãn và trường nhập liệu
@@ -402,69 +402,82 @@ class Program
         };
         var productNameField = new TextField("")
         {
-            X = 20,
-            Y = 1,
-            Width = Dim.Fill() - 21
+            X = 1,
+            Y = 2,
+            Width = Dim.Fill() - 2
+        };
+
+        var productStockQuantityLabel = new Label("Product stock quantity:")
+        {
+            X = 1,
+            Y = 4
+        };
+        var productStockQuantityField = new TextField("")
+        {
+            X = 1,
+            Y = 5,
+            Width = Dim.Fill() - 2
         };
 
         var productCategoryIDLabel = new Label("Product category ID:")
         {
             X = 1,
-            Y = 3
+            Y = 7
         };
         var productCategoryIDField = new TextField("")
         {
-            X = 20,
-            Y = 3,
-            Width = Dim.Fill() - 21
+            X = 1,
+            Y = 8,
+            Width = Dim.Fill() - 2
         };
 
         var productPriceLabel = new Label("Product price:")
         {
             X = 1,
-            Y = 5
+            Y = 10
         };
         var productPriceField = new TextField("")
         {
-            X = 20,
-            Y = 5,
-            Width = Dim.Fill() - 21
+            X = 1,
+            Y = 11,
+            Width = Dim.Fill() - 2
         };
 
         var productDescriptionLabel = new Label("Product description:")
         {
             X = 1,
-            Y = 7
+            Y = 13
         };
         var productDescriptionField = new TextField("")
         {
-            X = 20,
-            Y = 7,
-            Width = Dim.Fill() - 21
+            X = 1,
+            Y = 14,
+            Width = Dim.Fill() - 2
         };
 
         var productBrandLabel = new Label("Product brand:")
         {
             X = 1,
-            Y = 9
+            Y = 16
         };
         var productBrandField = new TextField("")
         {
-            X = 20,
-            Y = 9,
-            Width = Dim.Fill() - 21
+            X = 1,
+            Y = 17,
+            Width = Dim.Fill() - 2
         };
 
         var saveButton = new Button("Save")
         {
             X = Pos.Center(),
-            Y = 11
+            Y = 19
         };
         saveButton.Clicked += () =>
         {
             try
             {
                 sp.ProductName = productNameField.Text.ToString();
+                sp.ProductStockQuantity = int.Parse(productStockQuantityField.Text.ToString());
                 sp.ProductCategoryID = int.Parse(productCategoryIDField.Text.ToString());
                 sp.ProductPrice = decimal.Parse(productPriceField.Text.ToString());
                 sp.ProductDescription = productDescriptionField.Text.ToString();
@@ -473,9 +486,10 @@ class Program
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
                     connection.Open();
-                    string query = "INSERT INTO products (product_name, product_category_id, product_price, product_description, product_brand) VALUES (@ProductName, @ProductCategoryID, @ProductPrice, @ProductDescription, @ProductBrand)";
+                    string query = "INSERT INTO products (product_name, product_stock_quantity, product_category_id, product_price, product_description, product_brand) VALUES (@ProductName, @ProductStockQuantity, @ProductCategoryID, @ProductPrice, @ProductDescription, @ProductBrand)";
                     MySqlCommand command = new MySqlCommand(query, connection);
                     command.Parameters.AddWithValue("@ProductName", sp.ProductName);
+                    command.Parameters.AddWithValue("@ProductStockQuantity", sp.ProductStockQuantity);
                     command.Parameters.AddWithValue("@ProductCategoryID", sp.ProductCategoryID);
                     command.Parameters.AddWithValue("@ProductPrice", sp.ProductPrice);
                     command.Parameters.AddWithValue("@ProductDescription", sp.ProductDescription);
@@ -493,52 +507,179 @@ class Program
             }
         };
 
-        addProductWin.Add(productNameLabel, productNameField, productCategoryIDLabel, productCategoryIDField,
-                          productPriceLabel, productPriceField, productDescriptionLabel, productDescriptionField,
-                          productBrandLabel, productBrandField, saveButton);
+    addProductWin.Add(productNameLabel, productNameField, productStockQuantityLabel, productStockQuantityField, productCategoryIDLabel, productCategoryIDField,
+                      productPriceLabel, productPriceField, productDescriptionLabel, productDescriptionField,
+                      productBrandLabel, productBrandField, saveButton);
 
-        Application.Run(addProductWin);
-    }    static void Editproductinformations (List<Products> ListProducts) 
+    Application.Run(addProductWin);
+}
+
+    static void Editproductinformations(List<Products> ListProducts)
     {
+        
         ListProducts = LoadProducts(connectionString);
 
-        Console.WriteLine("Enter the correct product code:");
-        int ProductID= int.Parse(Console.ReadLine());
-        Products sp = ListProducts.Find(s => s.ProductID == ProductID);
-        if(sp != null)
+        var Editproductinformations = new Window("Edit Productinformations")
         {
-            Console.WriteLine("New product information: ");
-            Console.Write("Product name: ");
-            sp.ProductName = Console.ReadLine();
-            Console.Write("Product category ID: ");
-            sp.ProductCategoryID = int.Parse(Console.ReadLine());
-            Console.Write("Product price: ");
-            sp.ProductPrice = decimal.Parse(Console.ReadLine());
-            Console.Write("Product description: ");
-            sp.ProductDescription = Console.ReadLine();
-            Console.Write("Product brand: ");
-            sp.ProductBrand = Console.ReadLine();
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+
+        var FindproductIDLabel = new Label("Find Product ID:")
+        {
+            X = 1,
+            Y = 1
+        };
+
+        var FindproductIDField = new TextField("")
+        {
+            X = Pos.Right(FindproductIDLabel) + 1,
+            Y = 1,
+            Width = Dim.Fill() - 3
+        };
+
+        var EditproductnameLabel = new Label("Product Name:")
+        {
+            X = 1,
+            Y = 3
+        };
+
+        var EditproductnameField = new TextField("")
+        {
+            X = Pos.Right(EditproductnameLabel) + 1,
+            Y = 3,
+            Width = Dim.Fill() - 3
+        };
+
+        var EditproductstockquantityLabel = new Label("Stock Quantity:")
+        {
+            X = 1,
+            Y = 5
+        };
+
+        var EditproductstockquantityField = new TextField("")
+        {
+            X = Pos.Right(EditproductstockquantityLabel) +1,
+            Y = 5,
+            Width = Dim.Fill() - 3
+        };
+
+        var EditproductcategoryIDLabel = new Label("Product Category:")
+        {
+            X = 1,
+            Y = 7
+        };
+
+        var EditproductcategoryIDField = new TextField("")
+        {
+            X = Pos.Right(EditproductcategoryIDLabel) +1,
+            Y = 7,
+            Width = Dim.Fill() - 3
+        };
+
+        var EditproductpriceLabel = new Label("Product Price:")
+        {
+            X = 1,
+            Y = 9
+        };
+        var EditproductpriceField = new TextField("")
+        {
+            X = Pos.Right(EditproductpriceLabel) +1,
+            Y = 9,
+            Width = Dim.Fill() - 3
+        };
+
+        var EditproductdescriptionLabel = new Label("Product Description:")
+        {
+            X = 1,
+            Y = 11
+        };
+
+        var EditproductdescriptionField = new TextField("")
+        {
+            X = Pos.Right(EditproductdescriptionLabel) +1,
+            Y = 11,
+            Width = Dim.Fill() - 3
+        };
+
+        var EditproductbrandLabel = new Label("Product Brand:")
+        {
+            X = 1,
+            Y = 13
+        };
+
+        var EditproductbrandField = new TextField("")
+        {
+            X = Pos.Right(EditproductbrandLabel) +1,
+            Y = 13,
+            Width = Dim.Fill() - 3
+        };
 
 
-            using (MySqlConnection connection = new MySqlConnection(connectionString))
+        var saveButton = new Button("Save")
+        {
+            X = Pos.Center(),
+            Y = 15
+        };
+        saveButton.Clicked += () =>
+        {
+            try
             {
-                connection.Open();
-                string query = "UPDATE products SET product_name = @ProductName, product_category_id = @ProductCategoryID, product_price = @ProductPrice, product_description = @ProductDescription, product_brand = @ProductBrand WHERE product_id = @ProductID";
-                MySqlCommand command = new MySqlCommand(query, connection);
-                command.Parameters.AddWithValue("@ProductID", sp.ProductID);
-                command.Parameters.AddWithValue("@ProductName", sp.ProductName);
-                command.Parameters.AddWithValue("@ProductCategoryID", sp.ProductCategoryID);
-                command.Parameters.AddWithValue("@ProductPrice", sp.ProductPrice);
-                command.Parameters.AddWithValue("@ProductDescription", sp.ProductDescription);
-                command.Parameters.AddWithValue("@ProductBrand", sp.ProductBrand);
+                if (int.TryParse(FindproductIDField.Text.ToString(), out int productID))
+                {
+                    Products sp = ListProducts.Find(s => s.ProductID == productID);
 
-                command.ExecuteNonQuery();
+                    if (sp != null)
+                    {
+                        // Update the product properties
+                        sp.ProductName = EditproductnameField.Text.ToString();
+                        sp.ProductStockQuantity = int.Parse(EditproductstockquantityField.Text.ToString());
+                        sp.ProductDescription = EditproductdescriptionField.Text.ToString();
+                        sp.ProductPrice = decimal.Parse(EditproductpriceField.Text.ToString());
+                        sp.ProductCategoryID = int.Parse(EditproductcategoryIDField.Text.ToString());
+                        sp.ProductBrand = EditproductbrandField.Text.ToString();
+
+                        // Update the product in the database
+                        using (MySqlConnection connection = new MySqlConnection(connectionString))
+                        {
+                            connection.Open();
+                            string query = "UPDATE products SET product_name = @ProductName, product_stock_quantity = @ProductStockQuantity, product_description = @ProductDescription, product_price = @ProductPrice, product_category_id = @ProductCategoryID, product_brand = @ProductBrand WHERE product_id = @ProductID";
+                            MySqlCommand command = new MySqlCommand(query, connection);
+                            command.Parameters.AddWithValue("@ProductID", sp.ProductID);
+                            command.Parameters.AddWithValue("@ProductName", sp.ProductName);
+                            command.Parameters.AddWithValue("@ProductStockQuantity", sp.ProductStockQuantity);
+                            command.Parameters.AddWithValue("@ProductDescription", sp.ProductDescription);
+                            command.Parameters.AddWithValue("@ProductPrice", sp.ProductPrice);
+                            command.Parameters.AddWithValue("@ProductCategoryID", sp.ProductCategoryID);
+                            command.Parameters.AddWithValue("@ProductBrand", sp.ProductBrand);
+                            command.ExecuteNonQuery();
+                        }
+                        ListProducts.Add(sp);
+
+                        // Reload the list of products from the database
+                        ListProducts = LoadProducts(connectionString);
+
+                        MessageBox.Query("Success", "Successfully edited product!", "OK");
+                        Application.RequestStop();
+                    }
+                }
             }
-            Console.WriteLine("Successfully edited product informations!");
-        }else{
-            Console.WriteLine("Product not found!");
-        }
-    }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+
+    Editproductinformations.Add(FindproductIDLabel, FindproductIDField, EditproductnameLabel, EditproductnameField , EditproductstockquantityLabel , EditproductstockquantityField, EditproductcategoryIDLabel, EditproductcategoryIDField, EditproductpriceLabel, EditproductpriceField, EditproductdescriptionLabel, EditproductdescriptionField, EditproductbrandLabel, EditproductbrandField, saveButton);
+
+    Application.Run(Editproductinformations);
+}
+
+
+
+
     static void Deleteproduct(List<Products> ListProducts)
     {
         ListProducts = LoadProducts(connectionString);

@@ -153,3 +153,11 @@ D:\C Learning\Project\Shop\bin\Debug\net8.0\fr-FR\Terminal.Gui.resources.dll
 D:\C Learning\Project\Shop\bin\Debug\net8.0\ja-JP\Terminal.Gui.resources.dll
 D:\C Learning\Project\Shop\bin\Debug\net8.0\pt-PT\Terminal.Gui.resources.dll
 D:\C Learning\Project\Shop\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Management.dll
+D:\shop\bin\Debug\net8.0\NStack.dll
+D:\shop\bin\Debug\net8.0\System.CodeDom.dll
+D:\shop\bin\Debug\net8.0\System.Management.dll
+D:\shop\bin\Debug\net8.0\Terminal.Gui.dll
+D:\shop\bin\Debug\net8.0\fr-FR\Terminal.Gui.resources.dll
+D:\shop\bin\Debug\net8.0\ja-JP\Terminal.Gui.resources.dll
+D:\shop\bin\Debug\net8.0\pt-PT\Terminal.Gui.resources.dll
+D:\shop\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Management.dll
