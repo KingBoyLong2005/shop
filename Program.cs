@@ -16,6 +16,10 @@ class Program
     static Window mainMenu;
     static Window productMenu;
     static Window displayProductWindow;
+    static Window addProductWin;
+    static Window editProductWin;
+    static Window deleteProductWin;
+    static Window findProductWin;
     public static string connectionString;
     public static List<Products> ListProducts = new List<Products>();
     public static List<Categories> ListCategories = new List<Categories>();
