@@ -90,7 +90,7 @@ class Program
         Colors.Base.Normal = Application.Driver.MakeAttribute(Color.BrightGreen, Color.Black);
         Colors.Base.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
         
-        AddProduct(ListProducts);
+        Editproductinformations(ListProducts);
     }
 
     static void MainMenu()
@@ -516,7 +516,7 @@ class Program
 
     static void Editproductinformations(List<Products> ListProducts)
     {
-        
+        Products sp = new Products();
         ListProducts = LoadProducts(connectionString);
 
         var Editproductinformations = new Window("Edit Productinformations")
@@ -612,11 +612,22 @@ class Program
 
         var EditproductbrandField = new TextField("")
         {
-            X = Pos.Right(EditproductbrandLabel) +1,
+            X = Pos.Bottom(EditproductbrandLabel) +1,
             Y = 13,
             Width = Dim.Fill() - 3
         };
-
+        EditproductnameLabel.Visible = false; 
+        EditproductnameField.Visible = false; 
+        EditproductstockquantityLabel.Visible = false; 
+        EditproductstockquantityField.Visible = false; 
+        EditproductcategoryIDLabel.Visible = false; 
+        EditproductcategoryIDField.Visible = false; 
+        EditproductpriceLabel.Visible = false; 
+        EditproductpriceField.Visible = false; 
+        EditproductdescriptionLabel.Visible = false; 
+        EditproductdescriptionField.Visible = false; 
+        EditproductbrandLabel.Visible = false; 
+        EditproductbrandField.Visible = false;
 
         var saveButton = new Button("Save")
         {
@@ -627,12 +638,6 @@ class Program
         {
             try
             {
-                if (int.TryParse(FindproductIDField.Text.ToString(), out int productID))
-                {
-                    Products sp = ListProducts.Find(s => s.ProductID == productID);
-
-                    if (sp != null)
-                    {
                         // Update the product properties
                         sp.ProductName = EditproductnameField.Text.ToString();
                         sp.ProductStockQuantity = int.Parse(EditproductstockquantityField.Text.ToString());
@@ -663,7 +668,43 @@ class Program
 
                         MessageBox.Query("Success", "Successfully edited product!", "OK");
                         Application.RequestStop();
-                    }
+                    
+                
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+        saveButton.Visible = false;
+        var btncomfirm = new Button("Comfirm")
+        {
+            X = Pos.Bottom(saveButton),
+            Y = 15
+        };
+        btncomfirm.Clicked += () =>
+        {
+            try
+            {
+                if (int.TryParse(FindproductIDField.Text.ToString(), out int productID))
+                {
+                    FindproductIDLabel.Visible = false; 
+                    FindproductIDField.Visible = false;
+                    btncomfirm.Visible = false;
+                    EditproductnameLabel.Visible = true; 
+                    EditproductnameField.Visible = true; 
+                    EditproductstockquantityLabel.Visible = true; 
+                    EditproductstockquantityField.Visible = true; 
+                    EditproductcategoryIDLabel.Visible = true; 
+                    EditproductcategoryIDField.Visible = true; 
+                    EditproductpriceLabel.Visible = true; 
+                    EditproductpriceField.Visible = true; 
+                    EditproductdescriptionLabel.Visible = true; 
+                    EditproductdescriptionField.Visible = true; 
+                    EditproductbrandLabel.Visible = true; 
+                    EditproductbrandField.Visible = true;
+                    saveButton.Visible = true;
+                    
                 }
             }
             catch (Exception ex)
@@ -672,7 +713,7 @@ class Program
             }
         };
 
-    Editproductinformations.Add(FindproductIDLabel, FindproductIDField, EditproductnameLabel, EditproductnameField , EditproductstockquantityLabel , EditproductstockquantityField, EditproductcategoryIDLabel, EditproductcategoryIDField, EditproductpriceLabel, EditproductpriceField, EditproductdescriptionLabel, EditproductdescriptionField, EditproductbrandLabel, EditproductbrandField, saveButton);
+    Editproductinformations.Add(FindproductIDLabel, FindproductIDField, btncomfirm , EditproductnameLabel, EditproductnameField , EditproductstockquantityLabel , EditproductstockquantityField, EditproductcategoryIDLabel, EditproductcategoryIDField, EditproductpriceLabel, EditproductpriceField, EditproductdescriptionLabel, EditproductdescriptionField, EditproductbrandLabel, EditproductbrandField, saveButton);
 
     Application.Run(Editproductinformations);
 }
