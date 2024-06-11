@@ -863,7 +863,7 @@ static void MainMenu()
 }
 
 
-  /*  static void FindProduct()
+   static void FindProduct()
 {
     ListProducts = LoadProducts(connectionString);
     var top = Application.Top;
@@ -897,29 +897,28 @@ static void MainMenu()
     {
         try
         {
-            if (int.TryParse(productIDField.Text.ToString(), out int productID))
+            int productID = int.Parse(productIDField.Text.ToString());
+            List<Products> matchedProducts = ListProducts.FindAll(s => s.ProductID == productID);
+
+            if (matchedProducts.Count > 0)
             {
-                Products sp = ListProducts.Find(s => s.ProductID == productID);
-
-                if (sp != null)
+                StringBuilder message = new StringBuilder();
+                foreach (var product in matchedProducts)
                 {
-                    var details = $"Name: {sp.ProductName}\n" +
-                                  $"Stock Quantity: {sp.ProductStockQuantity}\n" +
-                                  $"Category ID: {sp.ProductCategoryID}\n" +
-                                  $"Price: {sp.ProductPrice}\n" +
-                                  $"Description: {sp.ProductDescription}\n" +
-                                  $"Brand: {sp.ProductBrand}";
+                    message.AppendLine($"Name: {product.ProductName}");
+                    message.AppendLine($"Stock Quantity: {product.ProductStockQuantity}");
+                    message.AppendLine($"Category ID: {product.ProductCategoryID}");
+                    message.AppendLine($"Price: {product.ProductPrice}");
+                    message.AppendLine($"Description: {product.ProductDescription}");
+                    message.AppendLine($"Brand: {product.ProductBrand}");
+                    message.AppendLine(); // Add a blank line between products
+                }
 
-                    MessageBox.Query("Product Details", details, "OK");
-                }
-                else
-                {
-                    MessageBox.ErrorQuery("Error", "Product not found!", "OK");
-                }
+                MessageBox.Query($"Products Matching ID {productID}", message.ToString(), "OK");
             }
             else
             {
-                MessageBox.ErrorQuery("Error", "Invalid Product ID!", "OK");
+                MessageBox.ErrorQuery("Error", "Product not found!", "OK");
             }
         }
         catch (Exception ex)
@@ -935,13 +934,13 @@ static void MainMenu()
     };
     closeButton.Clicked += () =>
     {
-        top.Remove(findProductWin);
-        ProductMenu();
+        Application.RequestStop();
     };
-
     findProductWin.Add(productIDLabel, productIDField, findButton, closeButton);
-}*/
-static void FindProduct()
+
+}
+
+/*static void FindProduct()
 {
     ListProducts = LoadProducts(connectionString);
     var top = Application.Top;
@@ -976,18 +975,23 @@ static void FindProduct()
         try
         {
             string productName = productNameField.Text.ToString();
-            Products sp = ListProducts.Find(s => s.ProductName.Equals(productName, StringComparison.OrdinalIgnoreCase));
+            List<Products> matchedProducts = ListProducts.FindAll(s => s.ProductName.Equals(productName, StringComparison.OrdinalIgnoreCase));
 
-            if (sp != null)
+            if (matchedProducts.Count > 0)
             {
-                var details = $"Name: {sp.ProductName}\n" +
-                              $"Stock Quantity: {sp.ProductStockQuantity}\n" +
-                              $"Category ID: {sp.ProductCategoryID}\n" +
-                              $"Price: {sp.ProductPrice}\n" +
-                              $"Description: {sp.ProductDescription}\n" +
-                              $"Brand: {sp.ProductBrand}";
+                StringBuilder message = new StringBuilder();
+                foreach (var product in matchedProducts)
+                {
+                    message.AppendLine($"Name: {product.ProductName}");
+                    message.AppendLine($"Stock Quantity: {product.ProductStockQuantity}");
+                    message.AppendLine($"Category ID: {product.ProductCategoryID}");
+                    message.AppendLine($"Price: {product.ProductPrice}");
+                    message.AppendLine($"Description: {product.ProductDescription}");
+                    message.AppendLine($"Brand: {product.ProductBrand}");
+                    message.AppendLine(); // Add a blank line between products
+                }
 
-                MessageBox.Query("Product Details", details, "OK");
+                MessageBox.Query($"Products Matching {productName}", message.ToString(), "OK");
             }
             else
             {
@@ -1010,10 +1014,9 @@ static void FindProduct()
         top.Remove(findProductWin);
         ProductMenu();
     };
-
     findProductWin.Add(productNameLabel, productNameField, findButton, closeButton);
 
 }
-
+*/
 
 }
