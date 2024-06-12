@@ -96,7 +96,7 @@ class Program
         Colors.Base.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
         
         Application.Init();
-        MainMenu();
+        Login();
         Application.Run();
     }
 
@@ -1022,5 +1022,289 @@ static void MainMenu()
 
 }
 */
+ static void Login()
+    {
+        var top = Application.Top;
+        var loginWin = new Window()
+        {
+            Title = "Login",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(loginWin);
+
+        var usernameLabel = new Label("Username:")
+        {
+            X = 2,
+            Y = 2
+        };
+        var usernameField = new TextField("")
+        {
+            X = Pos.Right(usernameLabel) + 1,
+            Y = 2,
+            Width = Dim.Fill() - 4
+        };
+
+        var passwordLabel = new Label("Password:")
+        {
+            X = 2,
+            Y = 4
+        };
+        var passwordField = new TextField("")
+        {
+            Secret = true,
+            X = Pos.Right(passwordLabel) + 1,
+            Y = 4,
+            Width = Dim.Fill() - 4
+        };
+
+        var loginButton = new Button("Login")
+        {
+            X = Pos.Center(),
+            Y = 6
+        };
+        loginButton.Clicked += () =>
+        {
+            string username = usernameField.Text.ToString();
+            string password = passwordField.Text.ToString();
+            bool isAuthenticated = false;
+            string role = "";
+
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = "SELECT username, password_hash, role FROM users WHERE username = @Username";
+                MySqlCommand command = new MySqlCommand(query, connection);
+                command.Parameters.AddWithValue("@Username", username);
+
+                MySqlDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    string storedHash = reader.GetString("password_hash");
+                    if (password == storedHash)
+                    {
+                            isAuthenticated = true;
+                            role = reader.GetString("role");
+                    }
+                } 
+            }
+
+            if (isAuthenticated)
+            {
+                MessageBox.Query("Success", $"Welcome {role}!", "OK");
+                top.Remove(loginWin);
+                switch (role)
+                {
+                    case "user":
+                        UserMenu();
+                        break;
+                    case "admin":
+                        AdminMenu();
+                        break;
+                    case "superadmin":
+                        SuperAdminMenu();
+                        break;
+                }
+            }
+            else
+            {
+                MessageBox.ErrorQuery("Error", "Invalid username or password!", "OK");
+            }
+        };
+
+        var closeButton = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = Pos.Bottom(loginButton) + 1
+        };
+        closeButton.Clicked += () =>
+        {
+            top.Remove(loginWin);
+            MainMenu();
+        };
+
+        loginWin.Add(usernameLabel, usernameField, passwordLabel, passwordField, loginButton, closeButton);
+    }
+    static void RegisterUser()
+    {
+        Register("user");
+    }
+
+    static void RegisterAdmin()
+    {
+        Register("admin");
+    }
+
+    static void RegisterSuperAdmin()
+    {
+        Register("superadmin");
+    }
+
+    static void Register(string role)
+    {
+        var top = Application.Top;
+        var registerWin = new Window()
+        {
+            Title = $"Register {role}",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(registerWin);
+
+        var usernameLabel = new Label("Username:")
+        {
+            X = 2,
+            Y = 2
+        };
+        var usernameField = new TextField("")
+        {
+            X = Pos.Right(usernameLabel) + 1,
+            Y = 2,
+            Width = Dim.Fill() - 4
+        };
+
+        var passwordLabel = new Label("Password:")
+        {
+            X = 2,
+            Y = 4
+        };
+        var passwordField = new TextField("")
+        {
+            Secret = true,
+            X = Pos.Right(passwordLabel) + 1,
+            Y = 4,
+            Width = Dim.Fill() - 4
+        };
+
+        var registerButton = new Button("Register")
+        {
+            X = Pos.Center(),
+            Y = 6
+        };
+        registerButton.Clicked += () =>
+        {
+            string username = usernameField.Text.ToString();
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(passwordField.Text.ToString());
+
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = $"INSERT INTO users (username, password_hash, role) VALUES (@Username, @PasswordHash, @Role)";
+                MySqlCommand command = new MySqlCommand(query, connection);
+                command.Parameters.AddWithValue("@Username", username);
+                command.Parameters.AddWithValue("@PasswordHash", passwordHash);
+                command.Parameters.AddWithValue("@Role", role);
+                try
+                {
+                    command.ExecuteNonQuery();
+                    MessageBox.Query("Success", "Registration successful!", "OK");
+                    Application.RequestStop();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                }
+            }
+        };
+
+        var closeButton = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = Pos.Bottom(registerButton) + 1
+        };
+        closeButton.Clicked += () =>
+        {
+            top.Remove(registerWin);
+            MainMenu();
+        };
+
+        registerWin.Add(usernameLabel, usernameField, passwordLabel, passwordField, registerButton, closeButton);
+        Application.Run(registerWin);
+    }
+
+    static void UserMenu()
+    {
+        var top = Application.Top;
+        var userMenu = new Window()
+        {
+            Title = "User Menu",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(userMenu);
+
+        var closeButton = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = Pos.Percent(100) - 3
+        };
+        closeButton.Clicked += () => 
+        {
+            top.Remove(userMenu);
+            MainMenu();
+        };
+        userMenu.Add(closeButton);
+
+    }
+
+    static void AdminMenu()
+    {
+        var top = Application.Top;
+        var adminMenu = new Window()
+        {
+            Title = "Admin Menu",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(adminMenu);
+
+        var closeButton = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = Pos.Percent(100) - 3
+        };
+        closeButton.Clicked += () => 
+        {
+            top.Remove(adminMenu);
+            MainMenu();
+        };
+        adminMenu.Add(closeButton);
+    }
+
+    static void SuperAdminMenu()
+    {
+        var top = Application.Top;
+        var superAdminMenu = new Window()
+        {
+            Title = "Super Admin Menu",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(superAdminMenu);
+
+        var closeButton = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = Pos.Percent(100) - 3
+        };
+        closeButton.Clicked += () => 
+        {
+            top.Remove(superAdminMenu);
+            MainMenu();
+        };
+        superAdminMenu.Add(closeButton);
+
+    }
+
 
 }
