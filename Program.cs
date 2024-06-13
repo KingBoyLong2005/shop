@@ -23,6 +23,8 @@ class Program
     public static string connectionString;
     public static List<Products> ListProducts = new List<Products>();
     public static List<Categories> ListCategories = new List<Categories>();
+    public static List<Users> ListUsers = new List<Users>();
+    public static List<Customers> ListCustomers = new List<Customers>();
     static Program()
     {
         // Hỏi mật khẩu từ người dùng
@@ -96,7 +98,7 @@ class Program
         Colors.Base.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
         
         Application.Init();
-        Login();
+        Register("user");
         Application.Run();
     }
 
@@ -1144,6 +1146,8 @@ static void MainMenu()
 
     static void Register(string role)
     {
+        Users  us = new Users();
+        Customers cus = new Customers();
         var top = Application.Top;
         var registerWin = new Window()
         {
@@ -1179,28 +1183,123 @@ static void MainMenu()
             Y = 4,
             Width = Dim.Fill() - 4
         };
+        var CustomerNameLabel = new Label("Name: ")
+        {
+            X = 2,
+            Y = 6
+        };
+        var CustomerNameField = new TextField("")
+        {
+            X = Pos.Right(CustomerNameLabel) + 1,
+            Y  = 6,
+            Width = Dim.Fill() - 4
+        };
+        var CustomerPhoneNumberLabel = new Label("Phone number: ")
+        {
+            X = 2,
+            Y = 8
+        };
+        var CustomerPhoneNumberField = new TextField("")
+        {
+            X = Pos.Right(CustomerPhoneNumberLabel) + 1,
+            Y  = 8,
+            Width = Dim.Fill() - 4
+        };
+        var CustomerAddressLabel = new Label("Address: ")
+        {
+            X = 2,
+            Y = 10
+        };
+        var CustomerAddressField = new TextField("")
+        {
+            X = Pos.Right(CustomerAddressLabel) + 1,
+            Y  = 10,
+            Width = Dim.Fill() - 4
+        };
+        var CustomerEmailLabel = new Label("Email: ")
+        {
+            X = 2,
+            Y = 12
+        };
+        var CustomerEmailField = new TextField("")
+        {
+            X = Pos.Right(CustomerEmailLabel) + 1,
+            Y  = 12,
+            Width = Dim.Fill() - 4
+        };
+        var CustomerGenderLabel = new Label("Gender: ")
+        {
+            X = 2,
+            Y = 14
+        };
+        var CustomerGenderField = new TextField("")
+        {
+            X = Pos.Right(CustomerGenderLabel) + 1,
+            Y  = 14,
+            Width = Dim.Fill() - 4
+        };
+        var CustomerDateOfBirthLabel = new Label("Date of birth (YYYY-MM-DD): ")
+        {
+            X = 2,
+            Y = 16
+        };
+        var CustomerDateOfBirthField = new TextField("")
+        {
+            X = Pos.Right(CustomerDateOfBirthLabel) + 1,
+            Y  = 16,
+            Width = Dim.Fill() - 4
+        };
 
         var registerButton = new Button("Register")
         {
             X = Pos.Center(),
-            Y = 6
+            Y = Pos.Bottom(CustomerDateOfBirthField),
         };
         registerButton.Clicked += () =>
         {
-            string username = usernameField.Text.ToString();
-            string passwordHash = BCrypt.Net.BCrypt.HashPassword(passwordField.Text.ToString());
+            us.Username = usernameField.Text.ToString();
+            us.PasswordHash = BCrypt.Net.BCrypt.HashPassword(passwordField.Text.ToString());
+            cus.CustomerName = CustomerNameField.Text.ToString();
+            cus.CustomerPhone = CustomerPhoneNumberField.Text.ToString();
+            cus.CustomerAddress = CustomerAddressField.Text.ToString();
+            cus.CustomerEmail = CustomerEmailField.Text.ToString();
+            cus.CustomerGender = CustomerGenderField.Text.ToString();
+            
+            DateTime customerDateOfBirth;
+            if (!DateTime.TryParse(CustomerDateOfBirthField.Text.ToString(), out customerDateOfBirth))
+            {
+                MessageBox.ErrorQuery("Error", "Invalid date format. Please use YYYY-MM-DD.", "OK");
+                return;
+            }
+            cus.CustomerDateOfBirth = customerDateOfBirth;
 
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 connection.Open();
-                string query = $"INSERT INTO users (username, password_hash, role) VALUES (@Username, @PasswordHash, @Role)";
-                MySqlCommand command = new MySqlCommand(query, connection);
-                command.Parameters.AddWithValue("@Username", username);
-                command.Parameters.AddWithValue("@PasswordHash", passwordHash);
-                command.Parameters.AddWithValue("@Role", role);
+                string customerquery ="INSERT INTO customers (customer_name, customer_phone_number, customer_address, customer_email, customer_gender, customer_dateofbirth, customer_count, customer_totalspent)"+
+                                    "VALUES (@customername, @customerphonenumber, @customeraddress, @customeremail, @customergender, @customerdateofbirth, 0, 0)";
+                MySqlCommand customercommand = new MySqlCommand(customerquery, connection);
+                customercommand.Parameters.AddWithValue("@customername", cus.CustomerName);
+                customercommand.Parameters.AddWithValue("@customerphonenumber", cus.CustomerPhone);
+                customercommand.Parameters.AddWithValue("@customeraddress",cus.CustomerAddress);
+                customercommand.Parameters.AddWithValue("@customeremail", cus.CustomerEmail);
+                customercommand.Parameters.AddWithValue("@customergender", cus.CustomerGender);
+                customercommand.Parameters.AddWithValue("@customerdateofbirth", cus.CustomerDateOfBirth);
+                customercommand.ExecuteNonQuery();
+
+                long customerId = customercommand.LastInsertedId;
+                string userquery = "INSERT INTO users (username, password_hash, role, customer_id) VALUES (@Username, @PasswordHash, @Role, @CustomerId)";
+                MySqlCommand usercommand = new MySqlCommand(userquery, connection);
+                usercommand.Parameters.AddWithValue("@Username", us.Username);
+                usercommand.Parameters.AddWithValue("@PasswordHash", us.PasswordHash);
+                usercommand.Parameters.AddWithValue("@Role", role);
+                usercommand.Parameters.AddWithValue("@CustomerId", customerId);
+
                 try
                 {
-                    command.ExecuteNonQuery();
+                    usercommand.ExecuteNonQuery();
+                    ListUsers.Add(us);
+                    ListCustomers.Add(cus);
                     MessageBox.Query("Success", "Registration successful!", "OK");
                     Application.RequestStop();
                 }
@@ -1222,8 +1321,12 @@ static void MainMenu()
             MainMenu();
         };
 
-        registerWin.Add(usernameLabel, usernameField, passwordLabel, passwordField, registerButton, closeButton);
-        Application.Run(registerWin);
+        registerWin.Add(usernameLabel, usernameField, passwordLabel, passwordField,
+                        CustomerNameLabel, CustomerNameField, CustomerPhoneNumberLabel,
+                        CustomerPhoneNumberField, CustomerAddressLabel, CustomerAddressField,
+                        CustomerEmailLabel, CustomerEmailField, CustomerGenderLabel, CustomerGenderField,
+                        CustomerDateOfBirthLabel, CustomerDateOfBirthField, registerButton, closeButton);
+
     }
 
     static void UserMenu()
