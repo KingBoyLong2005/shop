@@ -9,6 +9,7 @@ using System.Security.Cryptography.X509Certificates;
 using Terminal.Gui;
 using Google.Protobuf;
 using Org.BouncyCastle.Asn1.Tsp;
+using System.Security.Cryptography;
 
 
 class Program
@@ -1437,6 +1438,454 @@ static void MainMenu()
         };
         superAdminMenu.Add(closeButton);
 
+    }
+
+    static void CustomerMenu()
+    {
+        var top = Application.Top;
+        var customerMenu = new Window()
+        {
+            Title = "Customer Menu",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(customerMenu);
+        customerMenu = new Window("Customer Menu");
+
+        var btnDisplayCustomer = new Button("Display Customer")
+        {
+            X =2,
+            Y = 2
+        };
+        btnDisplayCustomer.Clicked += () =>
+        {
+            try
+            {
+                top.Remove(customerMenu);
+                DisplayCustomer();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+
+        var btnAddCustomer = new Button("Add Customer")
+        {
+            X =2,
+            Y = 4
+        };
+        btnAddCustomer.Clicked += () =>
+        {
+            try
+            {
+                top.Remove(customerMenu);
+                AddCustomer();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+
+        var btnEditCustomer = new Button("Edit Customer:")
+        {
+            X =2,
+            Y = 6
+        };
+        btnEditCustomer.Clicked += () =>
+        {
+            try
+            {
+                top.Remove(customerMenu);
+                EditCustomer();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+
+        var btnDeleteCustomer = new Button("Delete Customer:")
+        {
+            X =2,
+            Y = 8
+        };
+        btnDeleteCustomer.Clicked += () =>
+        {
+            try
+            {
+                top.Remove(customerMenu);
+                DeleteCustomer();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+
+        var btnClose = new Button()
+        {
+            X = Pos.Center(),
+            Y = Pos.Percent(100) - 3
+        };
+
+        customerMenu.Add(btnDisplayCustomer,btnAddCustomer,btnEditCustomer,btnDeleteCustomer, btnClose);
+
+    }
+    static void EditCustomer()
+    {
+        ListCustomers = LoadCustomers(connectionString);
+        var top = Application.Top;
+        var editCustomerWin = new Window("Edit Customer")
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill() - 4,
+            Height = Dim.Fill() - 4
+        };
+        top.Add(editCustomerWin);
+
+        var findCustomerIDLabel = new Label("Find Customer ID:")
+        {
+            X = 1,
+            Y = 1
+        };
+
+        var findCustomerIDField = new TextField("")
+        {
+            X = Pos.Right(findCustomerIDLabel) + 1,
+            Y = 1,
+            Width = Dim.Fill() - 4
+        };
+
+        var editCustomerNameLabel = new Label("Customer Name:")
+        {
+            X = 1,
+            Y = 3
+        };
+
+        var editCustomerNameField = new TextField("")
+        {
+            X = Pos.Right(editCustomerNameLabel) + 1,
+            Y = 3,
+            Width = Dim.Fill() - 4
+        };
+
+        var editCustomerPhoneLabel = new Label("Customer Phone:")
+        {
+            X = 1,
+            Y = 5
+        };
+        var editCustomerPhoneField = new TextField("")
+        {
+            X = Pos.Right(editCustomerPhoneLabel) + 1,
+            Y = 5,
+            Width = Dim.Fill() - 4
+        };
+
+        var editCustomerAddressLabel = new Label("Customer Address:")
+        {
+            X = 1,
+            Y = 7
+        };
+
+        var editCustomerAddressField = new TextField("")
+        {
+            X = Pos.Right(editCustomerAddressLabel) + 1,
+            Y = 7,
+            Width = Dim.Fill() - 4
+        };
+
+        var editCustomerEmailLabel = new Label("Customer Email:")
+        {
+            X = 1,
+            Y = 9
+        };
+
+        var editCustomerEmailField = new TextField("")
+        {
+            X = Pos.Right(editCustomerEmailLabel) + 1,
+            Y = 9,
+            Width = Dim.Fill() - 4
+        };
+
+        var editCustomerGenderLabel = new Label("Customer Gender:")
+        {
+            X = 1,
+            Y = 11
+        };
+        var editCustomerGenderField = new TextField("")
+        {
+            X = Pos.Right(editCustomerGenderLabel) + 1,
+            Y = 11,
+            Width = Dim.Fill() - 4
+        };
+
+        var editCustomerDateOfBirthLabel = new Label("Customer Date of Birth:")
+        {
+            X = 1,
+            Y = 13
+        };
+        var editCustomerDateOfBirthField = new TextField("")
+        {
+            X = Pos.Right(editCustomerDateOfBirthLabel) + 1,
+            Y = 13,
+            Width = Dim.Fill() - 4
+        };
+
+        var editCustomerCountLabel = new Label("Customer Count:")
+        {
+            X = 1,
+            Y = 15
+        };
+        var editCustomerCountField = new TextField("")
+        {
+            X = Pos.Right(editCustomerCountLabel) + 1,
+            Y = 15,
+            Width = Dim.Fill() - 4
+        };
+
+        var editCustomerTotalSpentLabel = new Label("Customer Total")
+        {
+            X = 1,
+            Y = 17
+        };
+
+        var editCustomerTotalSpentField = new TextField("")
+        {
+            X = Pos.Right(editCustomerTotalSpentLabel) + 1,
+            Y = 17,
+            Width = Dim.Fill() - 4
+        };
+    
+        var saveButton = new Button("Save")
+        {
+            X = Pos.Center(),
+            Y = 19
+        };
+        saveButton.Clicked += () =>
+        {
+            try
+            {
+                kh.CustomerName = editCustomerNameField.Text.ToString();
+                kh.CustomerPhone = int.Parse(editCustomerPhoneField.Text.ToString());
+                kh.CustomerAddress = editCustomerAddressField.Text.ToString();
+                kh.CustomerEmail = editCustomerEmailField.Text.ToString();
+                kh.CustomerGender = editCustomerGenderField.Text.ToString();
+                kh.CustomerDateOfBirth = DateTime.Parse(editCustomerDateOfBirthField.Text.ToString());
+                kh.CustomerCount = int.Parse(editCustomerCountField.Text.ToString());
+                kh.CustomerTotalSpent = double.Parse(editCustomerTotalSpentField.Text.ToString());
+
+                using (MySqlConnection connection = new MySqlConnection(connectionString))
+                {
+                    connection.Open();
+                    MySqlCommand command = connection.CreateCommand();
+                    command.CommandText = "UPDATE customer SET customer_name = @CustomerName, customer_phone_number = @CustomerPhone, customer_addresss = @CustomerAddress, customer_email = @CustomerEmail, customer_gender = @CustomerGender, customer_date_of_birth = @CustomerDateOfBirth, customer_count = @CustomerCount, customer_totalspent= @CustomerTotalSpent WHERE customer_id = @CustomerID";
+                    command.Parameters.AddWithValue("@CustomerID", kh.CustomerID);
+                    command.Parameters.AddWithValue("@CustomerName", kh.CustomerName);
+                    command.Parameters.AddWithValue("@CustomerPhone", kh.CustomerPhone);
+                    command.Parameters.AddWithValue("@CustomerAddress", kh.CustomerAddress);
+                    command.Parameters.AddWithValue("@CustomerEmail", kh.CustomerEmail);
+                    command.Parameters.AddWithValue("@CustomerGender", kh.CustomerGender);
+                    command.Parameters.AddWithValue("@CustomerDateOfBirth", kh.CustomerDateOfBirth);
+                    command.Parameters.AddWithValue("@CustomerCount", kh.CustomerCount);
+                    command.Parameters.AddWithValue("@CustomerTotalSpent", kh.CustomerTotalSpent);
+                    
+                    command.ExecuteNonQuery();
+                }
+                MessageBox.Query("Success", "Customer has been updated", "OK");
+                top.Remove(editCustomerWin);
+                CustomerMenu();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+
+        var confirmButton = new Button("Confirm")
+        {
+            X = Pos.Bottom(findCustomerIDField) +1,
+            Y= 2
+        };
+        confirmButton.Clicked += () =>
+        {
+            try
+            {
+                if(int.TryParse(findCustomerIDField.Text.ToString(), out int customerID))
+                {
+                    var customer = ListCustomers.FirstOrDefault(k => k.CustomerID == customerID);
+                    if (customer!= null)
+                    {
+                        kh = customer;
+                        findCustomerIDLabel.Visible = false;
+                        findCustomerIDField.Visible = false;
+
+                        editCustomerNameField.Text = customer.CustomerName;
+                        editCustomerPhoneField.Text = customer.CustomerPhone.ToString();
+                        editCustomerAddressField.Text = customer.CustomerAddress;
+                        editCustomerEmailField.Text = customer.CustomerEmail;
+                        editCustomerGenderField.Text = customer.CustomerGender;
+                        editCustomerDateOfBirthField.Text = customer.CustomerDateOfBirth.ToString();
+                        editCustomerCountField.Text = customer.CustomerCount.ToString();
+                        editCustomerTotalSpentField.Text = customer.CustomerTotalSpent.ToString();
+
+                        editCustomerNameLabel.Visible = true;
+                        editCustomerNameField.Visible = true;
+                        editCustomerPhoneLabel.Visible = true;
+                        editCustomerPhoneField.Visible = true;
+                        editCustomerAddressLabel.Visible = true;
+                        editCustomerAddressField.Visible = true;
+                        editCustomerEmailLabel.Visible = true;
+                        editCustomerEmailField.Visible = true;
+                        editCustomerGenderLabel.Visible = true;
+                        editCustomerGenderField.Visible = true;
+                        editCustomerDateOfBirthLabel.Visible = true;
+                        editCustomerDateOfBirthField.Visible = true;
+                        editCustomerCountLabel.Visible = true;
+                        editCustomerCountField.Visible = true;
+                        editCustomerTotalSpentLabel.Visible = true;
+                        editCustomerTotalSpentField.Visible = true;
+                        saveButton.Visible = true;
+
+                    }
+                    else
+                    {
+                        MessageBox.ErrorQuery("Error", "Customer not found", "OK");
+                    }
+                }
+                else
+                {
+                    MessageBox.ErrorQuery("Error", "Invalid Customer ID", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+        var closeButton = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = Pos.Bottom(saveButton) + 1
+        };
+        closeButton.Clicked += () =>
+        {
+            top.Remove(editCustomerWin);
+            CustomerMenu();
+        };
+
+        editCustomerNameLabel.Visible = false;
+        editCustomerNameField.Visible = false;
+        editCustomerPhoneLabel.Visible = false;
+        editCustomerPhoneField.Visible = false;
+        editCustomerAddressLabel.Visible = false;
+        editCustomerAddressField.Visible = false;
+        editCustomerEmailLabel.Visible = false;
+        editCustomerEmailField.Visible = false;
+        editCustomerGenderLabel.Visible = false;
+        editCustomerGenderField.Visible = false;
+        editCustomerDateOfBirthLabel.Visible = false;;
+        editCustomerDateOfBirthField.Visible = false;;
+        editCustomerCountLabel.Visible = false;
+        editCustomerCountField.Visible = false;
+        editCustomerTotalSpentLabel.Visible =false;
+        editCustomerTotalSpentField.Visible =false;
+        saveButton.Visible = false;
+
+
+        editCustomerWin.Add(findCustomerIDLabel,findCustomerIDField,editCustomerNameLabel,editCustomerNameField,editCustomerPhoneLabel,
+                            editCustomerPhoneField,editCustomerAddressLabel,editCustomerAddressField,editCustomerEmailLabel,editCustomerEmailField,
+                            editCustomerGenderLabel,editCustomerGenderField,editCustomerDateOfBirthLabel,editCustomerDateOfBirthField,editCustomerCountLabel,
+                            editCustomerCountField,editCustomerTotalSpentLabel,editCustomerTotalSpentField);
+    }
+    static void DeleteCustomer()
+    {
+        ListCustomers = LoadCustomers(connectionString);
+        var top = Application.Top;
+        var deleteCustomerWin = new Window("Delete Customer")
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill() - 4,
+            Height = Dim.Fill() - 4
+        };
+        top.Add(deleteCustomerWin);
+
+        var customerIDLabel = new Label("Customer ID:")
+        {
+            X = 1,
+            Y = 1
+        };
+
+        var customerIDField = new TextField("")
+        {
+            X = Pos.Right(customerIDLabel) + 1,
+            Y = 1,
+            Width = Dim.Fill() - 4
+        };
+
+        var deleteButton = new Button("Delete")
+        {
+            X = Pos.Center(),
+            Y = Pos.Bottom(customerIDField) + 1
+        };
+
+        deleteButton.Clicked += () =>
+        {
+            try
+            {
+                if(int.TryParse(customerIDField.Text.ToString(), out int customerID))
+                {
+                    Customers kh = ListCustomers.Find(k => k.CustomerID == customerID);
+
+                    if (kh!= null)
+                    {
+                        using (MySqlConnection connection = new MySqlConnection(connectionString))
+                        {
+                            connection.Open();
+                            string customerquery = "DELETE FROM customers WHERE customer_id = @customerid";
+                            MySqlCommand customercommand = new MySqlCommand(customerquery, connection);
+                            customercommand.Parameters.AddWithValue("@customerid", kh.CustomerID);
+                            customercommand.ExecuteNonQuery();
+                        }
+                        ListCustomers.Remove(kh);
+                        MessageBox.Query("Success", "Successfully deleted customer!", "OK");
+                        top.Remove(deleteCustomerWin);
+                        CustomerMenu();
+                    }
+                    else
+                    {
+                        MessageBox.ErrorQuery("Error", "Customer not found!", "OK");
+                    }
+                }
+                else
+                {
+                    MessageBox.ErrorQuery("Error", "Invalid customer ID!", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+
+    };
+
+    var closeButton = new Button("Close")
+    {
+        X = Pos.Center(),
+        Y = Pos.Bottom(deleteButton) + 1
+    };
+    closeButton.Clicked += () =>
+    {
+        top.Remove(deleteCustomerWin);
+        CustomerMenu();
+    };
+
+    deleteCustomerWin.Add(customerIDLabel, customerIDField, deleteButton, closeButton);
     }
 
 
