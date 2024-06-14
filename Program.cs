@@ -1535,8 +1535,10 @@ static void MainMenu()
         customerMenu.Add(btnDisplayCustomer,btnAddCustomer,btnEditCustomer,btnDeleteCustomer, btnClose);
 
     }
+ 
     static void EditCustomer()
     {
+        Customers kh = new Customers();
         ListCustomers = LoadCustomers(connectionString);
         var top = Application.Top;
         var editCustomerWin = new Window("Edit Customer")
@@ -1677,7 +1679,7 @@ static void MainMenu()
                 kh.CustomerGender = editCustomerGenderField.Text.ToString();
                 kh.CustomerDateOfBirth = DateTime.Parse(editCustomerDateOfBirthField.Text.ToString());
                 kh.CustomerCount = int.Parse(editCustomerCountField.Text.ToString());
-                kh.CustomerTotalSpent = double.Parse(editCustomerTotalSpentField.Text.ToString());
+                kh.CustomerTotalSpent = decimal.Parse(editCustomerTotalSpentField.Text.ToString());
 
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
