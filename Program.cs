@@ -91,6 +91,36 @@ class Program
         return ListCategory;
     }
 
+    static List<Customers> LoadCustomers(string connectionString)
+    {
+        List<Customers> ListCustomers = new List<Customers>();
+
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {   
+            string query = "SELECT * FROM customers"; 
+            MySqlCommand command = new MySqlCommand(query, connection);
+            connection.Open();
+            MySqlDataReader read = command.ExecuteReader();
+            while (read.Read())
+            {
+                Customers cus = new Customers();
+                // Nạp các thuộc tính 
+                cus.CustomerID = read.GetInt32("customer_id");
+                cus.CustomerName = read.GetString("customer_name");
+                cus.CustomerPhone = read.GetString("customer_phone_number");
+                cus.CustomerAddress = read.GetString("customer_address");
+                cus.CustomerEmail = read.GetString("customer_email");
+                cus.CustomerGender = read.GetString("customer_gender");
+                cus.CustomerDateOfBirth = read.GetDateTime("customer_date_of_birth");
+                cus.CustomerCount = read.GetInt32("customer_count");
+                cus.CustomerTotalSpent = read.GetDecimal("custommer_totalspent");
+
+                ListCustomers.Add(cus);
+            }
+        }
+        return ListCustomers;
+    }
+
     static void Main()
     {
         Application.Init();
