@@ -1636,8 +1636,10 @@ static void MainMenu()
         customerMenu.Add(btnDisplayCustomer, btnAddCustomer, btnEditCustomer, btnDeleteCustomer, btnClose);
 
     }
+ 
     static void EditCustomer()
     {
+        Customers kh = new Customers();
         ListCustomers = LoadCustomers(connectionString);
         Customers  kh = new Customers();
         var top = Application.Top;
