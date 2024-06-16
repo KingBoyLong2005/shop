@@ -10,22 +10,28 @@ using Terminal.Gui;
 using Google.Protobuf;
 using Org.BouncyCastle.Asn1.Tsp;
 using System.Security.Cryptography;
+using Mysqlx.Resultset;
 
 
 class Program
 {
     static Window mainMenu;
     static Window productMenu;
+    static Window customerMenu;
     static Window displayProductWindow;
     static Window addProductWin;
     static Window editProductWin;
     static Window deleteProductWin;
     static Window findProductWin;
     public static string connectionString;
+    public static int currentCustomerID = -1;
     public static List<Products> ListProducts = new List<Products>();
     public static List<Categories> ListCategories = new List<Categories>();
     public static List<Users> ListUsers = new List<Users>();
     public static List<Customers> ListCustomers = new List<Customers>();
+    public static List<Cart> ListCarts = new List<Cart>();
+    public static Cart userCart = new Cart();
+
     static Program()
     {
         // Hỏi mật khẩu từ người dùng
@@ -121,6 +127,35 @@ class Program
         }
         return ListCustomers;
     }
+    static List<Cart> LoadCarts(string connectionString)
+    {
+        List<Cart> ListCarts = new List<Cart>();
+
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {   
+            string query = "SELECT * FROM cart"; 
+            MySqlCommand command = new MySqlCommand(query, connection);
+            connection.Open();
+            MySqlDataReader read = command.ExecuteReader();
+            while (read.Read())
+            {
+                Cart gh = new Cart();
+                // Nạp các thuộc tính 
+                gh.CartID = read.GetInt32("cart_id");
+                gh.CartCustomerID = read.GetInt32("cart_customer_id");
+                gh.CartProductID = read.GetInt32("cart_product_id");
+                gh.CartQuantity = read.GetInt32("cart_quantity");
+                gh.CartOrderID = read.GetInt32("cart_order_id");
+                gh.CartProductPrice = read.GetDecimal("cart_product_price");
+                gh.CartOrderPrice = read.GetDecimal("cart_order_price");
+                gh.CartTotalProduct = read.GetInt32("cart_total_product");
+
+
+                ListCarts.Add(gh);
+            }
+        }
+        return ListCarts;
+    }
 
     static void Main()
     {
@@ -129,7 +164,7 @@ class Program
         Colors.Base.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
         
         Application.Init();
-        Register("user");
+        Login();
         Application.Run();
     }
 
@@ -346,26 +381,23 @@ static void MainMenu()
         productMenu.Add(btnDisplayProduct, btnAddProduct, btnFindProduct, btnDeleteProduct, btnEditProduct, btnClose);
     }
 
-    static void DisplayProduct()
+   static void DisplayProduct()
+{
+    var top = Application.Top;
+    displayProductWindow = new Window()
     {
-        List<Products> ListProducts = LoadProducts(connectionString);
-        ListCategories = LoadCategory(connectionString);
-        List<string[]> products = new List<string[]>();
-        var top = Application.Top;
+        Title = "Product List",
+        X = 0,
+        Y = 0,
+        Width = Dim.Fill(),
+        Height = Dim.Fill()
+    };
+    top.Add(displayProductWindow);
 
-        displayProductWindow = new Window("Display Products")
-        {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        top.Add(displayProductWindow);
-        displayProductWindow.FocusNext();
-
-        using (MySqlConnection connection = new MySqlConnection(connectionString))
+    using (MySqlConnection connection = new MySqlConnection(connectionString))
     {
         string query = @"SELECT 
+                            p.product_id,
                             p.product_name, 
                             p.product_stock_quantity, 
                             p.product_description, 
@@ -379,19 +411,10 @@ static void MainMenu()
         MySqlDataReader read = command.ExecuteReader();
         var columnDisplayListProduct = new string[]
         {
-            "Product's name", "Stock quantity", "Description", "Price", "Category's name", "Brand"
+            "Product's name", "Stock quantity", "Description", "Price", "Category's name", "Brand", "Quantity", "Action"
         };
-        while (read.Read())
-        {
-            products.Add(new string[]{
-                read["product_name"].ToString(),
-                read["product_stock_quantity"].ToString(),
-                read["product_description"].ToString(),
-                read["product_price"].ToString(),
-                read["category_name"].ToString(),
-                read["product_brand"].ToString()
-            });
-        }
+
+        // Hiển thị tiêu đề cột
         for (int i = 0; i < columnDisplayListProduct.Length; i++)
         {
             displayProductWindow.Add(new Label(columnDisplayListProduct[i])
@@ -402,34 +425,79 @@ static void MainMenu()
                 Height = 1
             });
         }
-        for (int i = 0; i < products.Count; i++)
+
+        int row = 1;
+        while (read.Read())
         {
-            for (int j = 0; j < products[i].Length; j++)
+            int productID = int.Parse(read["product_id"].ToString());
+
+            var productLabel = new Label($"{read["product_name"]}")
             {
-                displayProductWindow.Add(new Label(products[i][j])
-                {
-                    X = j * 15,
-                    Y = i + 1,
-                    Width = 15,
-                    Height = 1
-                });
-            }
+                X = 0,
+                Y = row
+            };
+            var stockQuantityLabel = new Label($"{read["product_stock_quantity"]}")
+            {
+                X = 15,
+                Y = row
+            };
+            var descriptionLabel = new Label($"{read["product_description"]}")
+            {
+                X = 30,
+                Y = row
+            };
+            var priceLabel = new Label($"{read["product_price"]}")
+            {
+                X = 45,
+                Y = row
+            };
+            var categoryLabel = new Label($"{read["category_name"]}")
+            {
+                X = 60,
+                Y = row
+            };
+            var brandLabel = new Label($"{read["product_brand"]}")
+            {
+                X = 75,
+                Y = row
+            };
+
+            var textQuantity = new TextField()
+            {
+                X = 90,
+                Y = row,
+                Width = 10
+            };
+
+            var addButton = new Button("Add to Cart")
+            {
+                X = 105,
+                Y = row
+            };
+            addButton.Clicked += () =>
+            {
+                int quantity = int.Parse(textQuantity.Text.ToString());
+                AddToCart(productID, quantity);
+            };
+
+            displayProductWindow.Add(productLabel, stockQuantityLabel, descriptionLabel, priceLabel, categoryLabel, brandLabel, textQuantity, addButton);
+            row++;
         }
     }
 
-        var btnClose = new Button("Close")
-        {
-            X = Pos.Center(),
-            Y = Pos.Percent(100) - 1
-        };
-        btnClose.Clicked += () =>
-        {
-            top.Remove(displayProductWindow);
-            ProductMenu();
-        };
+    var btnBack = new Button("Back")
+    {
+        X = 2,
+        Y = Pos.AnchorEnd(2) ,
+    };
+    btnBack.Clicked += () =>
+    {
+        top.Remove(displayProductWindow);
+        ProductMenu();
+    };
 
-        displayProductWindow.Add(btnClose);
-    }   
+    displayProductWindow.Add(btnBack);
+}
     static void AddProduct()
 {
     Products sp = new Products();
@@ -1055,7 +1123,7 @@ static void MainMenu()
 
 }
 */
- static void Login()
+  static void Login()
     {
         var top = Application.Top;
         var loginWin = new Window()
@@ -1108,7 +1176,7 @@ static void MainMenu()
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 connection.Open();
-                string query = "SELECT username, password_hash, role FROM users WHERE username = @Username";
+                string query = "SELECT customer_id, password_hash, role FROM users WHERE username = @Username";
                 MySqlCommand command = new MySqlCommand(query, connection);
                 command.Parameters.AddWithValue("@Username", username);
 
@@ -1118,10 +1186,11 @@ static void MainMenu()
                     string storedHash = reader.GetString("password_hash");
                     if (password == storedHash)
                     {
-                            isAuthenticated = true;
-                            role = reader.GetString("role");
+                        isAuthenticated = true;
+                        role = reader.GetString("role");
+                        currentCustomerID = reader.GetInt32("customer_id"); // Lưu giữ customerID sau khi đăng nhập
                     }
-                } 
+                }
             }
 
             if (isAuthenticated)
@@ -1160,6 +1229,7 @@ static void MainMenu()
 
         loginWin.Add(usernameLabel, usernameField, passwordLabel, passwordField, loginButton, closeButton);
     }
+
     static void RegisterUser()
     {
         Register("user");
@@ -1360,7 +1430,7 @@ static void MainMenu()
 
     }
 
-    static void UserMenu()
+   static void UserMenu()
     {
         var top = Application.Top;
         var userMenu = new Window()
@@ -1373,20 +1443,54 @@ static void MainMenu()
         };
         top.Add(userMenu);
 
-        var closeButton = new Button("Close")
+        var btnViewProducts = new Button("View Products")
         {
-            X = Pos.Center(),
-            Y = Pos.Percent(100) - 3
+            X = 2,
+            Y = 2,
         };
-        closeButton.Clicked += () => 
+        btnViewProducts.Clicked += () =>
+        {
+            try
+            {
+                top.Remove(userMenu);
+                ProductMenu();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+
+        var btnViewCart = new Button("View Cart")
+        {
+            X = 2,
+            Y = 3,
+        };
+        btnViewCart.Clicked += () =>
+        {
+            try
+            {
+                DisplayCart(userCart);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+
+        var btnLogout = new Button("Logout")
+        {
+            X = 2,
+            Y = 4,
+        };
+        btnLogout.Clicked += () =>
         {
             top.Remove(userMenu);
-            MainMenu();
+            Login();
         };
-        userMenu.Add(closeButton);
 
+        userMenu.Add(btnViewProducts, btnViewCart, btnLogout);
     }
-
     static void AdminMenu()
     {
         var top = Application.Top;
@@ -1443,7 +1547,7 @@ static void MainMenu()
     static void CustomerMenu()
     {
         var top = Application.Top;
-        var customerMenu = new Window()
+        customerMenu = new Window()
         {
             Title = "Customer Menu",
             X = 0,
@@ -1452,8 +1556,7 @@ static void MainMenu()
             Height = Dim.Fill()
         };
         top.Add(customerMenu);
-        customerMenu = new Window("Customer Menu");
-
+        customerMenu.FocusNext();
         var btnDisplayCustomer = new Button("Display Customer")
         {
             X =2,
@@ -1464,7 +1567,6 @@ static void MainMenu()
             try
             {
                 top.Remove(customerMenu);
-                DisplayCustomer();
             }
             catch (Exception ex)
             {
@@ -1482,7 +1584,6 @@ static void MainMenu()
             try
             {
                 top.Remove(customerMenu);
-                AddCustomer();
             }
             catch (Exception ex)
             {
@@ -1526,18 +1627,19 @@ static void MainMenu()
             }
         };
 
-        var btnClose = new Button()
+        var btnClose = new Button("Close")
         {
             X = Pos.Center(),
             Y = Pos.Percent(100) - 3
         };
 
-        customerMenu.Add(btnDisplayCustomer,btnAddCustomer,btnEditCustomer,btnDeleteCustomer, btnClose);
+        customerMenu.Add(btnDisplayCustomer, btnAddCustomer, btnEditCustomer, btnDeleteCustomer, btnClose);
 
     }
     static void EditCustomer()
     {
         ListCustomers = LoadCustomers(connectionString);
+        Customers  kh = new Customers();
         var top = Application.Top;
         var editCustomerWin = new Window("Edit Customer")
         {
@@ -1671,19 +1773,19 @@ static void MainMenu()
             try
             {
                 kh.CustomerName = editCustomerNameField.Text.ToString();
-                kh.CustomerPhone = int.Parse(editCustomerPhoneField.Text.ToString());
+                kh.CustomerPhone = editCustomerPhoneField.Text.ToString();
                 kh.CustomerAddress = editCustomerAddressField.Text.ToString();
                 kh.CustomerEmail = editCustomerEmailField.Text.ToString();
                 kh.CustomerGender = editCustomerGenderField.Text.ToString();
                 kh.CustomerDateOfBirth = DateTime.Parse(editCustomerDateOfBirthField.Text.ToString());
                 kh.CustomerCount = int.Parse(editCustomerCountField.Text.ToString());
-                kh.CustomerTotalSpent = double.Parse(editCustomerTotalSpentField.Text.ToString());
+                kh.CustomerTotalSpent = decimal.Parse(editCustomerTotalSpentField.Text.ToString());
 
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
                     connection.Open();
-                    MySqlCommand command = connection.CreateCommand();
-                    command.CommandText = "UPDATE customer SET customer_name = @CustomerName, customer_phone_number = @CustomerPhone, customer_addresss = @CustomerAddress, customer_email = @CustomerEmail, customer_gender = @CustomerGender, customer_date_of_birth = @CustomerDateOfBirth, customer_count = @CustomerCount, customer_totalspent= @CustomerTotalSpent WHERE customer_id = @CustomerID";
+                    string query = "UPDATE customer SET customer_name = @CustomerName, customer_phone_number = @CustomerPhone, customer_addresss = @CustomerAddress, customer_email = @CustomerEmail, customer_gender = @CustomerGender, customer_date_of_birth = @CustomerDateOfBirth, customer_count = @CustomerCount, customer_totalspent= @CustomerTotalSpent WHERE customer_id = @CustomerID";
+                    MySqlCommand command = new MySqlCommand(query, connection);
                     command.Parameters.AddWithValue("@CustomerID", kh.CustomerID);
                     command.Parameters.AddWithValue("@CustomerName", kh.CustomerName);
                     command.Parameters.AddWithValue("@CustomerPhone", kh.CustomerPhone);
@@ -1720,18 +1822,17 @@ static void MainMenu()
                     var customer = ListCustomers.FirstOrDefault(k => k.CustomerID == customerID);
                     if (customer!= null)
                     {
-                        kh = customer;
                         findCustomerIDLabel.Visible = false;
                         findCustomerIDField.Visible = false;
 
-                        editCustomerNameField.Text = customer.CustomerName;
-                        editCustomerPhoneField.Text = customer.CustomerPhone.ToString();
-                        editCustomerAddressField.Text = customer.CustomerAddress;
-                        editCustomerEmailField.Text = customer.CustomerEmail;
-                        editCustomerGenderField.Text = customer.CustomerGender;
-                        editCustomerDateOfBirthField.Text = customer.CustomerDateOfBirth.ToString();
-                        editCustomerCountField.Text = customer.CustomerCount.ToString();
-                        editCustomerTotalSpentField.Text = customer.CustomerTotalSpent.ToString();
+                        editCustomerNameField.Text = kh.CustomerName;
+                        editCustomerPhoneField.Text = kh.CustomerPhone.ToString();
+                        editCustomerAddressField.Text = kh.CustomerAddress;
+                        editCustomerEmailField.Text = kh.CustomerEmail;
+                        editCustomerGenderField.Text = kh.CustomerGender;
+                        editCustomerDateOfBirthField.Text = kh.CustomerDateOfBirth.ToString();
+                        editCustomerCountField.Text = kh.CustomerCount.ToString();
+                        editCustomerTotalSpentField.Text = kh.CustomerTotalSpent.ToString();
 
                         editCustomerNameLabel.Visible = true;
                         editCustomerNameField.Visible = true;
@@ -1888,5 +1989,91 @@ static void MainMenu()
     deleteCustomerWin.Add(customerIDLabel, customerIDField, deleteButton, closeButton);
     }
 
+static void DisplayCart(Cart cart)
+{
+    var top = Application.Top;
+
+    var cartWindow = new Window("Cart")
+    {
+        X = 0,
+        Y = 0,
+        Width = Dim.Fill(),
+        Height = Dim.Fill()
+    };
+    top.Add(cartWindow);
+
+    int row = 1;
+
+    foreach (var item in Cart.CartItems)
+    {
+        var productLabel = new Label($"{item.Product.ProductName} - ${item.Product.ProductPrice} x {item.Quantity}")
+        {
+            X = 1,
+            Y = row
+        };
+        var removeButton = new Button("Remove")
+        {
+            X = Pos.Right(productLabel) + 1,
+            Y = row
+        };
+        removeButton.Clicked += () =>
+        {
+            cart.RemoveItem(item.Product.ProductID);
+            top.Remove(cartWindow);
+            DisplayCart(cart);
+        };
+
+        cartWindow.Add(productLabel, removeButton);
+        row++;
+    }
+
+    var btnBack = new Button("Back")
+    {
+        X = 2,
+        Y = row + 1
+    };
+    btnBack.Clicked += () =>
+    {
+        top.Remove(cartWindow);
+        MainMenu();
+    };
+
+    cartWindow.Add(btnBack);
+}
+static void AddToCart(int productID, int quantityProduct)
+{
+    ListProducts = LoadProducts(connectionString);
+    Products sp = ListProducts.FirstOrDefault(p => p.ProductID == productID);
+    if (sp != null)
+    {
+        userCart.AddItem(sp, quantityProduct);
+        using(MySqlConnection connection = new MySqlConnection(connectionString))
+        {
+            connection.Open();
+            // Tạm thời bỏ cart_order_id
+            string query = "INSERT INTO cart (cart_customer_id, cart_product_id, cart_quantity, cart_product_price, cart_order_price, cart_total_products)" +
+                        "VALUES(@CartCustomerID, @CartProductID, @CartQuantity, 0, 0, 0)";
+            MySqlCommand command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@CartProductID", productID);
+            command.Parameters.AddWithValue("@CartQuantity", quantityProduct);
+            command.Parameters.AddWithValue("@CartCustomerID", currentCustomerID);
+
+            try
+            {
+                command.ExecuteNonQuery();
+                ListCarts.Add(userCart);
+                MessageBox.Query("Success", "Product added to cart.", "OK");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        }
+    }
+    else
+    {
+        MessageBox.ErrorQuery("Error", "Product not found.", "OK");
+    }
+}
 
 }
