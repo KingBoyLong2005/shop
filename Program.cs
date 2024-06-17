@@ -164,7 +164,7 @@ class Program
         Colors.Base.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
         
         Application.Init();
-        Login();
+        RegisterUser();
         Application.Run();
     }
 
@@ -1470,7 +1470,7 @@ static void MainMenu()
         {
             try
             {
-                DisplayCart(userCart);
+                DisplayCart();
             }
             catch (Exception ex)
             {
@@ -1641,7 +1641,6 @@ static void MainMenu()
     {
         Customers kh = new Customers();
         ListCustomers = LoadCustomers(connectionString);
-        Customers  kh = new Customers();
         var top = Application.Top;
         var editCustomerWin = new Window("Edit Customer")
         {
@@ -1990,59 +1989,93 @@ static void MainMenu()
 
     deleteCustomerWin.Add(customerIDLabel, customerIDField, deleteButton, closeButton);
     }
-
-static void DisplayCart(Cart cart)
-{
-    var top = Application.Top;
-
-    var cartWindow = new Window("Cart")
+// Cart
+static void DisplayCart()
     {
-        X = 0,
-        Y = 0,
-        Width = Dim.Fill(),
-        Height = Dim.Fill()
-    };
-    top.Add(cartWindow);
+        var top = Application.Top;
 
-    int row = 1;
+        var cartWindow = new Window("Cart")
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(cartWindow);
 
-    foreach (var item in Cart.CartItems)
-    {
-        var productLabel = new Label($"{item.Product.ProductName} - ${item.Product.ProductPrice} x {item.Quantity}")
+        int row = 1;
+
+        // Kết nối cơ sở dữ liệu để lấy thông tin giỏ hàng của khách hàng
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
-            X = 1,
-            Y = row
+            string query = @"SELECT 
+                                p.product_id,
+                                p.product_name, 
+                                p.product_price, 
+                                c.cart_quantity 
+                            FROM cart c
+                            INNER JOIN products p ON c.cart_product_id = p.product_id
+                            WHERE c.cart_customer_id = @CustomerID";
+            MySqlCommand command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@CustomerID", currentCustomerID);
+            connection.Open();
+            MySqlDataReader reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                int productID = reader.GetInt32("product_id");
+                string productName = reader["product_name"].ToString();
+                decimal productPrice = reader.GetDecimal("product_price");
+                int quantity = reader.GetInt32("cart_quantity");
+
+                var productLabel = new Label($"{productName} - ${productPrice} x {quantity}")
+                {
+                    X = 1,
+                    Y = row
+                };
+                var removeButton = new Button("Remove")
+                {
+                    X = Pos.Right(productLabel) + 1,
+                    Y = row
+                };
+                removeButton.Clicked += () =>
+                {
+                    RemoveItemFromCart(productID);
+                    top.Remove(cartWindow);
+                    DisplayCart();
+                };
+
+                cartWindow.Add(productLabel, removeButton);
+                row++;
+            }
+        }
+
+        var btnBack = new Button("Back")
+        {
+            X = 2,
+            Y = row + 1
         };
-        var removeButton = new Button("Remove")
+        btnBack.Clicked += () =>
         {
-            X = Pos.Right(productLabel) + 1,
-            Y = row
-        };
-        removeButton.Clicked += () =>
-        {
-            cart.RemoveItem(item.Product.ProductID);
             top.Remove(cartWindow);
-            DisplayCart(cart);
+            MainMenu();
         };
 
-        cartWindow.Add(productLabel, removeButton);
-        row++;
+        cartWindow.Add(btnBack);
     }
-
-    var btnBack = new Button("Back")
+    static void RemoveItemFromCart(int productID)
     {
-        X = 2,
-        Y = row + 1
-    };
-    btnBack.Clicked += () =>
-    {
-        top.Remove(cartWindow);
-        MainMenu();
-    };
-
-    cartWindow.Add(btnBack);
-}
-static void AddToCart(int productID, int quantityProduct)
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {
+            string query = "DELETE FROM cart WHERE cart_customer_id = @CustomerID AND cart_product_id = @ProductID";
+            MySqlCommand command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@CustomerID", currentCustomerID);
+            command.Parameters.AddWithValue("@ProductID", productID);
+            connection.Open();
+            command.ExecuteNonQuery();
+        }
+    }
+    static void AddToCart(int productID, int quantityProduct)
 {
     ListProducts = LoadProducts(connectionString);
     Products sp = ListProducts.FirstOrDefault(p => p.ProductID == productID);
