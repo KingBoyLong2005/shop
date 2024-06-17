@@ -2169,158 +2169,166 @@ static void FindProduct()
     displayCustomerWindow.Add(btnClose);
 }
   static void AddCustomer()
+{
+    Customers cus = new Customers();
+    var top = Application.Top;
+    var addCustomerWin = new Window("Add Customer")
     {
-        Customers cus = new Customers();
-        var top = Application.Top;
-        var addCustomerWin = new Window("Add Customer")
-        {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        top.Add(addCustomerWin);
-        addCustomerWin.FocusNext();
+        X = 0,
+        Y = 0,
+        Width = Dim.Fill(),
+        Height = Dim.Fill()
+    };
+    top.Add(addCustomerWin);
+    addCustomerWin.FocusNext();
 
-        var customerNameLabel = new Label("Customer Name: ")
-        {
-            X = 2,
-            Y = 2
-        };
+    var customerNameLabel = new Label("Customer Name: ")
+    {
+        X = 2,
+        Y = 2
+    };
 
-        var customerNameField = new TextField("")
-        {
-            X = Pos.Right(customerNameLabel) + 1,
-            Y = 2,
-            Width = Dim.Fill() - 4
-        };
+    var customerNameField = new TextField("")
+    {
+        X = Pos.Right(customerNameLabel) + 1,
+        Y = 2,
+        Width = Dim.Fill() - 4
+    };
 
-        var customerAddressLabel = new Label("Customer Address: ")
-        {
-            X = 2,
-            Y = 4
-        };
+    var customerAddressLabel = new Label("Customer Address: ")
+    {
+        X = 2,
+        Y = 4
+    };
 
-        var customerAddressField = new TextField("")
-        {
-            X = Pos.Right(customerAddressLabel) + 1,
-            Y = 4,
-            Width = Dim.Fill() - 4
-        };
+    var customerAddressField = new TextField("")
+    {
+        X = Pos.Right(customerAddressLabel) + 1,
+        Y = 4,
+        Width = Dim.Fill() - 4
+    };
 
-        var customerPhoneNumberLabel = new Label("Customer Phone: ")
-        {
-            X = 2,
-            Y = 6
-        };
+    var customerPhoneNumberLabel = new Label("Customer Phone: ")
+    {
+        X = 2,
+        Y = 6
+    };
 
-        var customerPhoneNumberField = new TextField("")
-        {
-            X = Pos.Right(customerPhoneNumberLabel) + 1,
-            Y = 6,
-            Width = Dim.Fill() - 4
-        };
+    var customerPhoneNumberField = new TextField("")
+    {
+        X = Pos.Right(customerPhoneNumberLabel) + 1,
+        Y = 6,
+        Width = Dim.Fill() - 4
+    };
 
-        var customerEmailLabel = new Label("Customer Email: ")
-        {
-            X = 2,
-            Y = 8
-        };
+    var customerEmailLabel = new Label("Customer Email: ")
+    {
+        X = 2,
+        Y = 8
+    };
 
-        var customerEmailField = new TextField("")
-        {
-            X = Pos.Right(customerEmailLabel) + 1,
-            Y = 8,
-            Width = Dim.Fill() - 4
-        };
+    var customerEmailField = new TextField("")
+    {
+        X = Pos.Right(customerEmailLabel) + 1,
+        Y = 8,
+        Width = Dim.Fill() - 4
+    };
 
-        var customerGenderLabel = new Label("Customer Gender: ")
-        {
-            X = 2,
-            Y = 10
-        };
+    var customerGenderLabel = new Label("Customer Gender: ")
+    {
+        X = 2,
+        Y = 10
+    };
 
-        var customerGenderField = new TextField("")
-        {
-            X = Pos.Right(customerGenderLabel) + 1,
-            Y = 10,
-            Width = Dim.Fill() - 4
-        };
+    var customerGenderField = new TextField("")
+    {
+        X = Pos.Right(customerGenderLabel) + 1,
+        Y = 10,
+        Width = Dim.Fill() - 4
+    };
 
-        var customerDateOfBirthLabel = new Label("Customer Date Of Birth: ")
-        {
-            X = 2,
-            Y = 12
-        };
+    var customerDateOfBirthLabel = new Label("Customer Date Of Birth: ")
+    {
+        X = 2,
+        Y = 12
+    };
 
-        var customerDateOfBirthField = new TextField("")
-        {
-            X = Pos.Right(customerDateOfBirthLabel) + 1,
-            Y = 12,
-            Width = Dim.Fill() - 4
-        };
+    var customerDateOfBirthField = new TextField("")
+    {
+        X = Pos.Right(customerDateOfBirthLabel) + 1,
+        Y = 12,
+        Width = Dim.Fill() - 4
+    };
 
-        var saveButton = new Button("Save")
+    var saveButton = new Button("Save")
+    {
+        X = Pos.Center(),
+        Y = 14
+    };
+    saveButton.Clicked += () =>
+    {
+        try
         {
-            X = Pos.Center(),
-            Y = 14
-        };
-        saveButton.Clicked += () =>
-        {
-            try
+            cus.CustomerName = customerNameField.Text.ToString();
+            cus.CustomerAddress = customerAddressField.Text.ToString();
+            cus.CustomerPhone = customerPhoneNumberField.Text.ToString();
+            cus.CustomerEmail = customerEmailField.Text.ToString();
+            cus.CustomerGender = customerGenderField.Text.ToString();
+            DateTime customerDateOfBirth;
+            if (!DateTime.TryParse(customerDateOfBirthField.Text.ToString(), out customerDateOfBirth))
             {
-                cus.CustomerName = customerNameField.Text.ToString();
-                cus.CustomerAddress = customerAddressField.Text.ToString();
-                cus.CustomerPhone = customerPhoneNumberField.Text.ToString();
-                cus.CustomerEmail = customerEmailField.Text.ToString();
-                cus.CustomerGender = customerGenderField.Text.ToString();
-                DateTime customerDateOfBirth;
-                if (!DateTime.TryParse(customerDateOfBirthField.Text.ToString(), out customerDateOfBirth))
-                {
-                    MessageBox.ErrorQuery("Error", "Invalid date format. Please use YYYY-MM-DD.", "OK");
-                    return;
-                }
-                cus.CustomerDateOfBirth = customerDateOfBirth;
-
-                using (MySqlConnection connection = new MySqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string query = "INSERT INTO customers (customer_name, customer_address, customer_phone_number, customer_email, customer_gender, customer_dateofbirth, customer_count, customer_totalspent) VALUES (@CustomerName, @CustomerAddress, @CustomerPhone, @CustomerEmail, @CustomerGender, @CustomerDateOfBirth)";
-                    MySqlCommand command = new MySqlCommand(query, connection);
-                    command.Parameters.AddWithValue("@ProductName", cus.CustomerName);
-                    command.Parameters.AddWithValue("@CustomerAddress", cus.CustomerAddress);
-                    command.Parameters.AddWithValue("@CustomerPhoneNumber", cus.CustomerPhone);
-                    command.Parameters.AddWithValue("@CustomerEmail", cus.CustomerEmail);
-                    command.Parameters.AddWithValue("@CustomerGender", cus.CustomerGender);
-                    command.Parameters.AddWithValue("@CustomerDateOfBirth", cus.CustomerDateOfBirth);
-                    command.ExecuteNonQuery();
-                }
-
-                ListCustomers.Add(cus);
-                MessageBox.Query("Success", "Successfully added new customer infomration!");
-                top.Remove(addCustomerWin);
-                CustomerMenu();
+                MessageBox.ErrorQuery("Error", "Invalid date format. Please use YYYY-MM-DD.", "OK");
+                return;
             }
-            catch (Exception ex)
+            cus.CustomerDateOfBirth = customerDateOfBirth;
+
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                connection.Open();
+                string query = "INSERT INTO customers (customer_name, customer_address, customer_phone_number, customer_email, customer_gender, customer_dateofbirth) VALUES (@CustomerName, @CustomerAddress, @CustomerPhone, @CustomerEmail, @CustomerGender, @CustomerDateOfBirth)";
+                MySqlCommand command = new MySqlCommand(query, connection);
+                command.Parameters.AddWithValue("@CustomerName", cus.CustomerName);
+                command.Parameters.AddWithValue("@CustomerAddress", cus.CustomerAddress);
+                command.Parameters.AddWithValue("@CustomerPhone", cus.CustomerPhone);
+                command.Parameters.AddWithValue("@CustomerEmail", cus.CustomerEmail);
+                command.Parameters.AddWithValue("@CustomerGender", cus.CustomerGender);
+                command.Parameters.AddWithValue("@CustomerDateOfBirth", cus.CustomerDateOfBirth);
+                command.ExecuteNonQuery();
             }
-        };
 
-        var closeButton = new Button("Close")
-        {
-            X = Pos.Center(),
-            Y = Pos.Bottom(saveButton) + 1
-        };
-        closeButton.Clicked += () =>
-        {
+            ListCustomers.Add(cus);
+            MessageBox.Query("Success", "Successfully added new customer information!", "OK");
             top.Remove(addCustomerWin);
             CustomerMenu();
-        };
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery("Error", ex.Message, "OK");
+        }
+    };
 
-        addCustomerWin.Add(customerNameLabel, customerNameField, customerAddressLabel, customerAddressField, customerPhoneNumberLabel, customerPhoneNumberField,
-                            customerEmailLabel, customerEmailField, customerGenderLabel, customerGenderField, customerDateOfBirthLabel, customerDateOfBirthField);
-    }   
+    var closeButton = new Button("Close")
+    {
+        X = Pos.Center(),
+        Y = Pos.Bottom(saveButton) + 1
+    };
+    closeButton.Clicked += () =>
+    {
+        top.Remove(addCustomerWin);
+        CustomerMenu();
+    };
+
+    addCustomerWin.Add(
+        customerNameLabel, customerNameField,
+        customerAddressLabel, customerAddressField,
+        customerPhoneNumberLabel, customerPhoneNumberField,
+        customerEmailLabel, customerEmailField,
+        customerGenderLabel, customerGenderField,
+        customerDateOfBirthLabel, customerDateOfBirthField,
+        saveButton, closeButton
+    );
+}
+   
  static void FindCustomer()
     {
         List<string[]> customers = new List<string[]>();
