@@ -23,6 +23,8 @@ class Program
     static Window editProductWin;
     static Window deleteProductWin;
     static Window findProductWin;
+    static Window displayCustomerWindow;
+    static Window addCustomerWin;
     public static string connectionString;
     public static int currentCustomerID = -1;
     public static List<Products> ListProducts = new List<Products>();
@@ -164,7 +166,7 @@ class Program
         Colors.Base.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
         
         Application.Init();
-        RegisterUser();
+        AddCustomer();
         Application.Run();
     }
 
@@ -807,13 +809,6 @@ static void MainMenu()
                     findProductIDField.Visible = false;
                     confirmButton.Visible = false;
 
-                    editProductNameField.Text = sp.ProductName;
-                    editProductStockQuantityField.Text = sp.ProductStockQuantity.ToString();
-                    editProductCategoryIDField.Text = sp.ProductCategoryID.ToString();
-                    editProductPriceField.Text = sp.ProductPrice.ToString();
-                    editProductDescriptionField.Text = sp.ProductDescription;
-                    editProductBrandField.Text = sp.ProductBrand;
-
                     editProductNameLabel.Visible = true;
                     editProductNameField.Visible = true;
                     editProductStockQuantityLabel.Visible = true;
@@ -916,6 +911,7 @@ static void MainMenu()
     {
         try
         {
+
             if (int.TryParse(productIDField.Text.ToString(), out int productID))
             {
                 Products sp = ListProducts.Find(s => s.ProductID == productID);
@@ -1359,7 +1355,7 @@ static void MainMenu()
         registerButton.Clicked += () =>
         {
             us.Username = usernameField.Text.ToString();
-            us.PasswordHash = BCrypt.Net.BCrypt.HashPassword(passwordField.Text.ToString());
+            us.PasswordHash = passwordField.Text.ToString();
             cus.CustomerName = CustomerNameField.Text.ToString();
             cus.CustomerPhone = CustomerPhoneNumberField.Text.ToString();
             cus.CustomerAddress = CustomerAddressField.Text.ToString();
@@ -1641,6 +1637,7 @@ static void MainMenu()
     {
         Customers kh = new Customers();
         ListCustomers = LoadCustomers(connectionString);
+
         var top = Application.Top;
         var editCustomerWin = new Window("Edit Customer")
         {
@@ -1739,31 +1736,7 @@ static void MainMenu()
             Width = Dim.Fill() - 4
         };
 
-        var editCustomerCountLabel = new Label("Customer Count:")
-        {
-            X = 1,
-            Y = 15
-        };
-        var editCustomerCountField = new TextField("")
-        {
-            X = Pos.Right(editCustomerCountLabel) + 1,
-            Y = 15,
-            Width = Dim.Fill() - 4
-        };
-
-        var editCustomerTotalSpentLabel = new Label("Customer Total")
-        {
-            X = 1,
-            Y = 17
-        };
-
-        var editCustomerTotalSpentField = new TextField("")
-        {
-            X = Pos.Right(editCustomerTotalSpentLabel) + 1,
-            Y = 17,
-            Width = Dim.Fill() - 4
-        };
-    
+        
         var saveButton = new Button("Save")
         {
             X = Pos.Center(),
@@ -1773,19 +1746,19 @@ static void MainMenu()
         {
             try
             {
+                kh.CustomerID = int.Parse(findCustomerIDField.Text.ToString());
                 kh.CustomerName = editCustomerNameField.Text.ToString();
                 kh.CustomerPhone = editCustomerPhoneField.Text.ToString();
                 kh.CustomerAddress = editCustomerAddressField.Text.ToString();
                 kh.CustomerEmail = editCustomerEmailField.Text.ToString();
                 kh.CustomerGender = editCustomerGenderField.Text.ToString();
                 kh.CustomerDateOfBirth = DateTime.Parse(editCustomerDateOfBirthField.Text.ToString());
-                kh.CustomerCount = int.Parse(editCustomerCountField.Text.ToString());
-                kh.CustomerTotalSpent = decimal.Parse(editCustomerTotalSpentField.Text.ToString());
+                
 
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
                     connection.Open();
-                    string query = "UPDATE customer SET customer_name = @CustomerName, customer_phone_number = @CustomerPhone, customer_addresss = @CustomerAddress, customer_email = @CustomerEmail, customer_gender = @CustomerGender, customer_date_of_birth = @CustomerDateOfBirth, customer_count = @CustomerCount, customer_totalspent= @CustomerTotalSpent WHERE customer_id = @CustomerID";
+                    string query = "UPDATE customers SET customer_name = @CustomerName, customer_phone_number = @CustomerPhone, customer_address = @CustomerAddress, customer_email = @CustomerEmail, customer_gender = @CustomerGender, customer_dateofbirth = @CustomerDateOfBirth WHERE customer_id = @CustomerID";
                     MySqlCommand command = new MySqlCommand(query, connection);
                     command.Parameters.AddWithValue("@CustomerID", kh.CustomerID);
                     command.Parameters.AddWithValue("@CustomerName", kh.CustomerName);
@@ -1794,8 +1767,7 @@ static void MainMenu()
                     command.Parameters.AddWithValue("@CustomerEmail", kh.CustomerEmail);
                     command.Parameters.AddWithValue("@CustomerGender", kh.CustomerGender);
                     command.Parameters.AddWithValue("@CustomerDateOfBirth", kh.CustomerDateOfBirth);
-                    command.Parameters.AddWithValue("@CustomerCount", kh.CustomerCount);
-                    command.Parameters.AddWithValue("@CustomerTotalSpent", kh.CustomerTotalSpent);
+
                     
                     command.ExecuteNonQuery();
                 }
@@ -1825,15 +1797,7 @@ static void MainMenu()
                     {
                         findCustomerIDLabel.Visible = false;
                         findCustomerIDField.Visible = false;
-
-                        editCustomerNameField.Text = kh.CustomerName;
-                        editCustomerPhoneField.Text = kh.CustomerPhone.ToString();
-                        editCustomerAddressField.Text = kh.CustomerAddress;
-                        editCustomerEmailField.Text = kh.CustomerEmail;
-                        editCustomerGenderField.Text = kh.CustomerGender;
-                        editCustomerDateOfBirthField.Text = kh.CustomerDateOfBirth.ToString();
-                        editCustomerCountField.Text = kh.CustomerCount.ToString();
-                        editCustomerTotalSpentField.Text = kh.CustomerTotalSpent.ToString();
+                        confirmButton.Visible = false;
 
                         editCustomerNameLabel.Visible = true;
                         editCustomerNameField.Visible = true;
@@ -1847,10 +1811,7 @@ static void MainMenu()
                         editCustomerGenderField.Visible = true;
                         editCustomerDateOfBirthLabel.Visible = true;
                         editCustomerDateOfBirthField.Visible = true;
-                        editCustomerCountLabel.Visible = true;
-                        editCustomerCountField.Visible = true;
-                        editCustomerTotalSpentLabel.Visible = true;
-                        editCustomerTotalSpentField.Visible = true;
+                    
                         saveButton.Visible = true;
 
                     }
@@ -1892,17 +1853,13 @@ static void MainMenu()
         editCustomerGenderField.Visible = false;
         editCustomerDateOfBirthLabel.Visible = false;;
         editCustomerDateOfBirthField.Visible = false;;
-        editCustomerCountLabel.Visible = false;
-        editCustomerCountField.Visible = false;
-        editCustomerTotalSpentLabel.Visible =false;
-        editCustomerTotalSpentField.Visible =false;
+        
         saveButton.Visible = false;
 
 
-        editCustomerWin.Add(findCustomerIDLabel,findCustomerIDField,editCustomerNameLabel,editCustomerNameField,editCustomerPhoneLabel,
+        editCustomerWin.Add(findCustomerIDLabel,findCustomerIDField,confirmButton,editCustomerNameLabel,editCustomerNameField,editCustomerPhoneLabel,
                             editCustomerPhoneField,editCustomerAddressLabel,editCustomerAddressField,editCustomerEmailLabel,editCustomerEmailField,
-                            editCustomerGenderLabel,editCustomerGenderField,editCustomerDateOfBirthLabel,editCustomerDateOfBirthField,editCustomerCountLabel,
-                            editCustomerCountField,editCustomerTotalSpentLabel,editCustomerTotalSpentField);
+                            editCustomerGenderLabel,editCustomerGenderField,editCustomerDateOfBirthLabel,editCustomerDateOfBirthField,saveButton);
     }
     static void DeleteCustomer()
     {
@@ -1940,6 +1897,7 @@ static void MainMenu()
         {
             try
             {
+
                 if(int.TryParse(customerIDField.Text.ToString(), out int customerID))
                 {
                     Customers kh = ListCustomers.Find(k => k.CustomerID == customerID);
@@ -1988,6 +1946,246 @@ static void MainMenu()
     };
 
     deleteCustomerWin.Add(customerIDLabel, customerIDField, deleteButton, closeButton);
+    }
+    static void DisplayCustomers()
+    {
+        List<Customers> ListCustomers = LoadCustomers(connectionString);
+        List<string[]> customers = new List<string[]>();
+        var top = Application.Top;
+
+        displayCustomerWindow = new Window("Display Customers")
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(displayCustomerWindow);
+        displayCustomerWindow.FocusNext();
+
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+    {
+        string query = @"SELECT 
+                            cus.customer_name, 
+                            cus.customer_phone_number, 
+                            cus.customer_address, 
+                            cus.customer_email, 
+                            cus.customer_gender, 
+                            cus.customer_dateofbirth,
+                            cus.customer_count,
+                            cus.customer_totalspent
+                        FROM customers cus";
+        MySqlCommand command = new MySqlCommand(query, connection);
+        connection.Open();
+        MySqlDataReader read = command.ExecuteReader();
+        var columnDisplayListCustomer = new string[]
+        {
+            "Customer's name", "Phone number", "Address", "Email", "Gender", "Date of birth", "Order count", "Total spent"
+        };
+        while (read.Read())
+        {
+            customers.Add(new string[]{
+                read["customer_name"].ToString(),
+                read["customer_phone_number"].ToString(),
+                read["customer_address"].ToString(),
+                read["customer_email"].ToString(),
+                read["customer_gender"].ToString(),
+                read["customer_dateofbirth"].ToString(),
+                read["customer_count"].ToString(),
+                read["customer_totalspent"].ToString()
+
+            });
+        }
+        for (int i = 0; i < columnDisplayListCustomer.Length; i++)
+        {
+            displayCustomerWindow.Add(new Label(columnDisplayListCustomer[i])
+            {
+                X = i * 15,
+                Y = 0,
+                Width = 15,
+                Height = 1
+            });
+        }
+        for (int i = 0; i < customers.Count; i++)
+        {
+            for (int j = 0; j < customers[i].Length; j++)
+            {
+                displayCustomerWindow.Add(new Label(customers[i][j])
+                {
+                    X = j * 15,
+                    Y = i + 1,
+                    Width = 15,
+                    Height = 1
+                });
+            }
+        }
+    }
+
+        var btnClose = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = Pos.Percent(100) - 1
+        };
+        btnClose.Clicked += () =>
+        {
+            top.Remove(displayCustomerWindow);
+            CustomerMenu();
+        };
+
+        displayCustomerWindow.Add(btnClose);
+    }
+    static void AddCustomer()
+    {
+        Customers cus = new Customers();
+        var top = Application.Top;
+        addCustomerWin = new Window("Add Customer")
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(addCustomerWin);
+        addCustomerWin.FocusNext();
+
+        var customerNameLabel = new Label("Customer Name: ")
+        {
+            X = 2,
+            Y = 2
+        };
+
+        var customerNameField = new TextField("")
+        {
+            X = Pos.Right(customerNameLabel) + 1,
+            Y = 2,
+            Width = Dim.Fill() - 4
+        };
+
+        var customerAddressLabel = new Label("Customer Address: ")
+        {
+            X = 2,
+            Y = 4
+        };
+
+        var customerAddressField = new TextField("")
+        {
+            X = Pos.Right(customerAddressLabel) + 1,
+            Y = 4,
+            Width = Dim.Fill() - 4
+        };
+
+        var customerPhoneNumberLabel = new Label("Customer Phone: ")
+        {
+            X = 2,
+            Y = 4
+        };
+
+        var customerPhoneNumberField = new TextField("")
+        {
+            X = Pos.Right(customerPhoneNumberLabel) + 1,
+            Y = 4,
+            Width = Dim.Fill() - 4
+        };
+
+        var customerEmailLabel = new Label("Customer Email: ")
+        {
+            X = 2,
+            Y = 4
+        };
+
+        var customerEmailField = new TextField("")
+        {
+            X = Pos.Right(customerEmailLabel) + 1,
+            Y = 4,
+            Width = Dim.Fill() - 4
+        };
+
+        var customerGenderLabel = new Label("Customer Gender: ")
+        {
+            X = 2,
+            Y = 4
+        };
+
+        var customerGenderField = new TextField("")
+        {
+            X = Pos.Right(customerGenderLabel) + 1,
+            Y = 4,
+            Width = Dim.Fill() - 4
+        };
+
+        var customerDateOfBirthLabel = new Label("Customer Date Of Birth: ")
+        {
+            X = 2,
+            Y = 4
+        };
+
+        var customerDateOfBirthField = new TextField("")
+        {
+            X = Pos.Right(customerDateOfBirthLabel) + 1,
+            Y = 4,
+            Width = Dim.Fill() - 4
+        };
+
+        var saveButton = new Button("Save")
+        {
+            X = Pos.Center(),
+            Y = 14
+        };
+        saveButton.Clicked += () =>
+        {
+            try
+            {
+                cus.CustomerName = customerNameField.Text.ToString();
+                cus.CustomerAddress = customerAddressField.Text.ToString();
+                cus.CustomerPhone = customerPhoneNumberField.Text.ToString();
+                cus.CustomerEmail = customerEmailField.Text.ToString();
+                cus.CustomerGender = customerGenderField.Text.ToString();
+                DateTime customerDateOfBirth;
+                if (!DateTime.TryParse(customerDateOfBirthField.Text.ToString(), out customerDateOfBirth))
+                {
+MessageBox.ErrorQuery("Error", "Invalid date format. Please use YYYY-MM-DD.", "OK");
+                    return;
+                }
+                cus.CustomerDateOfBirth = customerDateOfBirth;
+
+                using (MySqlConnection connection = new MySqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string query = "INSERT INTO customers (customer_name, customer_address, customer_phone_number, customer_email, customer_gender, customer_dateofbirth, customer_count, customer_totalspent) VALUES (@CustomerName, @CustomerAddress, @CustomerPhone, @CustomerEmail, @CustomerGender, @CustomerDateOfBirth)";
+                    MySqlCommand command = new MySqlCommand(query, connection);
+                    command.Parameters.AddWithValue("@ProductName", cus.CustomerName);
+                    command.Parameters.AddWithValue("@CustomerAddress", cus.CustomerAddress);
+                    command.Parameters.AddWithValue("@CustomerPhoneNumber", cus.CustomerPhone);
+                    command.Parameters.AddWithValue("@CustomerEmail", cus.CustomerEmail);
+                    command.Parameters.AddWithValue("@CustomerGender", cus.CustomerGender);
+                    command.Parameters.AddWithValue("@CustomerDateOfBirth", cus.CustomerDateOfBirth);
+                    command.ExecuteNonQuery();
+                }
+
+                ListCustomers.Add(cus);
+                MessageBox.Query("Success", "Successfully added new customer infomration!");
+                top.Remove(addCustomerWin);
+                CustomerMenu();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+
+        var closeButton = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = Pos.Bottom(saveButton) + 1
+        };
+        closeButton.Clicked += () =>
+        {
+            top.Remove(addCustomerWin);
+            CustomerMenu();
+        };
+
+        addCustomerWin.Add(customerNameLabel, customerAddressLabel, customerPhoneNumberLabel,
+                            customerEmailLabel, customerGenderLabel, customerDateOfBirthLabel);
     }
 // Cart
 static void DisplayCart()
