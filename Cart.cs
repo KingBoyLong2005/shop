@@ -13,6 +13,7 @@ public class Cart
     public decimal CartProductPrice { get; set; }
     public decimal CartOrderPrice { get; set; }
     public int CartTotalProduct { get; set; }
+    
 
     public static List<CartItem> CartItems { get; set; } = new List<CartItem>();
 
