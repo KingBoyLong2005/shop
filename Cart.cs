@@ -1,7 +1,12 @@
 using System;
+using System.Text;
+using System.Data;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MySql.Data.MySqlClient;
+using System.Security.Cryptography.X509Certificates;
+using Terminal.Gui;
 
 public class Cart
 {
@@ -13,6 +18,15 @@ public class Cart
     public decimal CartProductPrice { get; set; }
     public decimal CartOrderPrice { get; set; }
     public int CartTotalProduct { get; set; }
+    public static string connectionString = Configuration.ConnectionString;
+    public static Cart userCart = new Cart();
+    public static int currentCustomerID = SessionData.Instance.CurrentCustomerID;
+    public static List<Cart> ListCarts = new List<Cart>();
+    public static List<Products> ListProducts = new List<Products>();
+    public static Program program = new Program();
+
+
+
     
 
     public static List<CartItem> CartItems { get; set; } = new List<CartItem>();
@@ -38,6 +52,126 @@ public class Cart
             CartItems.Remove(cartItem);
         }
     }
+    public void DisplayCart()
+    {
+        var top = Application.Top;
+
+        var cartWindow = new Window("Cart")
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(cartWindow);
+
+        int row = 1;
+
+        // Kết nối cơ sở dữ liệu để lấy thông tin giỏ hàng của khách hàng
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {
+            string query = @"SELECT 
+                                p.product_id,
+                                p.product_name, 
+                                p.product_price, 
+                                c.cart_quantity 
+                            FROM cart c
+                            INNER JOIN products p ON c.cart_product_id = p.product_id
+                            WHERE c.cart_customer_id = @CustomerID";
+            MySqlCommand command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@CustomerID", currentCustomerID);
+            connection.Open();
+            MySqlDataReader reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                int productID = reader.GetInt32("product_id");
+                string productName = reader["product_name"].ToString();
+                decimal productPrice = reader.GetDecimal("product_price");
+                int quantity = reader.GetInt32("cart_quantity");
+
+                var productLabel = new Label($"{productName} - ${productPrice} x {quantity}")
+                {
+                    X = 1,
+                    Y = row
+                };
+                var removeButton = new Button("Remove")
+                {
+                    X = Pos.Right(productLabel) + 1,
+                    Y = row
+                };
+                removeButton.Clicked += () =>
+                {
+                    RemoveItemFromCart(productID);
+                    top.Remove(cartWindow);
+                    DisplayCart();
+                };
+
+                cartWindow.Add(productLabel, removeButton);
+                row++;
+            }
+        }
+
+        var btnBack = new Button("Back")
+        {
+            X = 2,
+            Y = row + 1
+        };
+        btnBack.Clicked += () =>
+        {
+            top.Remove(cartWindow);
+            program.MainMenu();
+        };
+
+        cartWindow.Add(btnBack);
+    }
+    static void RemoveItemFromCart(int productID)
+    {
+        userCart.RemoveItem(productID);
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {
+            string query = "DELETE FROM cart WHERE cart_customer_id = @CustomerID AND cart_product_id = @ProductID";
+            MySqlCommand command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@CustomerID", currentCustomerID);
+            command.Parameters.AddWithValue("@ProductID", productID);
+            connection.Open();
+            command.ExecuteNonQuery();
+        }
+    }
+    static void AddToCart(int productID, int quantityProduct)
+{
+    Products sp = ListProducts.FirstOrDefault(p => p.ProductID == productID);
+    if (sp != null)
+    {
+        userCart.AddItem(sp, quantityProduct);
+        using(MySqlConnection connection = new MySqlConnection(connectionString))
+        {
+            connection.Open();
+            // Tạm thời bỏ cart_order_id
+            string query = "INSERT INTO cart (cart_customer_id, cart_product_id, cart_quantity, cart_product_price, cart_order_price, cart_total_products)" +
+                        "VALUES(@CartCustomerID, @CartProductID, @CartQuantity, 0, 0, 0)";
+            MySqlCommand command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@CartProductID", productID);
+            command.Parameters.AddWithValue("@CartQuantity", quantityProduct);
+            command.Parameters.AddWithValue("@CartCustomerID", currentCustomerID);
+
+            try
+            {
+                command.ExecuteNonQuery();
+                ListCarts.Add(userCart);
+                MessageBox.Query("Success", "Product added to cart.", "OK");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        }
+    }
+    else
+    {
+        MessageBox.ErrorQuery("Error", "Product not found.", "OK");
+    }
+}
     
 }
 
