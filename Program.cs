@@ -7,10 +7,6 @@ using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using System.Security.Cryptography.X509Certificates;
 using Terminal.Gui;
-using Google.Protobuf;
-using Org.BouncyCastle.Asn1.Tsp;
-using System.Security.Cryptography;
-using Mysqlx.Resultset;
 
 
 class Program
@@ -25,7 +21,7 @@ class Program
     static Window findProductWin;
     static Window displayCustomerWindow;
     static Window addCustomerWin;
-     static Window DisplayProductToOrderWin;
+    static Window DisplayProductToOrderWin;
     public static string connectionString;
     public static int currentCustomerID = -1;
     public static List<Products> ListProducts = new List<Products>();
@@ -160,17 +156,6 @@ class Program
         return ListCarts;
     }
 
-    static void Main()
-    {
-        Application.Init();
-        Colors.Base.Normal = Application.Driver.MakeAttribute(Color.BrightGreen, Color.Black);
-        Colors.Base.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
-
-        
-        Application.Init();
-        Login();
-        Application.Run();
-    }
 
 static void MainMenu()
     {
@@ -267,6 +252,7 @@ static void MainMenu()
         mainMenu.Add(btnCustomer, btnProduct, btnCategories, btnOrder, btnClose);
     }
 
+//Products
     static void ProductMenu()
     {
         var top = Application.Top;
@@ -971,14 +957,14 @@ static void FindProduct()
     };
     top.Add(findProductWin);
 
-    var productIDLabel = new Label("Product ID:")
+    var productNameLabel = new Label("Product name:")
     {
         X = 2,
         Y = 2
     };
-    var productIDField = new TextField("")
+    var productNameField = new TextField("")
     {
-        X = Pos.Right(productIDLabel) + 1,
+        X = Pos.Right(productNameLabel) + 1,
         Y = 2,
         Width = Dim.Fill() - 4
     };
@@ -1010,7 +996,7 @@ static void FindProduct()
     {
         try
         {
-            int productID = int.Parse(productIDField.Text.ToString());
+            string productName = productNameField.Text.ToString();
             Products product = null;
 
             using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -1021,11 +1007,11 @@ static void FindProduct()
                                     p.product_description, 
                                     p.product_price, 
                                     p.product_category_id, 
-                                    p.product_brand,
+                                    p.product_brand
                                 FROM products p
-                                WHERE p.product_id = @ProductID";
+                                WHERE p.product_name = @ProductName";
                 MySqlCommand command = new MySqlCommand(query, connection);
-                command.Parameters.AddWithValue("@ProductID", productID);
+                command.Parameters.AddWithValue("@ProductName", "%" + productName + "%");
                 connection.Open();
                 MySqlDataReader reader = command.ExecuteReader();
 
@@ -1111,526 +1097,11 @@ static void FindProduct()
         ProductMenu();
     };
 
-    findProductWin.Add(productIDLabel, productIDField, findButton, closeButton);
-}
-
-/*static void FindProduct()
-{
-    ListProducts = LoadProducts(connectionString);
-    var top = Application.Top;
-    var findProductWin = new Window("Find Product")
-    {
-        X = 0,
-        Y = 0,
-        Width = Dim.Fill(),
-        Height = Dim.Fill()
-    };
-    top.Add(findProductWin);
-
-    var productNameLabel = new Label("Product Name:")
-    {
-        X = 2,
-        Y = 2
-    };
-    var productNameField = new TextField("")
-    {
-        X = Pos.Right(productNameLabel) + 1,
-        Y = 2,
-        Width = Dim.Fill() - 4
-    };
-
-    var findButton = new Button("Find")
-    {
-        X = Pos.Center(),
-        Y = 4
-    };
-    findButton.Clicked += () =>
-    {
-        try
-        {
-            string productName = productNameField.Text.ToString();
-            List<Products> matchedProducts = ListProducts.FindAll(s => s.ProductName.Equals(productName, StringComparison.OrdinalIgnoreCase));
-
-            if (matchedProducts.Count > 0)
-            {
-                StringBuilder message = new StringBuilder();
-                foreach (var product in matchedProducts)
-                {
-                    message.AppendLine($"Name: {product.ProductName}");
-                    message.AppendLine($"Stock Quantity: {product.ProductStockQuantity}");
-                    message.AppendLine($"Category ID: {product.ProductCategoryID}");
-                    message.AppendLine($"Price: {product.ProductPrice}");
-                    message.AppendLine($"Description: {product.ProductDescription}");
-                    message.AppendLine($"Brand: {product.ProductBrand}");
-                    message.AppendLine(); // Add a blank line between products
-                }
-
-                MessageBox.Query($"Products Matching {productName}", message.ToString(), "OK");
-            }
-            else
-            {
-                MessageBox.ErrorQuery("Error", "Product not found!", "OK");
-            }
-        }
-        catch (Exception ex)
-        {
-            MessageBox.ErrorQuery("Error", ex.Message, "OK");
-        }
-    };
-
-    var closeButton = new Button("Close")
-    {
-        X = Pos.Center(),
-        Y = Pos.Bottom(findButton) + 1
-    };
-    closeButton.Clicked += () =>
-    {
-        top.Remove(findProductWin);
-        ProductMenu();
-    };
     findProductWin.Add(productNameLabel, productNameField, findButton, closeButton);
-
 }
-*/
-  static void Login()
-    {
-        var top = Application.Top;
-        var loginWin = new Window()
-        {
-            Title = "Login",
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        top.Add(loginWin);
 
-        var usernameLabel = new Label("Username:")
-        {
-            X = 2,
-            Y = 2
-        };
-        var usernameField = new TextField("")
-        {
-            X = Pos.Right(usernameLabel) + 1,
-            Y = 2,
-            Width = Dim.Fill() - 4
-        };
 
-        var passwordLabel = new Label("Password:")
-        {
-            X = 2,
-            Y = 4
-        };
-        var passwordField = new TextField("")
-        {
-            Secret = true,
-            X = Pos.Right(passwordLabel) + 1,
-            Y = 4,
-            Width = Dim.Fill() - 4
-        };
-
-        var loginButton = new Button("Login")
-        {
-            X = Pos.Center(),
-            Y = 6
-        };
-        loginButton.Clicked += () =>
-        {
-            string username = usernameField.Text.ToString();
-            string password = passwordField.Text.ToString();
-            bool isAuthenticated = false;
-            string role = "";
-
-            using (MySqlConnection connection = new MySqlConnection(connectionString))
-            {
-                connection.Open();
-                string query = "SELECT customer_id, password_hash, role FROM users WHERE username = @Username";
-                MySqlCommand command = new MySqlCommand(query, connection);
-                command.Parameters.AddWithValue("@Username", username);
-
-                MySqlDataReader reader = command.ExecuteReader();
-                while (reader.Read())
-                {
-                    string storedHash = reader.GetString("password_hash");
-                    if (password == storedHash)
-                    {
-                        isAuthenticated = true;
-                        role = reader.GetString("role");
-                        currentCustomerID = reader.GetInt32("customer_id"); // Lưu giữ customerID sau khi đăng nhập
-                    }
-                }
-            }
-
-            if (isAuthenticated)
-            {
-                MessageBox.Query("Success", $"Welcome {role}!", "OK");
-                top.Remove(loginWin);
-                switch (role)
-                {
-                    case "user":
-                        UserMenu();
-                        break;
-                    case "admin":
-                        AdminMenu();
-                        break;
-                    case "superadmin":
-                        SuperAdminMenu();
-                        break;
-                }
-            }
-            else
-            {
-                MessageBox.ErrorQuery("Error", "Invalid username or password!", "OK");
-            }
-        };
-
-        var closeButton = new Button("Close")
-        {
-            X = Pos.Center(),
-            Y = Pos.Bottom(loginButton) + 1
-        };
-        closeButton.Clicked += () =>
-        {
-            top.Remove(loginWin);
-            MainMenu();
-        };
-
-        loginWin.Add(usernameLabel, usernameField, passwordLabel, passwordField, loginButton, closeButton);
-    }
-
-    static void RegisterUser()
-    {
-        Register("user");
-    }
-
-    static void RegisterAdmin()
-    {
-        Register("admin");
-    }
-
-    static void RegisterSuperAdmin()
-    {
-        Register("superadmin");
-    }
-
-    static void Register(string role)
-    {
-        Users  us = new Users();
-        Customers cus = new Customers();
-        var top = Application.Top;
-        var registerWin = new Window()
-        {
-            Title = $"Register {role}",
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        top.Add(registerWin);
-
-        var usernameLabel = new Label("Username:")
-        {
-            X = 2,
-            Y = 2
-        };
-        var usernameField = new TextField("")
-        {
-            X = Pos.Right(usernameLabel) + 1,
-            Y = 2,
-            Width = Dim.Fill() - 4
-        };
-
-        var passwordLabel = new Label("Password:")
-        {
-            X = 2,
-            Y = 4
-        };
-        var passwordField = new TextField("")
-        {
-            Secret = true,
-            X = Pos.Right(passwordLabel) + 1,
-            Y = 4,
-            Width = Dim.Fill() - 4
-        };
-        var CustomerNameLabel = new Label("Name: ")
-        {
-            X = 2,
-            Y = 6
-        };
-        var CustomerNameField = new TextField("")
-        {
-            X = Pos.Right(CustomerNameLabel) + 1,
-            Y  = 6,
-            Width = Dim.Fill() - 4
-        };
-        var CustomerPhoneNumberLabel = new Label("Phone number: ")
-        {
-            X = 2,
-            Y = 8
-        };
-        var CustomerPhoneNumberField = new TextField("")
-        {
-            X = Pos.Right(CustomerPhoneNumberLabel) + 1,
-            Y  = 8,
-            Width = Dim.Fill() - 4
-        };
-        var CustomerAddressLabel = new Label("Address: ")
-        {
-            X = 2,
-            Y = 10
-        };
-        var CustomerAddressField = new TextField("")
-        {
-            X = Pos.Right(CustomerAddressLabel) + 1,
-            Y  = 10,
-            Width = Dim.Fill() - 4
-        };
-        var CustomerEmailLabel = new Label("Email: ")
-        {
-            X = 2,
-            Y = 12
-        };
-        var CustomerEmailField = new TextField("")
-        {
-            X = Pos.Right(CustomerEmailLabel) + 1,
-            Y  = 12,
-            Width = Dim.Fill() - 4
-        };
-        var CustomerGenderLabel = new Label("Gender: ")
-        {
-            X = 2,
-            Y = 14
-        };
-        var CustomerGenderField = new TextField("")
-        {
-            X = Pos.Right(CustomerGenderLabel) + 1,
-            Y  = 14,
-            Width = Dim.Fill() - 4
-        };
-        var CustomerDateOfBirthLabel = new Label("Date of birth (YYYY-MM-DD): ")
-        {
-            X = 2,
-            Y = 16
-        };
-        var CustomerDateOfBirthField = new TextField("")
-        {
-            X = Pos.Right(CustomerDateOfBirthLabel) + 1,
-            Y  = 16,
-            Width = Dim.Fill() - 4
-        };
-
-        var registerButton = new Button("Register")
-        {
-            X = Pos.Center(),
-            Y = Pos.Bottom(CustomerDateOfBirthField),
-        };
-        registerButton.Clicked += () =>
-        {
-            us.Username = usernameField.Text.ToString();
-            us.PasswordHash = passwordField.Text.ToString();
-            cus.CustomerName = CustomerNameField.Text.ToString();
-            cus.CustomerPhone = CustomerPhoneNumberField.Text.ToString();
-            cus.CustomerAddress = CustomerAddressField.Text.ToString();
-            cus.CustomerEmail = CustomerEmailField.Text.ToString();
-            cus.CustomerGender = CustomerGenderField.Text.ToString();
-            
-            DateTime customerDateOfBirth;
-            if (!DateTime.TryParse(CustomerDateOfBirthField.Text.ToString(), out customerDateOfBirth))
-            {
-                MessageBox.ErrorQuery("Error", "Invalid date format. Please use YYYY-MM-DD.", "OK");
-                return;
-            }
-            cus.CustomerDateOfBirth = customerDateOfBirth;
-
-            using (MySqlConnection connection = new MySqlConnection(connectionString))
-            {
-                connection.Open();
-                string customerquery ="INSERT INTO customers (customer_name, customer_phone_number, customer_address, customer_email, customer_gender, customer_dateofbirth, customer_count, customer_totalspent)"+
-                                    "VALUES (@customername, @customerphonenumber, @customeraddress, @customeremail, @customergender, @customerdateofbirth, 0, 0)";
-                MySqlCommand customercommand = new MySqlCommand(customerquery, connection);
-                customercommand.Parameters.AddWithValue("@customername", cus.CustomerName);
-                customercommand.Parameters.AddWithValue("@customerphonenumber", cus.CustomerPhone);
-                customercommand.Parameters.AddWithValue("@customeraddress",cus.CustomerAddress);
-                customercommand.Parameters.AddWithValue("@customeremail", cus.CustomerEmail);
-                customercommand.Parameters.AddWithValue("@customergender", cus.CustomerGender);
-                customercommand.Parameters.AddWithValue("@customerdateofbirth", cus.CustomerDateOfBirth);
-                customercommand.ExecuteNonQuery();
-
-                long customerId = customercommand.LastInsertedId;
-                string userquery = "INSERT INTO users (username, password_hash, role, customer_id) VALUES (@Username, @PasswordHash, @Role, @CustomerId)";
-                MySqlCommand usercommand = new MySqlCommand(userquery, connection);
-                usercommand.Parameters.AddWithValue("@Username", us.Username);
-                usercommand.Parameters.AddWithValue("@PasswordHash", us.PasswordHash);
-                usercommand.Parameters.AddWithValue("@Role", role);
-                usercommand.Parameters.AddWithValue("@CustomerId", customerId);
-
-                try
-                {
-                    usercommand.ExecuteNonQuery();
-                    ListUsers.Add(us);
-                    ListCustomers.Add(cus);
-                    MessageBox.Query("Success", "Registration successful!", "OK");
-                    Application.RequestStop();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.ErrorQuery("Error", ex.Message, "OK");
-                }
-            }
-        };
-
-        var closeButton = new Button("Close")
-        {
-            X = Pos.Center(),
-            Y = Pos.Bottom(registerButton) + 1
-        };
-        closeButton.Clicked += () =>
-        {
-            top.Remove(registerWin);
-            MainMenu();
-        };
-
-        registerWin.Add(usernameLabel, usernameField, passwordLabel, passwordField,
-                        CustomerNameLabel, CustomerNameField, CustomerPhoneNumberLabel,
-                        CustomerPhoneNumberField, CustomerAddressLabel, CustomerAddressField,
-                        CustomerEmailLabel, CustomerEmailField, CustomerGenderLabel, CustomerGenderField,
-                        CustomerDateOfBirthLabel, CustomerDateOfBirthField, registerButton, closeButton);
-
-    }
-
-   static void UserMenu()
-    {
-        var top = Application.Top;
-        var userMenu = new Window()
-        {
-            Title = "User Menu",
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        top.Add(userMenu);
-
-        var btnViewProducts = new Button("View Products")
-        {
-            X = 2,
-            Y = 2,
-        };
-        btnViewProducts.Clicked += () =>
-        {
-            try
-            {
-                top.Remove(userMenu);
-                ProductMenu();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        var btnViewCart = new Button("View Cart")
-        {
-            X = 2,
-            Y = 3,
-        };
-        btnViewCart.Clicked += () =>
-        {
-            try
-            {
-                top.Remove(userMenu); 
-                DisplayCart();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-        
-        var btnOrder = new Button("Order")
-        {
-            X = 2,
-            Y = 4,
-        };
-        btnOrder.Clicked += () =>
-        {
-            try
-            {
-                top.Remove(userMenu);
-                DisplayProductToOrder();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-        var btnLogout = new Button("Logout")
-        {
-            X = 2,
-            Y = 5,
-        };
-        btnLogout.Clicked += () =>
-        {
-            top.Remove(userMenu);
-            Login();
-        };
-
-        userMenu.Add(btnViewProducts, btnViewCart, btnOrder, btnLogout);
-    }
-    static void AdminMenu()
-    {
-        var top = Application.Top;
-        var adminMenu = new Window()
-        {
-            Title = "Admin Menu",
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        top.Add(adminMenu);
-
-        var closeButton = new Button("Close")
-        {
-            X = Pos.Center(),
-            Y = Pos.Percent(100) - 3
-        };
-        closeButton.Clicked += () => 
-        {
-            top.Remove(adminMenu);
-            MainMenu();
-        };
-        adminMenu.Add(closeButton);
-    }
-
-    static void SuperAdminMenu()
-    {
-        var top = Application.Top;
-        var superAdminMenu = new Window()
-        {
-            Title = "Super Admin Menu",
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        top.Add(superAdminMenu);
-
-        var closeButton = new Button("Close")
-        {
-            X = Pos.Center(),
-            Y = Pos.Percent(100) - 3
-        };
-        closeButton.Clicked += () => 
-        {
-            top.Remove(superAdminMenu);
-            MainMenu();
-        };
-        superAdminMenu.Add(closeButton);
-
-    }
-
+  //Customer
     static void CustomerMenu()
     {
         var top = Application.Top;
@@ -2473,7 +1944,8 @@ static void FindProduct()
         };
 
         findCustomerWindow.Add(btnClose);
-    }// Cart
+    }
+    // Cart
 static void DisplayCart()
     {
         var top = Application.Top;
@@ -2833,5 +2305,454 @@ static void DisplayProductToOrder()
                 MessageBox.ErrorQuery("Error", ex.Message, "OK");
             }
         }
+    }
+    static void Main()
+    {
+        Application.Init();
+        Colors.Base.Normal = Application.Driver.MakeAttribute(Color.BrightGreen, Color.Black);
+        Colors.Base.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
+
+        
+        Application.Init();
+        Login();
+        Application.Run();
+    }
+    static void Login()
+    {
+        var top = Application.Top;
+        var loginWin = new Window()
+        {
+            Title = "Login",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(loginWin);
+
+        var usernameLabel = new Label("Username:")
+        {
+            X = 2,
+            Y = 2
+        };
+        var usernameField = new TextField("")
+        {
+            X = Pos.Right(usernameLabel) + 1,
+            Y = 2,
+            Width = Dim.Fill() - 4
+        };
+
+        var passwordLabel = new Label("Password:")
+        {
+            X = 2,
+            Y = 4
+        };
+        var passwordField = new TextField("")
+        {
+            Secret = true,
+            X = Pos.Right(passwordLabel) + 1,
+            Y = 4,
+            Width = Dim.Fill() - 4
+        };
+
+        var loginButton = new Button("Login")
+        {
+            X = Pos.Center(),
+            Y = 6
+        };
+        loginButton.Clicked += () =>
+        {
+            string username = usernameField.Text.ToString();
+            string password = passwordField.Text.ToString();
+            bool isAuthenticated = false;
+            string role = "";
+
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = "SELECT customer_id, password_hash, role FROM users WHERE username = @Username";
+                MySqlCommand command = new MySqlCommand(query, connection);
+                command.Parameters.AddWithValue("@Username", username);
+
+                MySqlDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    string storedHash = reader.GetString("password_hash");
+                    if (password == storedHash)
+                    {
+                        isAuthenticated = true;
+                        role = reader.GetString("role");
+                        currentCustomerID = reader.GetInt32("customer_id"); // Lưu giữ customerID sau khi đăng nhập
+                    }
+                }
+            }
+
+            if (isAuthenticated)
+            {
+                MessageBox.Query("Success", $"Welcome {role}!", "OK");
+                top.Remove(loginWin);
+                switch (role)
+                {
+                    case "user":
+                        UserMenu();
+                        break;
+                    case "admin":
+                        AdminMenu();
+                        break;
+                    case "superadmin":
+                        SuperAdminMenu();
+                        break;
+                }
+            }
+            else
+            {
+                MessageBox.ErrorQuery("Error", "Invalid username or password!", "OK");
+            }
+        };
+
+        var closeButton = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = Pos.Bottom(loginButton) + 1
+        };
+        closeButton.Clicked += () =>
+        {
+            top.Remove(loginWin);
+            MainMenu();
+        };
+
+        loginWin.Add(usernameLabel, usernameField, passwordLabel, passwordField, loginButton, closeButton);
+    }
+
+    static void RegisterUser()
+    {
+        Register("user");
+    }
+
+    static void RegisterAdmin()
+    {
+        Register("admin");
+    }
+
+    static void RegisterSuperAdmin()
+    {
+        Register("superadmin");
+    }
+
+    static void Register(string role)
+    {
+        Users  us = new Users();
+        Customers cus = new Customers();
+        var top = Application.Top;
+        var registerWin = new Window()
+        {
+            Title = $"Register {role}",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(registerWin);
+
+        var usernameLabel = new Label("Username:")
+        {
+            X = 2,
+            Y = 2
+        };
+        var usernameField = new TextField("")
+        {
+            X = Pos.Right(usernameLabel) + 1,
+            Y = 2,
+            Width = Dim.Fill() - 4
+        };
+
+        var passwordLabel = new Label("Password:")
+        {
+            X = 2,
+            Y = 4
+        };
+        var passwordField = new TextField("")
+        {
+            Secret = true,
+            X = Pos.Right(passwordLabel) + 1,
+            Y = 4,
+            Width = Dim.Fill() - 4
+        };
+        var CustomerNameLabel = new Label("Name: ")
+        {
+            X = 2,
+            Y = 6
+        };
+        var CustomerNameField = new TextField("")
+        {
+            X = Pos.Right(CustomerNameLabel) + 1,
+            Y  = 6,
+            Width = Dim.Fill() - 4
+        };
+        var CustomerPhoneNumberLabel = new Label("Phone number: ")
+        {
+            X = 2,
+            Y = 8
+        };
+        var CustomerPhoneNumberField = new TextField("")
+        {
+            X = Pos.Right(CustomerPhoneNumberLabel) + 1,
+            Y  = 8,
+            Width = Dim.Fill() - 4
+        };
+        var CustomerAddressLabel = new Label("Address: ")
+        {
+            X = 2,
+            Y = 10
+        };
+        var CustomerAddressField = new TextField("")
+        {
+            X = Pos.Right(CustomerAddressLabel) + 1,
+            Y  = 10,
+            Width = Dim.Fill() - 4
+        };
+        var CustomerEmailLabel = new Label("Email: ")
+        {
+            X = 2,
+            Y = 12
+        };
+        var CustomerEmailField = new TextField("")
+        {
+            X = Pos.Right(CustomerEmailLabel) + 1,
+            Y  = 12,
+            Width = Dim.Fill() - 4
+        };
+        var CustomerGenderLabel = new Label("Gender: ")
+        {
+            X = 2,
+            Y = 14
+        };
+        var CustomerGenderField = new TextField("")
+        {
+            X = Pos.Right(CustomerGenderLabel) + 1,
+            Y  = 14,
+            Width = Dim.Fill() - 4
+        };
+        var CustomerDateOfBirthLabel = new Label("Date of birth (YYYY-MM-DD): ")
+        {
+            X = 2,
+            Y = 16
+        };
+        var CustomerDateOfBirthField = new TextField("")
+        {
+            X = Pos.Right(CustomerDateOfBirthLabel) + 1,
+            Y  = 16,
+            Width = Dim.Fill() - 4
+        };
+
+        var registerButton = new Button("Register")
+        {
+            X = Pos.Center(),
+            Y = Pos.Bottom(CustomerDateOfBirthField),
+        };
+        registerButton.Clicked += () =>
+        {
+            us.Username = usernameField.Text.ToString();
+            us.PasswordHash = passwordField.Text.ToString();
+            cus.CustomerName = CustomerNameField.Text.ToString();
+            cus.CustomerPhone = CustomerPhoneNumberField.Text.ToString();
+            cus.CustomerAddress = CustomerAddressField.Text.ToString();
+            cus.CustomerEmail = CustomerEmailField.Text.ToString();
+            cus.CustomerGender = CustomerGenderField.Text.ToString();
+            
+            DateTime customerDateOfBirth;
+            if (!DateTime.TryParse(CustomerDateOfBirthField.Text.ToString(), out customerDateOfBirth))
+            {
+                MessageBox.ErrorQuery("Error", "Invalid date format. Please use YYYY-MM-DD.", "OK");
+                return;
+            }
+            cus.CustomerDateOfBirth = customerDateOfBirth;
+
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                connection.Open();
+                string customerquery ="INSERT INTO customers (customer_name, customer_phone_number, customer_address, customer_email, customer_gender, customer_dateofbirth, customer_count, customer_totalspent)"+
+                                    "VALUES (@customername, @customerphonenumber, @customeraddress, @customeremail, @customergender, @customerdateofbirth, 0, 0)";
+                MySqlCommand customercommand = new MySqlCommand(customerquery, connection);
+                customercommand.Parameters.AddWithValue("@customername", cus.CustomerName);
+                customercommand.Parameters.AddWithValue("@customerphonenumber", cus.CustomerPhone);
+                customercommand.Parameters.AddWithValue("@customeraddress",cus.CustomerAddress);
+                customercommand.Parameters.AddWithValue("@customeremail", cus.CustomerEmail);
+                customercommand.Parameters.AddWithValue("@customergender", cus.CustomerGender);
+                customercommand.Parameters.AddWithValue("@customerdateofbirth", cus.CustomerDateOfBirth);
+                customercommand.ExecuteNonQuery();
+
+                long customerId = customercommand.LastInsertedId;
+                string userquery = "INSERT INTO users (username, password_hash, role, customer_id) VALUES (@Username, @PasswordHash, @Role, @CustomerId)";
+                MySqlCommand usercommand = new MySqlCommand(userquery, connection);
+                usercommand.Parameters.AddWithValue("@Username", us.Username);
+                usercommand.Parameters.AddWithValue("@PasswordHash", us.PasswordHash);
+                usercommand.Parameters.AddWithValue("@Role", role);
+                usercommand.Parameters.AddWithValue("@CustomerId", customerId);
+
+                try
+                {
+                    usercommand.ExecuteNonQuery();
+                    ListUsers.Add(us);
+                    ListCustomers.Add(cus);
+                    MessageBox.Query("Success", "Registration successful!", "OK");
+                    Application.RequestStop();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                }
+            }
+        };
+
+        var closeButton = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = Pos.Bottom(registerButton) + 1
+        };
+        closeButton.Clicked += () =>
+        {
+            top.Remove(registerWin);
+            MainMenu();
+        };
+
+        registerWin.Add(usernameLabel, usernameField, passwordLabel, passwordField,
+                        CustomerNameLabel, CustomerNameField, CustomerPhoneNumberLabel,
+                        CustomerPhoneNumberField, CustomerAddressLabel, CustomerAddressField,
+                        CustomerEmailLabel, CustomerEmailField, CustomerGenderLabel, CustomerGenderField,
+                        CustomerDateOfBirthLabel, CustomerDateOfBirthField, registerButton, closeButton);
+
+    }
+
+   static void UserMenu()
+    {
+        var top = Application.Top;
+        var userMenu = new Window()
+        {
+            Title = "User Menu",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(userMenu);
+
+        var btnViewProducts = new Button("View Products")
+        {
+            X = 2,
+            Y = 2,
+        };
+        btnViewProducts.Clicked += () =>
+        {
+            try
+            {
+                top.Remove(userMenu);
+                ProductMenu();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+
+        var btnViewCart = new Button("View Cart")
+        {
+            X = 2,
+            Y = 3,
+        };
+        btnViewCart.Clicked += () =>
+        {
+            try
+            {
+                top.Remove(userMenu); 
+                DisplayCart();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+        
+        var btnOrder = new Button("Order")
+        {
+            X = 2,
+            Y = 4,
+        };
+        btnOrder.Clicked += () =>
+        {
+            try
+            {
+                top.Remove(userMenu);
+                DisplayProductToOrder();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+        var btnLogout = new Button("Logout")
+        {
+            X = 2,
+            Y = 5,
+        };
+        btnLogout.Clicked += () =>
+        {
+            top.Remove(userMenu);
+            Login();
+        };
+
+        userMenu.Add(btnViewProducts, btnViewCart, btnOrder, btnLogout);
+    }
+    static void AdminMenu()
+    {
+        var top = Application.Top;
+        var adminMenu = new Window()
+        {
+            Title = "Admin Menu",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(adminMenu);
+
+        var closeButton = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = Pos.Percent(100) - 3
+        };
+        closeButton.Clicked += () => 
+        {
+            top.Remove(adminMenu);
+            MainMenu();
+        };
+        adminMenu.Add(closeButton);
+    }
+
+    static void SuperAdminMenu()
+    {
+        var top = Application.Top;
+        var superAdminMenu = new Window()
+        {
+            Title = "Super Admin Menu",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(superAdminMenu);
+
+        var closeButton = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = Pos.Percent(100) - 3
+        };
+        closeButton.Clicked += () => 
+        {
+            top.Remove(superAdminMenu);
+            MainMenu();
+        };
+        superAdminMenu.Add(closeButton);
+
     }
   }
