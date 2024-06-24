@@ -25,7 +25,34 @@ public class Cart
     public static List<Products> ListProducts = new List<Products>();
     public static Program program = new Program();
 
+    static List<Products> LoadProducts(string connectionString)
+    {
+        List<Products> ListProduct = new List<Products>();
 
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {   
+            string query = "SELECT * FROM products"; 
+            MySqlCommand command = new MySqlCommand(query, connection);
+            connection.Open();
+            MySqlDataReader read = command.ExecuteReader();
+            while (read.Read())
+            {
+                Products sp = new Products();
+                // Nạp các thuộc tính 
+                sp.ProductID = read.GetInt32("product_id");
+                sp.ProductName = read.GetString("product_name");
+                sp.ProductDescription = read.GetString("product_description");
+                sp.ProductPrice = read.GetDecimal("product_price");
+                sp.ProductStockQuantity = read.GetInt32("product_stock_quantity");
+                sp.ProductBrand = read.GetString("product_brand");
+                sp.ProductCategoryID = read.GetInt32("product_category_id");
+
+
+                ListProduct.Add(sp);
+            }
+        }
+        return ListProduct;
+    }
 
     
 
@@ -138,40 +165,41 @@ public class Cart
             command.ExecuteNonQuery();
         }
     }
-    static void AddToCart(int productID, int quantityProduct)
-{
-    Products sp = ListProducts.FirstOrDefault(p => p.ProductID == productID);
-    if (sp != null)
+    public void AddToCart(int productID, int quantityProduct)
     {
-        userCart.AddItem(sp, quantityProduct);
-        using(MySqlConnection connection = new MySqlConnection(connectionString))
+        ListProducts = LoadProducts(connectionString);
+        Products sp = ListProducts.FirstOrDefault(p => p.ProductID == productID);
+        if (sp != null)
         {
-            connection.Open();
-            // Tạm thời bỏ cart_order_id
-            string query = "INSERT INTO cart (cart_customer_id, cart_product_id, cart_quantity, cart_product_price, cart_order_price, cart_total_products)" +
-                        "VALUES(@CartCustomerID, @CartProductID, @CartQuantity, 0, 0, 0)";
-            MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@CartProductID", productID);
-            command.Parameters.AddWithValue("@CartQuantity", quantityProduct);
-            command.Parameters.AddWithValue("@CartCustomerID", currentCustomerID);
+            userCart.AddItem(sp, quantityProduct);
+            using(MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                connection.Open();
+                // Tạm thời bỏ cart_order_id
+                string query = "INSERT INTO cart (cart_customer_id, cart_product_id, cart_quantity, cart_product_price, cart_order_price, cart_total_products)" +
+                            "VALUES(@CartCustomerID, @CartProductID, @CartQuantity, 0, 0, 0)";
+                MySqlCommand command = new MySqlCommand(query, connection);
+                command.Parameters.AddWithValue("@CartProductID", productID);
+                command.Parameters.AddWithValue("@CartQuantity", quantityProduct);
+                command.Parameters.AddWithValue("@CartCustomerID", currentCustomerID);
 
-            try
-            {
-                command.ExecuteNonQuery();
-                ListCarts.Add(userCart);
-                MessageBox.Query("Success", "Product added to cart.", "OK");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                try
+                {
+                    command.ExecuteNonQuery();
+                    ListCarts.Add(userCart);
+                    MessageBox.Query("Success", "Product added to cart.", "OK");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                }
             }
         }
+        else
+        {
+            MessageBox.ErrorQuery("Error", "Product not found.", "OK");
+        }
     }
-    else
-    {
-        MessageBox.ErrorQuery("Error", "Product not found.", "OK");
-    }
-}
     
 }
 

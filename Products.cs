@@ -20,6 +20,7 @@ public class Products
     public static string connectionString = Configuration.ConnectionString;
     public static List<Products> ListProducts = new List<Products>();
     public static Products pd = new Products();
+    public static Cart userCart = new Cart();
 
     
 
@@ -189,6 +190,7 @@ static List<Products> LoadProducts(string connectionString)
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
             string query = @"SELECT 
+                                p.product_id,
                                 p.product_name, 
                                 p.product_stock_quantity, 
                                 p.product_description, 
@@ -222,47 +224,61 @@ static List<Products> LoadProducts(string connectionString)
             int row = 1;
             while (reader.Read())
             {
-                var productLabel = new Label($"{reader["product_name"]}")
-                {
-                    X = 0,
-                    Y = row,
-                    Width = columnWidth
-                };
-                var stockQuantityLabel = new Label($"{reader["product_stock_quantity"]}")
-                {
-                    X = 1 * columnWidth,
-                    Y = row,
-                    Width = columnWidth
-                };
-                var descriptionLabel = new Label($"{reader["product_description"]}")
-                {
-                    X = 2 * columnWidth,
-                    Y = row,
-                    Width = columnWidth
-                };
-                var priceLabel = new Label($"{reader["product_price"]}")
-                {
-                    X = 3 * columnWidth,
-                    Y = row,
-                    Width = columnWidth
-                };
-                var categoryLabel = new Label($"{reader["category_name"]}")
-                {
-                    X = 4 * columnWidth,
-                    Y = row,
-                    Width = columnWidth
-                };
-                var brandLabel = new Label($"{reader["product_brand"]}")
-                {
-                    X = 5 * columnWidth,
-                    Y = row,
-                    Width = columnWidth
-                };
+                int productID = int.Parse(reader["product_id"].ToString());
 
-                displayProductWindow.Add(productLabel, stockQuantityLabel, descriptionLabel, priceLabel, categoryLabel, brandLabel);
-                row++;
-            }
+            var productLabel = new Label($"{reader["product_name"]}")
+            {
+                X = 0,
+                Y = row
+            };
+            var stockQuantityLabel = new Label($"{reader["product_stock_quantity"]}")
+            {
+                X = 15,
+                Y = row
+            };
+            var descriptionLabel = new Label($"{reader["product_description"]}")
+            {
+                X = 30,
+                Y = row
+            };
+            var priceLabel = new Label($"{reader["product_price"]}")
+            {
+                X = 45,
+                Y = row
+            };
+            var categoryLabel = new Label($"{reader["category_name"]}")
+            {
+                X = 60,
+                Y = row
+            };
+            var brandLabel = new Label($"{reader["product_brand"]}")
+            {
+                X = 75,
+                Y = row
+            };
+
+            var textQuantity = new TextField()
+            {
+                X = 90,
+                Y = row,
+                Width = 10
+            };
+
+            var addButton = new Button("Add to Cart")
+            {
+                X = 105,
+                Y = row
+            };
+            addButton.Clicked += () =>
+            {
+                int quantity = int.Parse(textQuantity.Text.ToString());
+                userCart.AddToCart(productID, quantity);
+            };
+
+            displayProductWindow.Add(productLabel, stockQuantityLabel, descriptionLabel, priceLabel, categoryLabel, brandLabel, textQuantity, addButton);
+            row++;
         }
+    }
 
         var btnBack = new Button("Back")
         {

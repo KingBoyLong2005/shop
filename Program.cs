@@ -12,17 +12,8 @@ using Terminal.Gui;
 public class Program
 {
     static Window mainMenu;
-    static Window productMenu;
-    static Window customerMenu;
-    static Window displayProductWindow;
-    static Window addProductWin;
-    static Window editProductWin;
-    static Window deleteProductWin;
-    static Window findProductWin;
-    static Window displayCustomerWindow;
-    static Window addCustomerWin;
-    static Window DisplayProductToOrderWin;
     public static string connectionString;
+    public static int currentCustomerID = SessionData.Instance.CurrentCustomerID;
     public static List<Products> ListProducts = new List<Products>();
     public static List<Categories> ListCategories = new List<Categories>();
     public static List<Users> ListUsers = new List<Users>();
@@ -166,15 +157,6 @@ public void MainMenu()
 
         mainMenu.Add(btnCustomer, btnProduct, btnCategories, btnOrder, btnClose);
     }
-
-//Products
-  
-
-  //Customer
-    
-    // Cart
-
-//Order
     static void Main()
     {
         Application.Init();
@@ -183,7 +165,7 @@ public void MainMenu()
 
         
         Application.Init();
-        UserMenu();
+        Login();
         Application.Run();
     }
     static void Login()
@@ -239,7 +221,7 @@ public void MainMenu()
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 connection.Open();
-                string query = "SELECT customer_id, password_hash, role FROM users WHERE username = @Username";
+                string query = "SELECT user_customer_id, password_hash, role FROM users WHERE username = @Username";
                 MySqlCommand command = new MySqlCommand(query, connection);
                 command.Parameters.AddWithValue("@Username", username);
 
@@ -251,7 +233,7 @@ public void MainMenu()
                     {
                         isAuthenticated = true;
                         role = reader.GetString("role");
-                        int currentCustomerID = reader.GetInt32("customer_id");
+                        currentCustomerID = reader.GetInt32("user_customer_id");
                         SessionData.Instance.CurrentCustomerID = currentCustomerID;
                     }
                 }
@@ -439,41 +421,46 @@ public void MainMenu()
             cus.CustomerDateOfBirth = customerDateOfBirth;
 
             using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {
+            connection.Open();
+            MySqlTransaction transaction = connection.BeginTransaction();
+            try
             {
-                connection.Open();
-                string customerquery ="INSERT INTO customers (customer_name, customer_phone_number, customer_address, customer_email, customer_gender, customer_dateofbirth, customer_count, customer_totalspent)"+
-                                    "VALUES (@customername, @customerphonenumber, @customeraddress, @customeremail, @customergender, @customerdateofbirth, 0, 0)";
-                MySqlCommand customercommand = new MySqlCommand(customerquery, connection);
-                customercommand.Parameters.AddWithValue("@customername", cus.CustomerName);
-                customercommand.Parameters.AddWithValue("@customerphonenumber", cus.CustomerPhone);
-                customercommand.Parameters.AddWithValue("@customeraddress",cus.CustomerAddress);
-                customercommand.Parameters.AddWithValue("@customeremail", cus.CustomerEmail);
-                customercommand.Parameters.AddWithValue("@customergender", cus.CustomerGender);
-                customercommand.Parameters.AddWithValue("@customerdateofbirth", cus.CustomerDateOfBirth);
-                customercommand.ExecuteNonQuery();
+                string customerQuery = "INSERT INTO customers (customer_name, customer_phone_number, customer_address, customer_email, customer_gender, customer_dateofbirth, customer_count, customer_totalspent)" +
+                                       "VALUES (@customername, @customerphonenumber, @customeraddress, @customeremail, @customergender, @customerdateofbirth, 0, 0)";
+                MySqlCommand customerCommand = new MySqlCommand(customerQuery, connection, transaction);
+                customerCommand.Parameters.AddWithValue("@customername", cus.CustomerName);
+                customerCommand.Parameters.AddWithValue("@customerphonenumber", cus.CustomerPhone);
+                customerCommand.Parameters.AddWithValue("@customeraddress", cus.CustomerAddress);
+                customerCommand.Parameters.AddWithValue("@customeremail", cus.CustomerEmail);
+                customerCommand.Parameters.AddWithValue("@customergender", cus.CustomerGender);
+                customerCommand.Parameters.AddWithValue("@customerdateofbirth", cus.CustomerDateOfBirth);
+                customerCommand.ExecuteNonQuery();
 
-                long customerId = customercommand.LastInsertedId;
-                string userquery = "INSERT INTO users (username, password_hash, role, customer_id) VALUES (@Username, @PasswordHash, @Role, @CustomerId)";
-                MySqlCommand usercommand = new MySqlCommand(userquery, connection);
-                usercommand.Parameters.AddWithValue("@Username", us.Username);
-                usercommand.Parameters.AddWithValue("@PasswordHash", us.PasswordHash);
-                usercommand.Parameters.AddWithValue("@Role", role);
-                usercommand.Parameters.AddWithValue("@CustomerId", customerId);
+                long customerId = customerCommand.LastInsertedId;
+                string userQuery = "INSERT INTO users (username, password_hash, role, user_customer_id) VALUES (@Username, @PasswordHash, @Role, @CustomerId)";
+                MySqlCommand userCommand = new MySqlCommand(userQuery, connection, transaction);
+                userCommand.Parameters.AddWithValue("@Username", us.Username);
+                userCommand.Parameters.AddWithValue("@PasswordHash", us.PasswordHash);
+                userCommand.Parameters.AddWithValue("@Role", role);
+                userCommand.Parameters.AddWithValue("@CustomerId", customerId);
+                userCommand.ExecuteNonQuery();
 
-                try
-                {
-                    usercommand.ExecuteNonQuery();
-                    ListUsers.Add(us);
-                    ListCustomers.Add(cus);
-                    MessageBox.Query("Success", "Registration successful!", "OK");
-                    Application.RequestStop();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.ErrorQuery("Error", ex.Message, "OK");
-                }
+                transaction.Commit();
+
+                ListUsers.Add(us);
+                ListCustomers.Add(cus);
+                MessageBox.Query("Success", "Registration successful!", "OK");
+                Application.RequestStop();
             }
-        };
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        }
+    };
+
 
         var closeButton = new Button("Close")
         {
@@ -494,7 +481,7 @@ public void MainMenu()
 
     }
 
-   static void UserMenu()
+    public static void UserMenu()
     {
         Application.Init();
         Colors.Base.Normal = Application.Driver.MakeAttribute(Color.BrightGreen, Color.Black);
@@ -519,12 +506,13 @@ public void MainMenu()
         // Thiết lập màu sắc cho TopLevel
         Colors.TopLevel.Normal = Application.Driver.MakeAttribute(Color.BrightMagenta, Color.Black);
         Colors.TopLevel.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
+
         // Tạo cửa sổ chính
         var top = Application.Top;
 
         var userMenu = new Window()
         {
-            Title = "User Menu",
+            Title = "Menu",
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
@@ -533,7 +521,7 @@ public void MainMenu()
         top.Add(userMenu);
 
         // Tạo FrameView bên trái chứa các nút
-        var leftFrame = new FrameView("Left Frame")
+        var leftFrame = new FrameView("Function")
         {
             X = 0,
             Y = 0,
@@ -543,7 +531,7 @@ public void MainMenu()
         userMenu.Add(leftFrame);
 
         // Tạo FrameView bên phải trên
-        var rightTopFrame = new FrameView("Right Top Frame")
+        var rightTopFrame = new FrameView("Welcome")
         {
             X = Pos.Percent(30), // Bắt đầu từ vị trí chiếm 30% chiều rộng cửa sổ
             Y = 0,
@@ -553,7 +541,7 @@ public void MainMenu()
         userMenu.Add(rightTopFrame);
 
         // Tạo FrameView bên phải dưới
-        var rightBottomFrame = new FrameView("Right Bottom Frame")
+        var rightBottomFrame = new FrameView("Top Products in month")
         {
             X = Pos.Percent(30), // Bắt đầu từ vị trí chiếm 30% chiều rộng cửa sổ
             Y = Pos.Percent(50), // Bắt đầu từ giữa chiều cao
@@ -630,21 +618,83 @@ public void MainMenu()
 
         leftFrame.Add(btnViewProducts, btnViewCart, btnOrder, btnLogout);
 
-        // Thêm một nhãn vào Right Top FrameView
-        var rightTopLabel = new Label("Hello, Right Top Frame!")
+        // Hiển thị tên khách hàng trong Right Top FrameView
+        string customerName = "";
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {
+            string query = "SELECT customer_name FROM customers WHERE customer_id = @CustomerID";
+            MySqlCommand command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@CustomerID", currentCustomerID);
+            connection.Open();
+            MySqlDataReader reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                customerName = reader["customer_name"].ToString();
+            }
+        }
+
+        var rightTopLabel = new Label(customerName)
         {
             X = 1,
             Y = 1
         };
         rightTopFrame.Add(rightTopLabel);
 
-        // Thêm một nhãn vào Right Bottom FrameView
-        var rightBottomLabel = new Label("Hello, Right Bottom Frame!")
+        // Hiển thị top 3 sản phẩm được đặt nhiều nhất trong Right Bottom FrameView
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
-            X = 1,
-            Y = 1
-        };
-        rightBottomFrame.Add(rightBottomLabel);
+            string query = @"SELECT 
+                                p.product_name, 
+                                COUNT(o.order_product_id) AS product_count
+                            FROM 
+                                orders o
+                            JOIN 
+                                products p ON o.order_product_id = p.product_id
+                            GROUP BY 
+                                p.product_name
+                            ORDER BY 
+                                product_count DESC
+                            LIMIT 3";
+            MySqlCommand command = new MySqlCommand(query, connection);
+            connection.Open();
+            MySqlDataReader reader = command.ExecuteReader();
+
+            int maxProductCount = 0;
+            List<(string ProductName, int ProductCount)> products = new List<(string, int)>();
+
+            while (reader.Read())
+            {
+                string productName = reader["product_name"].ToString();
+                int productCount = Convert.ToInt32(reader["product_count"]);
+                products.Add((productName, productCount));
+                if (productCount > maxProductCount)
+                {
+                    maxProductCount = productCount;
+                }
+            }
+
+            int row = 0;
+            int yPosition = 1;
+            foreach (var product in products)
+            {
+                string productName = product.ProductName;
+                int productCount = product.ProductCount;
+
+                // Tạo chiều dài của thanh ngang dựa trên tỷ lệ với sản phẩm có số lượng lớn nhất
+                int barLength = (int)((productCount / (double)maxProductCount) * 30); // 30 là chiều dài tối đa của thanh ngang
+
+                string bar = new string('=', barLength);
+
+                var productLabel = new Label($"{productName.PadRight(15)} | {bar} {productCount} orders")
+                {
+                    X = 1,
+                    Y = yPosition
+                };
+                rightBottomFrame.Add(productLabel);
+                yPosition += 2; // Tăng yPosition để tạo khoảng cách giữa các nhãn
+                row++;
+            }
+        }
     }
     static void AdminMenu()
     {

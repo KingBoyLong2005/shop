@@ -21,7 +21,9 @@ public class Orders
     
     public static string connectionString = Configuration.ConnectionString;
     public static Products pd = new Products();
+    public static Orders order = new Orders();
     public static int currentCustomerID = SessionData.Instance.CurrentCustomerID;
+
     public void DisplayProductToOrder()
     {
         List<Products> products = new List<Products>();
@@ -121,6 +123,7 @@ public class Orders
                 };
                 orderButton.Clicked += () =>
                 {
+                    top.Remove(DisplayProductToOrderWin);
                     OrderProduct(productID, productName, productPrice);
                 };
 
@@ -228,6 +231,7 @@ public class Orders
         btnCancel.Clicked += () =>
         {
             top.Remove(orderWindow);
+            order.DisplayProductToOrder();
         };
 
         orderWindow.Add(btnSubmitOrder, btnCancel);
@@ -238,10 +242,13 @@ public class Orders
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
             connection.Open();
-            string query = @"INSERT INTO orders (order_customer_id, order_quantity, order_date, order_delivery_date, order_payment_method, order_status, order_delivery_address) 
-                             VALUES (@CustomerID, @Quantity, @OrderDate, @DeliveryDate, @PaymentMethod, @OrderStatus, @DeliveryAddress)";
+            string query = @"INSERT INTO orders (order_customer_id, order_product_id, order_quantity, order_date, order_delivery_date, order_payment_method, order_status, order_delivery_address) 
+                             VALUES (@CustomerID, @ProductID, @Quantity, @OrderDate, @DeliveryDate, @PaymentMethod, @OrderStatus, @DeliveryAddress);
+
+                            UPDATE `orders` o JOIN `products` p ON o.order_product_id = p.product_id SET o.order_total_price = o.order_quantity * p.product_price;";
             MySqlCommand command = new MySqlCommand(query, connection);
             command.Parameters.AddWithValue("@CustomerID", currentCustomerID);
+            command.Parameters.AddWithValue("@ProductID", productID);
             command.Parameters.AddWithValue("@Quantity", quantity);
             command.Parameters.AddWithValue("@OrderDate", DateTime.Now);
             command.Parameters.AddWithValue("@DeliveryDate", DateTime.Now.AddDays(7)); // Giả sử thời gian giao hàng là 7 ngày
