@@ -18,7 +18,10 @@ public class Cart
     public decimal CartProductPrice { get; set; }
     public decimal CartOrderPrice { get; set; }
     public int CartTotalProduct { get; set; }
+
+
     public static string connectionString = Configuration.ConnectionString;
+    public static Customers customer = new Customers();
     public static Cart userCart = new Cart();
     public static int currentCustomerID = SessionData.Instance.CurrentCustomerID;
     public static List<Cart> ListCarts = new List<Cart>();
@@ -79,7 +82,7 @@ public class Cart
             CartItems.Remove(cartItem);
         }
     }
-    public void DisplayCart()
+    public void DisplayCart(string role)
     {
         var top = Application.Top;
 
@@ -131,7 +134,7 @@ public class Cart
                 {
                     RemoveItemFromCart(productID);
                     top.Remove(cartWindow);
-                    DisplayCart();
+                    DisplayCart("user");
                 };
 
                 cartWindow.Add(productLabel, removeButton);
@@ -147,7 +150,7 @@ public class Cart
         btnBack.Clicked += () =>
         {
             top.Remove(cartWindow);
-            program.MainMenu();
+            customer.UserMenu();
         };
 
         cartWindow.Add(btnBack);

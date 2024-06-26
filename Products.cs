@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
-using Spectre.Console;
 using Terminal.Gui;
 
 
@@ -20,7 +19,12 @@ public class Products
     public static string connectionString = Configuration.ConnectionString;
     public static List<Products> ListProducts = new List<Products>();
     public static Products pd = new Products();
+    public static Program program = new Program();
+    public static Users user = new Users();
+    public static Admin admin = new Admin();
+    public static SuperAdmin superadmin = new SuperAdmin();
     public static Cart userCart = new Cart();
+    public static Customers customer = new Customers();
 
     
 
@@ -36,143 +40,25 @@ static List<Products> LoadProducts(string connectionString)
             MySqlDataReader read = command.ExecuteReader();
             while (read.Read())
             {
-                Products sp = new Products();
+                Products pd = new Products();
                 // Nạp các thuộc tính 
-                sp.ProductID = read.GetInt32("product_id");
-                sp.ProductName = read.GetString("product_name");
-                sp.ProductDescription = read.GetString("product_description");
-                sp.ProductPrice = read.GetDecimal("product_price");
-                sp.ProductStockQuantity = read.GetInt32("product_stock_quantity");
-                sp.ProductBrand = read.GetString("product_brand");
-                sp.ProductCategoryID = read.GetInt32("product_category_id");
+                pd.ProductID = read.GetInt32("product_id");
+                pd.ProductName = read.GetString("product_name");
+                pd.ProductDescription = read.GetString("product_description");
+                pd.ProductPrice = read.GetDecimal("product_price");
+                pd.ProductStockQuantity = read.GetInt32("product_stock_quantity");
+                pd.ProductBrand = read.GetString("product_brand");
+                pd.ProductCategoryID = read.GetInt32("product_category_id");
 
 
-                ListProduct.Add(sp);
+                ListProduct.Add(pd);
             }
         }
         return ListProduct;
     }
 
-    public void ProductMenu()
-    {
-        var top = Application.Top;
 
-        var productMenu = new Window("Product Menu")
-        {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        top.Add(productMenu);
-        productMenu.FocusNext();
-
-        var btnDisplayProduct = new Button("Display Product")
-        {
-            X = 2,
-            Y = 2
-        };
-        btnDisplayProduct.Clicked += () =>
-        {
-            try
-            {
-                top.Remove(productMenu);
-                DisplayProduct();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        var btnAddProduct = new Button("Add Product")
-        {
-            X = 2,
-            Y = 3
-        };
-        btnAddProduct.Clicked += () =>
-        {
-            try
-            {
-                top.Remove(productMenu);
-                AddProduct();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        var btnFindProduct = new Button("Find Product")
-        {
-            X = 2,
-            Y = 4
-        };
-        btnFindProduct.Clicked += () =>
-        {
-            try
-            {
-                top.Remove(productMenu);
-                FindProduct();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        var btnDeleteProduct = new Button("Delete Product")
-        {
-            X = 2,
-            Y = 5
-        };
-        btnDeleteProduct.Clicked += () =>
-        {
-            try
-            {
-                top.Remove(productMenu);
-                DeleteProduct();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        var btnEditProduct = new Button("Edit Product")
-        {
-            X = 2,
-            Y = 6
-        };
-        btnEditProduct.Clicked += () =>
-        {
-            try
-            {
-                top.Remove(productMenu);
-                EditProductInformations();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        var btnClose = new Button("Close")
-        {
-            X = Pos.Center(),
-            Y = Pos.Percent(100) - 1
-        };
-        btnClose.Clicked += () =>
-        {
-            Program program = new Program();
-            top.Remove(productMenu);
-            program.MainMenu();
-        };
-
-        productMenu.Add(btnDisplayProduct, btnAddProduct, btnFindProduct, btnDeleteProduct, btnEditProduct, btnClose);
-    }
-
-    static void DisplayProduct()
+    public void DisplayProduct(string role)
     {
         List<string[]> products = new List<string[]>();
         var top = Application.Top;
@@ -288,14 +174,23 @@ static List<Products> LoadProducts(string connectionString)
         btnBack.Clicked += () =>
         {
             top.Remove(displayProductWindow);
-            pd.ProductMenu();
+            switch(role)
+            {
+                case "user":
+                customer.UserMenu();
+                break;
+                case "admin":
+                admin.AdminMenu();
+                break;
+            }
+            
         };
 
         displayProductWindow.Add(btnBack);
     }
-    static void AddProduct()
+    public void AddProduct()
     {
-    Products sp = new Products();
+    Products pd = new Products();
     var top = Application.Top;
     var addProductWin = new Window("Add Product")
     {
@@ -389,31 +284,31 @@ static List<Products> LoadProducts(string connectionString)
     {
         try
         {
-            sp.ProductName = productNameField.Text.ToString();
-            sp.ProductStockQuantity = int.Parse(productStockQuantityField.Text.ToString());
-            sp.ProductCategoryID = int.Parse(productCategoryIDField.Text.ToString());
-            sp.ProductPrice = decimal.Parse(productPriceField.Text.ToString());
-            sp.ProductDescription = productDescriptionField.Text.ToString();
-            sp.ProductBrand = productBrandField.Text.ToString();
+            pd.ProductName = productNameField.Text.ToString();
+            pd.ProductStockQuantity = int.Parse(productStockQuantityField.Text.ToString());
+            pd.ProductCategoryID = int.Parse(productCategoryIDField.Text.ToString());
+            pd.ProductPrice = decimal.Parse(productPriceField.Text.ToString());
+            pd.ProductDescription = productDescriptionField.Text.ToString();
+            pd.ProductBrand = productBrandField.Text.ToString();
 
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 connection.Open();
                 string query = "INSERT INTO products (product_name, product_stock_quantity, product_category_id, product_price, product_description, product_brand) VALUES (@ProductName, @ProductStockQuantity, @ProductCategoryID, @ProductPrice, @ProductDescription, @ProductBrand)";
                 MySqlCommand command = new MySqlCommand(query, connection);
-                command.Parameters.AddWithValue("@ProductName", sp.ProductName);
-                command.Parameters.AddWithValue("@ProductStockQuantity", sp.ProductStockQuantity);
-                command.Parameters.AddWithValue("@ProductCategoryID", sp.ProductCategoryID);
-                command.Parameters.AddWithValue("@ProductPrice", sp.ProductPrice);
-                command.Parameters.AddWithValue("@ProductDescription", sp.ProductDescription);
-                command.Parameters.AddWithValue("@ProductBrand", sp.ProductBrand);
+                command.Parameters.AddWithValue("@ProductName", pd.ProductName);
+                command.Parameters.AddWithValue("@ProductStockQuantity", pd.ProductStockQuantity);
+                command.Parameters.AddWithValue("@ProductCategoryID", pd.ProductCategoryID);
+                command.Parameters.AddWithValue("@ProductPrice", pd.ProductPrice);
+                command.Parameters.AddWithValue("@ProductDescription", pd.ProductDescription);
+                command.Parameters.AddWithValue("@ProductBrand", pd.ProductBrand);
                 command.ExecuteNonQuery();
             }
 
-            ListProducts.Add(sp);
+            ListProducts.Add(pd);
             MessageBox.Query("Success", "Successfully added new product!", "OK");
             top.Remove(addProductWin);
-            pd.ProductMenu();
+            admin.AdminMenu();
         }
         catch (Exception ex)
         {
@@ -428,8 +323,12 @@ static List<Products> LoadProducts(string connectionString)
     };
     closeButton.Clicked += () =>
     {
-        top.Remove(addProductWin);
-        pd.ProductMenu();
+        bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to close?", "Yes", "No") == 0;
+        if (confirmed)
+        {
+            top.Remove(addProductWin);
+            admin.AdminMenu();
+        }
     };
 
     addProductWin.Add(productNameLabel, productNameField, productStockQuantityLabel, productStockQuantityField,
@@ -438,9 +337,9 @@ static List<Products> LoadProducts(string connectionString)
                       saveButton, closeButton);
 
 }
-    static void EditProductInformations()
-    {
-    Products sp = new Products();
+  public void EditProductInformations()
+{
+    Products pd = new Products();
     ListProducts = LoadProducts(connectionString);
     var top = Application.Top;
     var editProductWin = new Window("Edit Product Information")
@@ -452,136 +351,146 @@ static List<Products> LoadProducts(string connectionString)
     };
     top.Add(editProductWin);
 
-    var findProductIDLabel = new Label("Find Product ID:")
+    var findProductLabel = new Label("Find Product Name:")
     {
         X = 2,
         Y = 2
     };
 
-    var findProductIDField = new TextField("")
+    var findProductField = new TextField("")
     {
-        X = Pos.Right(findProductIDLabel) + 1,
+        X = Pos.Right(findProductLabel) + 1,
         Y = 2,
         Width = Dim.Fill() - 4
     };
 
     var confirmButton = new Button("Confirm")
     {
-        X = Pos.Right(findProductIDField) + 1,
+        X = Pos.Right(findProductField) + 1,
         Y = 2
+    };
+
+    var productListView = new ListView(new List<string>())
+    {
+        X = 2,
+        Y = 4,
+        Width = Dim.Fill() - 4,
+        Height = 5,
+        Visible = false
     };
 
     var editProductNameLabel = new Label("Product Name:")
     {
         X = 2,
-        Y = 4
+        Y = Pos.Bottom(productListView) + 1
     };
 
     var editProductNameField = new TextField("")
     {
         X = Pos.Right(editProductNameLabel) + 1,
-        Y = 4,
+        Y = Pos.Bottom(productListView) + 1,
         Width = Dim.Fill() - 4
     };
 
     var editProductStockQuantityLabel = new Label("Stock Quantity:")
     {
         X = 2,
-        Y = 6
+        Y = Pos.Bottom(editProductNameField) + 1
     };
 
     var editProductStockQuantityField = new TextField("")
     {
         X = Pos.Right(editProductStockQuantityLabel) + 1,
-        Y = 6,
+        Y = Pos.Bottom(editProductNameField) + 1,
         Width = Dim.Fill() - 4
     };
 
     var editProductCategoryIDLabel = new Label("Category ID:")
     {
         X = 2,
-        Y = 8
+        Y = Pos.Bottom(editProductStockQuantityField) + 1
     };
 
     var editProductCategoryIDField = new TextField("")
     {
         X = Pos.Right(editProductCategoryIDLabel) + 1,
-        Y = 8,
+        Y = Pos.Bottom(editProductStockQuantityField) + 1,
         Width = Dim.Fill() - 4
     };
 
     var editProductPriceLabel = new Label("Price:")
     {
         X = 2,
-        Y = 10
+        Y = Pos.Bottom(editProductCategoryIDField) + 1
     };
+
     var editProductPriceField = new TextField("")
     {
         X = Pos.Right(editProductPriceLabel) + 1,
-        Y = 10,
+        Y = Pos.Bottom(editProductCategoryIDField) + 1,
         Width = Dim.Fill() - 4
     };
 
     var editProductDescriptionLabel = new Label("Description:")
     {
         X = 2,
-        Y = 12
+        Y = Pos.Bottom(editProductPriceField) + 1
     };
 
     var editProductDescriptionField = new TextField("")
     {
         X = Pos.Right(editProductDescriptionLabel) + 1,
-        Y = 12,
+        Y = Pos.Bottom(editProductPriceField) + 1,
         Width = Dim.Fill() - 4
     };
 
     var editProductBrandLabel = new Label("Brand:")
     {
         X = 2,
-        Y = 14
+        Y = Pos.Bottom(editProductDescriptionField) + 1
     };
 
     var editProductBrandField = new TextField("")
     {
         X = Pos.Right(editProductBrandLabel) + 1,
-        Y = 14,
+        Y = Pos.Bottom(editProductDescriptionField) + 1,
         Width = Dim.Fill() - 4
     };
 
     var saveButton = new Button("Save")
     {
         X = Pos.Center(),
-        Y = 16
+        Y = Pos.Bottom(editProductBrandField) + 2
     };
     saveButton.Clicked += () =>
     {
         try
         {
-            sp.ProductName = editProductNameField.Text.ToString();
-            sp.ProductStockQuantity = int.Parse(editProductStockQuantityField.Text.ToString());
-            sp.ProductCategoryID = int.Parse(editProductCategoryIDField.Text.ToString());
-            sp.ProductPrice = decimal.Parse(editProductPriceField.Text.ToString());
-            sp.ProductDescription = editProductDescriptionField.Text.ToString();
-            sp.ProductBrand = editProductBrandField.Text.ToString();
+            pd.ProductName = editProductNameField.Text.ToString();
+            pd.ProductStockQuantity = int.Parse(editProductStockQuantityField.Text.ToString());
+            pd.ProductCategoryID = int.Parse(editProductCategoryIDField.Text.ToString());
+            pd.ProductPrice = decimal.Parse(editProductPriceField.Text.ToString());
+            pd.ProductDescription = editProductDescriptionField.Text.ToString();
+            pd.ProductBrand = editProductBrandField.Text.ToString();
 
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 connection.Open();
                 string query = "UPDATE products SET product_name = @ProductName, product_stock_quantity = @ProductStockQuantity, product_description = @ProductDescription, product_price = @ProductPrice, product_category_id = @ProductCategoryID, product_brand = @ProductBrand WHERE product_id = @ProductID";
                 MySqlCommand command = new MySqlCommand(query, connection);
-                command.Parameters.AddWithValue("@ProductID", sp.ProductID);
-                command.Parameters.AddWithValue("@ProductName", sp.ProductName);
-                command.Parameters.AddWithValue("@ProductStockQuantity", sp.ProductStockQuantity);
-                command.Parameters.AddWithValue("@ProductDescription", sp.ProductDescription);
-                command.Parameters.AddWithValue("@ProductPrice", sp.ProductPrice);
-                command.Parameters.AddWithValue("@ProductCategoryID", sp.ProductCategoryID);
-                command.Parameters.AddWithValue("@ProductBrand", sp.ProductBrand);
+                command.Parameters.AddWithValue("@ProductID", pd.ProductID);
+                command.Parameters.AddWithValue("@ProductName", pd.ProductName);
+                command.Parameters.AddWithValue("@ProductStockQuantity", pd.ProductStockQuantity);
+                command.Parameters.AddWithValue("@ProductDescription", pd.ProductDescription);
+                command.Parameters.AddWithValue("@ProductPrice", pd.ProductPrice);
+                command.Parameters.AddWithValue("@ProductCategoryID", pd.ProductCategoryID);
+                command.Parameters.AddWithValue("@ProductBrand", pd.ProductBrand);
                 command.ExecuteNonQuery();
             }
 
             MessageBox.Query("Success", "Successfully edited product!", "OK");
             top.Remove(editProductWin);
-            pd.ProductMenu();
+            admin.AdminMenu();
         }
         catch (Exception ex)
         {
@@ -596,53 +505,95 @@ static List<Products> LoadProducts(string connectionString)
     };
     closeButton.Clicked += () =>
     {
-        top.Remove(editProductWin);
-        pd.ProductMenu();
+        bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to close?", "Yes", "No") == 0;
+        if (confirmed)
+        {
+            top.Remove(editProductWin);
+            admin.AdminMenu();
+        }
     };
 
     confirmButton.Clicked += () =>
     {
         try
         {
-            if (int.TryParse(findProductIDField.Text.ToString(), out int productID))
+            string productName = findProductField.Text.ToString();
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                var product = ListProducts.FirstOrDefault(p => p.ProductID == productID);
-                if (product != null)
+                string query = @"SELECT 
+                                    product_id,
+                                    product_name, 
+                                    product_stock_quantity, 
+                                    product_description, 
+                                    product_price, 
+                                    product_category_id, 
+                                    product_brand
+                                FROM products
+                                WHERE product_name LIKE @ProductName";
+                MySqlCommand command = new MySqlCommand(query, connection);
+                command.Parameters.AddWithValue("@ProductName", "%" + productName + "%");
+                connection.Open();
+                MySqlDataReader reader = command.ExecuteReader();
+
+                var productList = new List<string>();
+                var productMap = new Dictionary<int, Products>();
+
+                while (reader.Read())
                 {
-                    sp = product;
-                    findProductIDLabel.Visible = false;
-                    findProductIDField.Visible = false;
-                    confirmButton.Visible = false;
+                    Products product = new Products
+                    {
+                        ProductID = reader.GetInt32("product_id"),
+                        ProductName = reader.GetString("product_name"),
+                        ProductStockQuantity = reader.GetInt32("product_stock_quantity"),
+                        ProductDescription = reader.GetString("product_description"),
+                        ProductPrice = reader.GetDecimal("product_price"),
+                        ProductCategoryID = reader.GetInt32("product_category_id"),
+                        ProductBrand = reader.GetString("product_brand")
+                    };
 
-                    editProductNameField.Text = sp.ProductName;
-                    editProductStockQuantityField.Text = sp.ProductStockQuantity.ToString();
-                    editProductCategoryIDField.Text = sp.ProductCategoryID.ToString();
-                    editProductPriceField.Text = sp.ProductPrice.ToString();
-                    editProductDescriptionField.Text = sp.ProductDescription;
-                    editProductBrandField.Text = sp.ProductBrand;
+                    productList.Add($"{product.ProductID} - {product.ProductName}");
+                    productMap[product.ProductID] = product;
+                }
 
-                    editProductNameLabel.Visible = true;
-                    editProductNameField.Visible = true;
-                    editProductStockQuantityLabel.Visible = true;
-                    editProductStockQuantityField.Visible = true;
-                    editProductCategoryIDLabel.Visible = true;
-                    editProductCategoryIDField.Visible = true;
-                    editProductPriceLabel.Visible = true;
-                    editProductPriceField.Visible = true;
-                    editProductDescriptionLabel.Visible = true;
-                    editProductDescriptionField.Visible = true;
-                    editProductBrandLabel.Visible = true;
-                    editProductBrandField.Visible = true;
-                    saveButton.Visible = true;
+                if (productList.Count > 0)
+                {
+                    productListView.SetSource(productList);
+                    productListView.Visible = true;
+                    productListView.OpenSelectedItem += (args) =>
+                    {
+                        int selectedProductID = int.Parse(productList[args.Item].Split(' ')[0]);
+                        pd = productMap[selectedProductID];
+                        findProductLabel.Visible = false;
+                        findProductField.Visible = false;
+                        confirmButton.Visible = false;
+                        productListView.Visible = false;
+
+                        editProductNameField.Text = pd.ProductName;
+                        editProductStockQuantityField.Text = pd.ProductStockQuantity.ToString();
+                        editProductCategoryIDField.Text = pd.ProductCategoryID.ToString();
+                        editProductPriceField.Text = pd.ProductPrice.ToString();
+                        editProductDescriptionField.Text = pd.ProductDescription;
+                        editProductBrandField.Text = pd.ProductBrand;
+
+                        editProductNameLabel.Visible = true;
+                        editProductNameField.Visible = true;
+                        editProductStockQuantityLabel.Visible = true;
+                        editProductStockQuantityField.Visible = true;
+                        editProductCategoryIDLabel.Visible = true;
+                        editProductCategoryIDField.Visible = true;
+                        editProductPriceLabel.Visible = true;
+                        editProductPriceField.Visible = true;
+                        editProductDescriptionLabel.Visible = true;
+                        editProductDescriptionField.Visible = true;
+                        editProductBrandLabel.Visible = true;
+                        editProductBrandField.Visible = true;
+                        saveButton.Visible = true;
+                    };
                 }
                 else
                 {
                     MessageBox.ErrorQuery("Error", "Product not found!", "OK");
                 }
-            }
-            else
-            {
-                MessageBox.ErrorQuery("Error", "Invalid Product ID!", "OK");
             }
         }
         catch (Exception ex)
@@ -652,6 +603,7 @@ static List<Products> LoadProducts(string connectionString)
     };
 
     // Initial visibility
+    productListView.Visible = false;
     editProductNameLabel.Visible = false;
     editProductNameField.Visible = false;
     editProductStockQuantityLabel.Visible = false;
@@ -666,7 +618,7 @@ static List<Products> LoadProducts(string connectionString)
     editProductBrandField.Visible = false;
     saveButton.Visible = false;
 
-    editProductWin.Add(findProductIDLabel, findProductIDField, confirmButton,
+    editProductWin.Add(findProductLabel, findProductField, confirmButton, productListView,
                        editProductNameLabel, editProductNameField,
                        editProductStockQuantityLabel, editProductStockQuantityField,
                        editProductCategoryIDLabel, editProductCategoryIDField,
@@ -674,8 +626,8 @@ static List<Products> LoadProducts(string connectionString)
                        editProductDescriptionLabel, editProductDescriptionField,
                        editProductBrandLabel, editProductBrandField,
                        saveButton, closeButton);
-}    
-    static void DeleteProduct()
+}
+  public void DeleteProduct()
 {
     ListProducts = LoadProducts(connectionString);
     var top = Application.Top;
@@ -712,22 +664,22 @@ static List<Products> LoadProducts(string connectionString)
 
             if (int.TryParse(productIDField.Text.ToString(), out int productID))
             {
-                Products sp = ListProducts.Find(s => s.ProductID == productID);
+                Products pd = ListProducts.Find(s => s.ProductID == productID);
 
-                if (sp != null)
+                if (pd != null)
                 {
                     using (MySqlConnection connection = new MySqlConnection(connectionString))
                     {
                         connection.Open();
                         string query = "DELETE FROM products WHERE product_id = @ProductID";
                         MySqlCommand command = new MySqlCommand(query, connection);
-                        command.Parameters.AddWithValue("@ProductID", sp.ProductID);
+                        command.Parameters.AddWithValue("@ProductID", pd.ProductID);
                         command.ExecuteNonQuery();
                     }
-                    ListProducts.Remove(sp);
+                    ListProducts.Remove(pd);
                     MessageBox.Query("Success", "Successfully deleted product!", "OK");
                     top.Remove(deleteProductWin);
-                    pd.ProductMenu();
+                    admin.AdminMenu();
                 }
                 else
                 {
@@ -752,16 +704,19 @@ static List<Products> LoadProducts(string connectionString)
     };
     closeButton.Clicked += () =>
     {
-        Application.RequestStop();
+        bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to close?", "Yes", "No") == 0;
+        if (confirmed)
+        {
         top.Remove(deleteProductWin);
-        pd.ProductMenu();
+        admin.AdminMenu();
+        }
     };
 
     deleteProductWin.Add(productIDLabel, productIDField, deleteButton, closeButton);
 
 }
 
-    static void FindProduct()
+    public void FindProduct(string role)
 {
     var top = Application.Top;
     var findProductWin = new Window("Find Product")
@@ -910,7 +865,15 @@ static List<Products> LoadProducts(string connectionString)
     closeButton.Clicked += () =>
     {
         top.Remove(findProductWin);
-        pd.ProductMenu();
+        switch(role)
+        {
+            case "user":
+            customer.UserMenu();
+            break;
+            case "admin":
+            admin.AdminMenu();
+            break;
+        }
     };
 
     findProductWin.Add(productNameLabel, productNameField, findButton, closeButton);

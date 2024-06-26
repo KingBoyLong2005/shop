@@ -18,8 +18,17 @@ public class Customers
     public DateTime CustomerDateOfBirth {get; set;}
     public int CustomerCount {get; set;}
     public decimal CustomerTotalSpent {get; set;}
-    public static string connectionString = Configuration.ConnectionString;
+
+    public static Users user = new Users();
+    public static Admin admin = new Admin();
+    public static SuperAdmin superadmin = new SuperAdmin();
+    public static Cart userCart = new Cart();
+    public static Products pd = new Products();
+    public static Orders order = new Orders();
+    public static Program program = new Program();
     public static Customers cus = new Customers();
+    public static int currentCustomerID = SessionData.Instance.CurrentCustomerID;
+    public static string connectionString = Configuration.ConnectionString;
     public static List<Customers> ListCustomers = new List<Customers>();
     static List<Customers> LoadCustomers(string connectionString)
     {
@@ -50,100 +59,8 @@ public class Customers
         }
         return ListCustomers;
     }
-    public void CustomerMenu()
-    {
-        var top = Application.Top;
-        var customerMenu = new Window()
-        {
-            Title = "Customer Menu",
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        top.Add(customerMenu);
-        customerMenu.FocusNext();
-        var btnDisplayCustomer = new Button("Display Customer")
-        {
-            X =2,
-            Y = 2
-        };
-        btnDisplayCustomer.Clicked += () =>
-        {
-            try
-            {
-                top.Remove(customerMenu);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        var btnAddCustomer = new Button("Add Customer")
-        {
-            X =2,
-            Y = 4
-        };
-        btnAddCustomer.Clicked += () =>
-        {
-            try
-            {
-                top.Remove(customerMenu);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        var btnEditCustomer = new Button("Edit Customer:")
-        {
-            X =2,
-            Y = 6
-        };
-        btnEditCustomer.Clicked += () =>
-        {
-            try
-            {
-                top.Remove(customerMenu);
-                EditCustomer();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        var btnDeleteCustomer = new Button("Delete Customer:")
-        {
-            X =2,
-            Y = 8
-        };
-        btnDeleteCustomer.Clicked += () =>
-        {
-            try
-            {
-                top.Remove(customerMenu);
-                DeleteCustomer();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        var btnClose = new Button("Close")
-        {
-            X = Pos.Center(),
-            Y = Pos.Percent(100) - 3
-        };
-
-        customerMenu.Add(btnDisplayCustomer, btnAddCustomer, btnEditCustomer, btnDeleteCustomer, btnClose);
-
-    }
  
-   static void EditCustomer()
+   public void EditCustomer()
 {
     Customers customer = new Customers();
     List<Customers> customersList = LoadCustomers(connectionString);
@@ -293,7 +210,7 @@ public class Customers
             }
             MessageBox.Query("Success", "Customer information has been updated!", "OK");
             top.Remove(editCustomerWin);
-            cus.CustomerMenu();
+            admin.AdminMenu();
         }
         catch (Exception ex)
         {
@@ -361,8 +278,12 @@ public class Customers
     };
     closeButton.Clicked += () =>
     {
+        bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to close?", "Yes", "No") == 0;
+        if (confirmed)
+        {
         top.Remove(editCustomerWin);
-        cus.CustomerMenu();
+        admin.AdminMenu();
+        }
     };
 
     editCustomerWin.Add(findCustomerIDLabel, findCustomerIDField, findButton,
@@ -374,7 +295,7 @@ public class Customers
                         editCustomerDateOfBirthLabel, editCustomerDateOfBirthField,
                         saveButton, closeButton);
 }
-   static void DeleteCustomer()
+   public void DeleteCustomer()
     {
         ListCustomers = LoadCustomers(connectionString);
         var top = Application.Top;
@@ -428,7 +349,7 @@ public class Customers
                         ListCustomers.Remove(kh);
                         MessageBox.Query("Success", "Successfully deleted customer!", "OK");
                         top.Remove(deleteCustomerWin);
-                        cus.CustomerMenu();
+                        admin.AdminMenu();
                     }
                     else
                     {
@@ -455,12 +376,12 @@ public class Customers
     closeButton.Clicked += () =>
     {
         top.Remove(deleteCustomerWin);
-        cus.CustomerMenu();
+        admin.AdminMenu();
     };
 
     deleteCustomerWin.Add(customerIDLabel, customerIDField, deleteButton, closeButton);
     }
-   static void DisplayCustomers()
+   public void DisplayCustomers()
 {
     List<Customers> customersList = LoadCustomers(connectionString);
     var top = Application.Top;
@@ -602,12 +523,12 @@ public class Customers
     btnClose.Clicked += () =>
     {
         top.Remove(displayCustomerWindow);
-        cus.CustomerMenu();
+        admin.AdminMenu();
     };
 
     displayCustomerWindow.Add(btnClose);
 }
-  static void AddCustomer()
+  public void AddCustomer()
 {
     Customers cus = new Customers();
     var top = Application.Top;
@@ -738,7 +659,7 @@ public class Customers
             ListCustomers.Add(cus);
             MessageBox.Query("Success", "Successfully added new customer information!", "OK");
             top.Remove(addCustomerWin);
-            cus.CustomerMenu();
+            admin.AdminMenu();
         }
         catch (Exception ex)
         {
@@ -753,8 +674,12 @@ public class Customers
     };
     closeButton.Clicked += () =>
     {
+        bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to close?", "Yes", "No") == 0;
+        if (confirmed)
+        {
         top.Remove(addCustomerWin);
-        cus.CustomerMenu();
+        admin.AdminMenu();
+        }
     };
 
     addCustomerWin.Add(
@@ -768,7 +693,7 @@ public class Customers
     );
 }
    
- static void FindCustomer()
+ public void FindCustomer()
     {
         List<string[]> customers = new List<string[]>();
         var top = Application.Top;
@@ -888,9 +813,222 @@ public class Customers
         btnClose.Clicked += () =>
         {
             top.Remove(findCustomerWindow);
-            cus.CustomerMenu();
+            admin.AdminMenu();
         };
 
         findCustomerWindow.Add(btnClose);
+    }
+    public void UserMenu()
+    {
+        Application.Init();
+
+        // Tạo cửa sổ chính
+        var top = Application.Top;
+
+        var userMenu = new Window()
+        {
+            Title = "Menu",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(userMenu);
+
+        // Tạo FrameView bên trái chứa các nút
+        var leftFrame = new FrameView("Function")
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Percent(30), // Chiếm 30% chiều rộng cửa sổ
+            Height = Dim.Fill() // Chiếm toàn bộ chiều cao
+        };
+        userMenu.Add(leftFrame);
+
+        // Tạo FrameView bên phải trên
+        var rightTopFrame = new FrameView("Welcome")
+        {
+            X = Pos.Percent(30), // Bắt đầu từ vị trí chiếm 30% chiều rộng cửa sổ
+            Y = 0,
+            Width = Dim.Fill(), // Chiếm toàn bộ phần còn lại của chiều rộng
+            Height = Dim.Percent(50) // Chiếm 50% chiều cao
+        };
+        userMenu.Add(rightTopFrame);
+
+        // Tạo FrameView bên phải dưới
+        var rightBottomFrame = new FrameView("Top Products in month")
+        {
+            X = Pos.Percent(30), // Bắt đầu từ vị trí chiếm 30% chiều rộng cửa sổ
+            Y = Pos.Percent(50), // Bắt đầu từ giữa chiều cao
+            Width = Dim.Fill(), // Chiếm toàn bộ phần còn lại của chiều rộng
+            Height = Dim.Fill() // Chiếm phần còn lại của chiều cao
+        };
+        userMenu.Add(rightBottomFrame);
+
+        // Thêm các nút vào Left FrameView
+        var btnDisplayProducts = new Button("Display Products")
+        {
+            X = 2,
+            Y = 2,
+        };
+        btnDisplayProducts.Clicked += () =>
+        {
+            try
+            {
+                top.Remove(userMenu);
+                pd.DisplayProduct("user");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+
+        var btnViewCart = new Button("View Cart")
+        {
+            X = 2,
+            Y = 3,
+        };
+        btnViewCart.Clicked += () =>
+        {
+            try
+            {
+                top.Remove(userMenu); 
+                userCart.DisplayCart("user");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+
+        var btnOrder = new Button("Order")
+        {
+            X = 2,
+            Y = 4,
+        };
+        btnOrder.Clicked += () =>
+        {
+            try
+            {
+                top.Remove(userMenu);
+                order.DisplayProductToOrder();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+        var btnViewMyOrders = new Button("View My Orders")
+        {
+            X = 2,
+            Y = 5,
+        };
+        btnViewMyOrders.Clicked += () =>
+        {
+            top.Remove(userMenu);
+            order.DisplayMyOrder();
+        };
+        var btnFindProduct = new Button("Find Product")
+        {
+            X = 2,
+            Y = 6
+        };
+        btnFindProduct.Clicked += () =>
+        {
+            top.Remove(userMenu);
+            pd.FindProduct("user");
+        };
+
+        var btnLogout = new Button("Logout")
+        {
+            X = 2,
+            Y = 19,
+        };
+        btnLogout.Clicked += () =>
+        {
+            top.Remove(userMenu);
+            program.Login();
+        };
+
+        leftFrame.Add(btnDisplayProducts, btnViewCart, btnOrder, btnViewMyOrders, btnFindProduct, btnLogout);
+
+        // Hiển thị tên khách hàng trong Right Top FrameView
+        string customerName = "";
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {
+            string query = "SELECT customer_name FROM customers WHERE customer_id = @CustomerID";
+            MySqlCommand command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@CustomerID", currentCustomerID);
+            connection.Open();
+            MySqlDataReader reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                customerName = reader["customer_name"].ToString();
+            }
+        }
+
+        var rightTopLabel = new Label(customerName)
+        {
+            X = 1,
+            Y = 1
+        };
+        rightTopFrame.Add(rightTopLabel);
+
+        // Hiển thị top 3 sản phẩm được đặt nhiều nhất trong Right Bottom FrameView
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {
+            string query = @"SELECT 
+                                p.product_name, 
+                                COUNT(o.order_product_id) AS product_count
+                            FROM 
+                                orders o
+                            JOIN 
+                                products p ON o.order_product_id = p.product_id
+                            GROUP BY 
+                                p.product_name
+                            ORDER BY 
+                                product_count DESC
+                            LIMIT 3";
+            MySqlCommand command = new MySqlCommand(query, connection);
+            connection.Open();
+            MySqlDataReader reader = command.ExecuteReader();
+
+            int maxProductCount = 0;
+            List<(string ProductName, int ProductCount)> products = new List<(string, int)>();
+
+            while (reader.Read())
+            {
+                string productName = reader["product_name"].ToString();
+                int productCount = Convert.ToInt32(reader["product_count"]);
+                products.Add((productName, productCount));
+                if (productCount > maxProductCount)
+                {
+                    maxProductCount = productCount;
+                }
+            }
+
+            int row = 0;
+            int yPosition = 1;
+            foreach (var product in products)
+            {
+                string productName = product.ProductName;
+                int productCount = product.ProductCount;
+
+                // Tạo chiều dài của thanh ngang dựa trên tỷ lệ với sản phẩm có số lượng lớn nhất
+                int barLength = (int)((productCount / (double)maxProductCount) * 30); // 30 là chiều dài tối đa của thanh ngang
+
+                string bar = new string('=', barLength);
+
+                var productLabel = new Label($"{productName.PadRight(15)} | {bar} {productCount} orders")
+                {
+                    X = 1,
+                    Y = yPosition
+                };
+                rightBottomFrame.Add(productLabel);
+                yPosition += 2; // Tăng yPosition để tạo khoảng cách giữa các nhãn
+                row++;
+            }
+        }
     }
 }

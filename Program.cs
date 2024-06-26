@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using System.Security.Cryptography.X509Certificates;
 using Terminal.Gui;
+using Microsoft.VisualBasic;
 
 
 public class Program
@@ -22,8 +23,12 @@ public class Program
     public static Cart userCart = new Cart();
     public static Products pd = new Products();
     public static Orders order = new Orders();
+    public static Customers customer = new Customers();
     public static Program program = new Program();
+    public static Users user = new Users();
+    public static Admin admin = new Admin();
     
+    public static SuperAdmin superadmin = new SuperAdmin();
     static Program()
     {
         // Hỏi mật khẩu từ người dùng
@@ -63,112 +68,39 @@ public class Program
         return ListCategory;
     }
 
-public void MainMenu()
-    {
-        var top = Application.Top;
 
-        mainMenu = new Window("Main Menu")
-        {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        top.Add(mainMenu);
-
-        var btnCustomer = new Button("Customers")
-        {
-            X = 2,
-            Y = 2,
-        };
-        btnCustomer.Clicked += () =>
-        {
-            try
-            {
-                // Xử lý sự kiện cho nút Customers
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        var btnProduct = new Button("Products")
-        {
-            X = 2,
-            Y = 3
-        };
-        btnProduct.Clicked += () =>
-        {
-            try
-            {
-                top.Remove(mainMenu);
-                pd.ProductMenu();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        var btnCategories = new Button("Categories")
-        {
-            X = 2,
-            Y = 4
-        };
-        btnCategories.Clicked += () =>
-        {
-            try
-            {
-                // Xử lý sự kiện cho nút Categories
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        var btnOrder = new Button("Orders")
-        {
-            X = 2,
-            Y = 5,
-        };
-        btnOrder.Clicked += () =>
-        {
-            try
-            {
-                // Xử lý sự kiện cho nút Orders
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        var btnClose = new Button("Close")
-        {
-            X = Pos.Center(),
-            Y = Pos.Percent(100) - 1
-        };
-        btnClose.Clicked += () =>
-        {
-            Application.RequestStop();
-        };
-
-        mainMenu.Add(btnCustomer, btnProduct, btnCategories, btnOrder, btnClose);
-    }
     static void Main()
     {
         Application.Init();
         Colors.Base.Normal = Application.Driver.MakeAttribute(Color.BrightGreen, Color.Black);
         Colors.Base.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
 
+        // Thiết lập màu sắc cho Dialog
+        Colors.Dialog.Normal = Application.Driver.MakeAttribute(Color.Cyan, Color.Black);
+        Colors.Dialog.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
+        Colors.Dialog.HotNormal = Application.Driver.MakeAttribute(Color.Red, Color.Black);
+        Colors.Dialog.HotFocus = Application.Driver.MakeAttribute(Color.Red, Color.DarkGray);
+
+        // Thiết lập màu sắc cho Menu
+        Colors.Menu.Normal = Application.Driver.MakeAttribute(Color.White, Color.Blue);
+        Colors.Menu.Focus = Application.Driver.MakeAttribute(Color.Black, Color.Gray);
+        Colors.Menu.HotNormal = Application.Driver.MakeAttribute(Color.BrightYellow, Color.Blue);
+        Colors.Menu.HotFocus = Application.Driver.MakeAttribute(Color.BrightYellow, Color.Gray);
+
+        // Thiết lập màu sắc cho Error
+        Colors.Error.Normal = Application.Driver.MakeAttribute(Color.Red, Color.White);
+        Colors.Error.Focus = Application.Driver.MakeAttribute(Color.White, Color.Red);
+
+        // Thiết lập màu sắc cho TopLevel
+        Colors.TopLevel.Normal = Application.Driver.MakeAttribute(Color.BrightMagenta, Color.Black);
+        Colors.TopLevel.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
+
         
         Application.Init();
-        Login();
+        program.Login();
         Application.Run();
     }
-    static void Login()
+    public void Login()
     {
         var top = Application.Top;
         var loginWin = new Window()
@@ -246,13 +178,13 @@ public void MainMenu()
                 switch (role)
                 {
                     case "user":
-                        UserMenu();
+                        customer.UserMenu();
                         break;
                     case "admin":
-                        AdminMenu();
+                        admin.AdminMenu();
                         break;
                     case "superadmin":
-                        SuperAdminMenu();
+                        superadmin.SuperAdminMenu();
                         break;
                 }
             }
@@ -270,7 +202,7 @@ public void MainMenu()
         closeButton.Clicked += () =>
         {
             top.Remove(loginWin);
-            program.MainMenu();
+            Application.Shutdown();
         };
 
         loginWin.Add(usernameLabel, usernameField, passwordLabel, passwordField, loginButton, closeButton);
@@ -470,7 +402,7 @@ public void MainMenu()
         closeButton.Clicked += () =>
         {
             top.Remove(registerWin);
-            program.MainMenu();
+            Application.Shutdown();
         };
 
         registerWin.Add(usernameLabel, usernameField, passwordLabel, passwordField,
@@ -478,274 +410,6 @@ public void MainMenu()
                         CustomerPhoneNumberField, CustomerAddressLabel, CustomerAddressField,
                         CustomerEmailLabel, CustomerEmailField, CustomerGenderLabel, CustomerGenderField,
                         CustomerDateOfBirthLabel, CustomerDateOfBirthField, registerButton, closeButton);
-
-    }
-
-    public static void UserMenu()
-    {
-        Application.Init();
-        Colors.Base.Normal = Application.Driver.MakeAttribute(Color.BrightGreen, Color.Black);
-        Colors.Base.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
-
-        // Thiết lập màu sắc cho Dialog
-        Colors.Dialog.Normal = Application.Driver.MakeAttribute(Color.Cyan, Color.Black);
-        Colors.Dialog.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
-        Colors.Dialog.HotNormal = Application.Driver.MakeAttribute(Color.Red, Color.Black);
-        Colors.Dialog.HotFocus = Application.Driver.MakeAttribute(Color.Red, Color.DarkGray);
-
-        // Thiết lập màu sắc cho Menu
-        Colors.Menu.Normal = Application.Driver.MakeAttribute(Color.White, Color.Blue);
-        Colors.Menu.Focus = Application.Driver.MakeAttribute(Color.Black, Color.Gray);
-        Colors.Menu.HotNormal = Application.Driver.MakeAttribute(Color.BrightYellow, Color.Blue);
-        Colors.Menu.HotFocus = Application.Driver.MakeAttribute(Color.BrightYellow, Color.Gray);
-
-        // Thiết lập màu sắc cho Error
-        Colors.Error.Normal = Application.Driver.MakeAttribute(Color.Red, Color.White);
-        Colors.Error.Focus = Application.Driver.MakeAttribute(Color.White, Color.Red);
-
-        // Thiết lập màu sắc cho TopLevel
-        Colors.TopLevel.Normal = Application.Driver.MakeAttribute(Color.BrightMagenta, Color.Black);
-        Colors.TopLevel.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
-
-        // Tạo cửa sổ chính
-        var top = Application.Top;
-
-        var userMenu = new Window()
-        {
-            Title = "Menu",
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        top.Add(userMenu);
-
-        // Tạo FrameView bên trái chứa các nút
-        var leftFrame = new FrameView("Function")
-        {
-            X = 0,
-            Y = 0,
-            Width = Dim.Percent(30), // Chiếm 30% chiều rộng cửa sổ
-            Height = Dim.Fill() // Chiếm toàn bộ chiều cao
-        };
-        userMenu.Add(leftFrame);
-
-        // Tạo FrameView bên phải trên
-        var rightTopFrame = new FrameView("Welcome")
-        {
-            X = Pos.Percent(30), // Bắt đầu từ vị trí chiếm 30% chiều rộng cửa sổ
-            Y = 0,
-            Width = Dim.Fill(), // Chiếm toàn bộ phần còn lại của chiều rộng
-            Height = Dim.Percent(50) // Chiếm 50% chiều cao
-        };
-        userMenu.Add(rightTopFrame);
-
-        // Tạo FrameView bên phải dưới
-        var rightBottomFrame = new FrameView("Top Products in month")
-        {
-            X = Pos.Percent(30), // Bắt đầu từ vị trí chiếm 30% chiều rộng cửa sổ
-            Y = Pos.Percent(50), // Bắt đầu từ giữa chiều cao
-            Width = Dim.Fill(), // Chiếm toàn bộ phần còn lại của chiều rộng
-            Height = Dim.Fill() // Chiếm phần còn lại của chiều cao
-        };
-        userMenu.Add(rightBottomFrame);
-
-        // Thêm các nút vào Left FrameView
-        var btnViewProducts = new Button("View Products")
-        {
-            X = 2,
-            Y = 2,
-        };
-        btnViewProducts.Clicked += () =>
-        {
-            try
-            {
-                top.Remove(userMenu);
-                pd.ProductMenu();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        var btnViewCart = new Button("View Cart")
-        {
-            X = 2,
-            Y = 3,
-        };
-        btnViewCart.Clicked += () =>
-        {
-            try
-            {
-                top.Remove(userMenu); 
-                userCart.DisplayCart();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        var btnOrder = new Button("Order")
-        {
-            X = 2,
-            Y = 4,
-        };
-        btnOrder.Clicked += () =>
-        {
-            try
-            {
-                top.Remove(userMenu);
-                order.DisplayProductToOrder();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        var btnLogout = new Button("Logout")
-        {
-            X = 2,
-            Y = 5,
-        };
-        btnLogout.Clicked += () =>
-        {
-            top.Remove(userMenu);
-            Login();
-        };
-
-        leftFrame.Add(btnViewProducts, btnViewCart, btnOrder, btnLogout);
-
-        // Hiển thị tên khách hàng trong Right Top FrameView
-        string customerName = "";
-        using (MySqlConnection connection = new MySqlConnection(connectionString))
-        {
-            string query = "SELECT customer_name FROM customers WHERE customer_id = @CustomerID";
-            MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@CustomerID", currentCustomerID);
-            connection.Open();
-            MySqlDataReader reader = command.ExecuteReader();
-            if (reader.Read())
-            {
-                customerName = reader["customer_name"].ToString();
-            }
-        }
-
-        var rightTopLabel = new Label(customerName)
-        {
-            X = 1,
-            Y = 1
-        };
-        rightTopFrame.Add(rightTopLabel);
-
-        // Hiển thị top 3 sản phẩm được đặt nhiều nhất trong Right Bottom FrameView
-        using (MySqlConnection connection = new MySqlConnection(connectionString))
-        {
-            string query = @"SELECT 
-                                p.product_name, 
-                                COUNT(o.order_product_id) AS product_count
-                            FROM 
-                                orders o
-                            JOIN 
-                                products p ON o.order_product_id = p.product_id
-                            GROUP BY 
-                                p.product_name
-                            ORDER BY 
-                                product_count DESC
-                            LIMIT 3";
-            MySqlCommand command = new MySqlCommand(query, connection);
-            connection.Open();
-            MySqlDataReader reader = command.ExecuteReader();
-
-            int maxProductCount = 0;
-            List<(string ProductName, int ProductCount)> products = new List<(string, int)>();
-
-            while (reader.Read())
-            {
-                string productName = reader["product_name"].ToString();
-                int productCount = Convert.ToInt32(reader["product_count"]);
-                products.Add((productName, productCount));
-                if (productCount > maxProductCount)
-                {
-                    maxProductCount = productCount;
-                }
-            }
-
-            int row = 0;
-            int yPosition = 1;
-            foreach (var product in products)
-            {
-                string productName = product.ProductName;
-                int productCount = product.ProductCount;
-
-                // Tạo chiều dài của thanh ngang dựa trên tỷ lệ với sản phẩm có số lượng lớn nhất
-                int barLength = (int)((productCount / (double)maxProductCount) * 30); // 30 là chiều dài tối đa của thanh ngang
-
-                string bar = new string('=', barLength);
-
-                var productLabel = new Label($"{productName.PadRight(15)} | {bar} {productCount} orders")
-                {
-                    X = 1,
-                    Y = yPosition
-                };
-                rightBottomFrame.Add(productLabel);
-                yPosition += 2; // Tăng yPosition để tạo khoảng cách giữa các nhãn
-                row++;
-            }
-        }
-    }
-    static void AdminMenu()
-    {
-        var top = Application.Top;
-        var adminMenu = new Window()
-        {
-            Title = "Admin Menu",
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        top.Add(adminMenu);
-
-        var closeButton = new Button("Close")
-        {
-            X = Pos.Center(),
-            Y = Pos.Percent(100) - 3
-        };
-        closeButton.Clicked += () => 
-        {
-            top.Remove(adminMenu);
-            program.MainMenu();
-        };
-        adminMenu.Add(closeButton);
-    }
-
-    static void SuperAdminMenu()
-    {
-        var top = Application.Top;
-        var superAdminMenu = new Window()
-        {
-            Title = "Super Admin Menu",
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        top.Add(superAdminMenu);
-
-        var closeButton = new Button("Close")
-        {
-            X = Pos.Center(),
-            Y = Pos.Percent(100) - 3
-        };
-        closeButton.Clicked += () => 
-        {
-            top.Remove(superAdminMenu);
-            program.MainMenu();
-        };
-        superAdminMenu.Add(closeButton);
 
     }
   }
