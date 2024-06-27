@@ -193,11 +193,21 @@ public class Program
                 MessageBox.ErrorQuery("Error", "Invalid username or password!", "OK");
             }
         };
+        var btnRegister = new Button("Register")
+        {
+            X = Pos.Center(),
+            Y = Pos.Bottom(loginButton) + 1
+        };
+        btnRegister.Clicked += () =>
+        {
+            top.Remove(loginWin);
+            customer.RegisterUser();
+        };
 
         var closeButton = new Button("Close")
         {
             X = Pos.Center(),
-            Y = Pos.Bottom(loginButton) + 1
+            Y = Pos.Bottom(loginButton) + 2
         };
         closeButton.Clicked += () =>
         {
@@ -205,25 +215,16 @@ public class Program
             Application.Shutdown();
         };
 
-        loginWin.Add(usernameLabel, usernameField, passwordLabel, passwordField, loginButton, closeButton);
+        loginWin.Add(usernameLabel, usernameField, passwordLabel, passwordField, loginButton, btnRegister, closeButton);
     }
 
-    static void RegisterUser()
-    {
-        Register("user");
-    }
-
-    static void RegisterAdmin()
-    {
-        Register("admin");
-    }
 
     static void RegisterSuperAdmin()
     {
-        Register("superadmin");
+        program.Register("superadmin");
     }
 
-    static void Register(string role)
+    public void Register(string role)
     {
         Users  us = new Users();
         Customers cus = new Customers();
@@ -383,7 +384,11 @@ public class Program
                 ListUsers.Add(us);
                 ListCustomers.Add(cus);
                 MessageBox.Query("Success", "Registration successful!", "OK");
-                Application.RequestStop();
+                
+                top.Remove(registerWin);
+
+                Login();
+
             }
             catch (Exception ex)
             {

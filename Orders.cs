@@ -23,6 +23,7 @@ public class Orders
     public static string connectionString = Configuration.ConnectionString;
     public static Products pd = new Products();
     public static Orders order = new Orders();
+    public static Cart cart= new Cart();
     public static Users user = new Users();
     public static Program program = new Program();
     public static Customers customer = new Customers();
@@ -31,6 +32,7 @@ public class Orders
     public static int currentCustomerID = SessionData.Instance.CurrentCustomerID;
     public static List<Products> ListProducts = new List<Products>();
     public static List<Customers> ListCustomers = new List<Customers>();
+
     static List<Customers> LoadCustomers(string connectionString)
     {
         List<Customers> ListCustomers = new List<Customers>();
@@ -284,7 +286,7 @@ static List<Products> LoadProducts(string connectionString)
     }
     
 
-    static void OrderProduct(int productID, string productName, decimal productPrice)
+    public void OrderProduct(int productID, string productName, decimal productPrice)
     {
         var top = Application.Top;
         var orderWindow = new Window("Order Product")
@@ -352,6 +354,7 @@ static List<Products> LoadProducts(string connectionString)
             int quantity;
             if (int.TryParse(txtQuantity.Text.ToString(), out quantity) && quantity > 0)
             {
+                cart.RemoveItemFromCart(productID);
                 PlaceOrderDirectly(productID, quantity, txtDeliveryAddress.Text.ToString(), txtPaymentMethod.Text.ToString());
                 top.Remove(orderWindow);
             }

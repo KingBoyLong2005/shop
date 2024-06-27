@@ -28,34 +28,6 @@ public class Products
 
     
 
-static List<Products> LoadProducts(string connectionString)
-    {
-        List<Products> ListProduct = new List<Products>();
-
-        using (MySqlConnection connection = new MySqlConnection(connectionString))
-        {   
-            string query = "SELECT * FROM products"; 
-            MySqlCommand command = new MySqlCommand(query, connection);
-            connection.Open();
-            MySqlDataReader read = command.ExecuteReader();
-            while (read.Read())
-            {
-                Products pd = new Products();
-                // Nạp các thuộc tính 
-                pd.ProductID = read.GetInt32("product_id");
-                pd.ProductName = read.GetString("product_name");
-                pd.ProductDescription = read.GetString("product_description");
-                pd.ProductPrice = read.GetDecimal("product_price");
-                pd.ProductStockQuantity = read.GetInt32("product_stock_quantity");
-                pd.ProductBrand = read.GetString("product_brand");
-                pd.ProductCategoryID = read.GetInt32("product_category_id");
-
-
-                ListProduct.Add(pd);
-            }
-        }
-        return ListProduct;
-    }
 
 
     public void DisplayProduct(string role)
@@ -340,7 +312,6 @@ static List<Products> LoadProducts(string connectionString)
   public void EditProductInformations()
 {
     Products pd = new Products();
-    ListProducts = LoadProducts(connectionString);
     var top = Application.Top;
     var editProductWin = new Window("Edit Product Information")
     {
@@ -629,7 +600,6 @@ static List<Products> LoadProducts(string connectionString)
 }
   public void DeleteProduct()
 {
-    ListProducts = LoadProducts(connectionString);
     var top = Application.Top;
     var deleteProductWin = new Window("Delete Product")
     {
