@@ -357,6 +357,7 @@ static List<Products> LoadProducts(string connectionString)
                 cart.RemoveItemFromCart(productID);
                 PlaceOrderDirectly(productID, quantity, txtDeliveryAddress.Text.ToString(), txtPaymentMethod.Text.ToString());
                 top.Remove(orderWindow);
+                DisplayProductToOrder();
             }
             else
             {
@@ -375,7 +376,7 @@ static List<Products> LoadProducts(string connectionString)
             if (confirmed)
             {
                 top.Remove(orderWindow);
-                order.DisplayProductToOrder();
+                DisplayProductToOrder();
             }
         };
 

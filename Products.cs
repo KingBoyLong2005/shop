@@ -62,10 +62,10 @@ public class Products
             MySqlDataReader reader = command.ExecuteReader();
             var columnDisplayListProduct = new string[]
             {
-                "Product's name", "Stock quantity", "Description", "Price", "Category's name", "Brand"
+                "Product's name", "Stock quantity", "Description", "Price", "Category's name", "Brand", "Quantity", "Action"
             };
 
-            int columnWidth = 20; // Increase column width
+            int columnWidth = 20; // Set column width
 
             // Display column headers
             for (int i = 0; i < columnDisplayListProduct.Length; i++)
@@ -75,7 +75,8 @@ public class Products
                     X = i * columnWidth,
                     Y = 0,
                     Width = columnWidth,
-                    Height = 1
+                    Height = 1,
+                    Visible = !(role == "admin" && (columnDisplayListProduct[i] == "Quantity" || columnDisplayListProduct[i] == "Chosse product to your cart"))
                 });
             }
 
@@ -84,81 +85,98 @@ public class Products
             {
                 int productID = int.Parse(reader["product_id"].ToString());
 
-            var productLabel = new Label($"{reader["product_name"]}")
-            {
-                X = 0,
-                Y = row
-            };
-            var stockQuantityLabel = new Label($"{reader["product_stock_quantity"]}")
-            {
-                X = 15,
-                Y = row
-            };
-            var descriptionLabel = new Label($"{reader["product_description"]}")
-            {
-                X = 30,
-                Y = row
-            };
-            var priceLabel = new Label($"{reader["product_price"]}")
-            {
-                X = 45,
-                Y = row
-            };
-            var categoryLabel = new Label($"{reader["category_name"]}")
-            {
-                X = 60,
-                Y = row
-            };
-            var brandLabel = new Label($"{reader["product_brand"]}")
-            {
-                X = 75,
-                Y = row
-            };
+                var productLabel = new Label($"{reader["product_name"]}")
+                {
+                    X = 0,
+                    Y = row
+                };
+                var stockQuantityLabel = new Label($"{reader["product_stock_quantity"]}")
+                {
+                    X = 1 * columnWidth,
+                    Y = row
+                };
+                var descriptionLabel = new Label($"{reader["product_description"]}")
+                {
+                    X = 2 * columnWidth,
+                    Y = row
+                };
+                var priceLabel = new Label($"{reader["product_price"]}")
+                {
+                    X = 3 * columnWidth,
+                    Y = row
+                };
+                var categoryLabel = new Label($"{reader["category_name"]}")
+                {
+                    X = 4 * columnWidth,
+                    Y = row
+                };
+                var brandLabel = new Label($"{reader["product_brand"]}")
+                {
+                    X = 5 * columnWidth,
+                    Y = row
+                };
 
-            var textQuantity = new TextField()
-            {
-                X = 90,
-                Y = row,
-                Width = 10
-            };
+                var textQuantity = new TextField()
+                {
+                    X = 6 * columnWidth,
+                    Y = row,
+                    Width = 10
+                };
 
-            var addButton = new Button("Add to Cart")
-            {
-                X = 105,
-                Y = row
-            };
-            addButton.Clicked += () =>
-            {
-                int quantity = int.Parse(textQuantity.Text.ToString());
-                userCart.AddToCart(productID, quantity);
-            };
+                var addButton = new Button("Add to Cart")
+                {
+                    X = 7 * columnWidth,
+                    Y = row
+                };
+                addButton.Clicked += () =>
+                {
+                    int quantity;
+                    if (int.TryParse(textQuantity.Text.ToString(), out quantity) && quantity > 0)
+                    {
+                        userCart.AddToCart(productID, quantity);
+                    }
+                    else
+                    {
+                        MessageBox.ErrorQuery("Error", "Invalid quantity.", "OK");
+                    }
+                };
 
-            displayProductWindow.Add(productLabel, stockQuantityLabel, descriptionLabel, priceLabel, categoryLabel, brandLabel, textQuantity, addButton);
-            row++;
-        }
-    }
-
-        var btnBack = new Button("Back")
-        {
-            X = Pos.Center(),
-            Y = Pos.Percent(100) - 1
-        };
-        btnBack.Clicked += () =>
-        {
-            top.Remove(displayProductWindow);
-            switch(role)
-            {
-                case "user":
-                customer.UserMenu();
-                break;
-                case "admin":
-                admin.AdminMenu();
-                break;
+                displayProductWindow.Add(productLabel, stockQuantityLabel, descriptionLabel, priceLabel, categoryLabel, brandLabel, textQuantity, addButton);
+                row++;
+                if (role == "user")
+                {
+                    textQuantity.Visible = true;
+                    addButton.Visible = true;
+                }
+                else if (role == "admin")
+                {
+                    textQuantity.Visible = false;
+                    addButton.Visible = false;
+                }
             }
-            
-        };
 
-        displayProductWindow.Add(btnBack);
+            var btnBack = new Button("Back")
+            {
+                X = Pos.Center(),
+                Y = Pos.Percent(100) - 1
+            };
+            btnBack.Clicked += () =>
+            {
+                top.Remove(displayProductWindow);
+                switch (role)
+                {
+                    case "user":
+                        customer.UserMenu();
+                        break;
+                    case "admin":
+                        admin.AdminMenu();
+                        break;
+                }
+            };
+
+            displayProductWindow.Add(btnBack);
+        }
+
     }
     public void AddProduct()
     {

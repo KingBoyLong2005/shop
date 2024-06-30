@@ -10,6 +10,7 @@ using Terminal.Gui;
 using Microsoft.VisualBasic;
 
 
+
 public class Program
 {
     static Window mainMenu;
@@ -72,30 +73,30 @@ public class Program
     static void Main()
     {
         Application.Init();
-        Colors.Base.Normal = Application.Driver.MakeAttribute(Color.BrightGreen, Color.Black);
+        Colors.Base.Normal = Application.Driver.MakeAttribute(Color.Cyan, Color.Black); // Xanh Zalo
         Colors.Base.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
 
         // Thiết lập màu sắc cho Dialog
-        Colors.Dialog.Normal = Application.Driver.MakeAttribute(Color.Cyan, Color.Black);
+        Colors.Dialog.Normal = Application.Driver.MakeAttribute(Color.BrightCyan, Color.Black); // Xanh dương sáng Zalo
         Colors.Dialog.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
-        Colors.Dialog.HotNormal = Application.Driver.MakeAttribute(Color.Red, Color.Black);
-        Colors.Dialog.HotFocus = Application.Driver.MakeAttribute(Color.Red, Color.DarkGray);
+        Colors.Dialog.HotNormal = Application.Driver.MakeAttribute(Color.Red, Color.Black); // Giữ nguyên màu mặc định
+        Colors.Dialog.HotFocus = Application.Driver.MakeAttribute(Color.Red, Color.DarkGray); // Giữ nguyên màu mặc định
 
         // Thiết lập màu sắc cho Menu
-        Colors.Menu.Normal = Application.Driver.MakeAttribute(Color.White, Color.Blue);
+        Colors.Menu.Normal = Application.Driver.MakeAttribute(Color.White, Color.Blue); // Xanh dương đậm Zalo
         Colors.Menu.Focus = Application.Driver.MakeAttribute(Color.Black, Color.Gray);
-        Colors.Menu.HotNormal = Application.Driver.MakeAttribute(Color.BrightYellow, Color.Blue);
+        Colors.Menu.HotNormal = Application.Driver.MakeAttribute(Color.BrightYellow, Color.Blue); // Vàng Zalo
         Colors.Menu.HotFocus = Application.Driver.MakeAttribute(Color.BrightYellow, Color.Gray);
 
         // Thiết lập màu sắc cho Error
-        Colors.Error.Normal = Application.Driver.MakeAttribute(Color.Red, Color.White);
-        Colors.Error.Focus = Application.Driver.MakeAttribute(Color.White, Color.Red);
+        Colors.Error.Normal = Application.Driver.MakeAttribute(Color.Red, Color.White); // Giữ nguyên màu mặc định
+        Colors.Error.Focus = Application.Driver.MakeAttribute(Color.White, Color.Red); // Giữ nguyên màu mặc định
 
         // Thiết lập màu sắc cho TopLevel
-        Colors.TopLevel.Normal = Application.Driver.MakeAttribute(Color.BrightMagenta, Color.Black);
+        Colors.TopLevel.Normal = Application.Driver.MakeAttribute(Color.Magenta, Color.Black); // Hồng tím Zalo
         Colors.TopLevel.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
 
-        
+
         Application.Init();
         program.Login();
         Application.Run();
@@ -196,7 +197,7 @@ public class Program
         var btnRegister = new Button("Register")
         {
             X = Pos.Center(),
-            Y = Pos.Bottom(loginButton) + 1
+            Y = 8
         };
         btnRegister.Clicked += () =>
         {
@@ -207,7 +208,7 @@ public class Program
         var closeButton = new Button("Close")
         {
             X = Pos.Center(),
-            Y = Pos.Bottom(loginButton) + 2
+            Y = 10
         };
         closeButton.Clicked += () =>
         {

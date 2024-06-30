@@ -77,7 +77,7 @@ public class Admin
         btnDisplayProduct.Clicked += () =>
         {
             top.Remove(adminMenu);
-            pd.DisplayProduct("admin");
+            order.DisplayProductToOrderForCustomer();
         };
         var btnOrderForCustomer = new Button("Display Products")
         {
@@ -87,7 +87,7 @@ public class Admin
         btnOrderForCustomer.Clicked += () =>
         {
             top.Remove(adminMenu);
-            order.DisplayProductToOrderForCustomer();
+            pd.DisplayProduct("admin");
         };
         var btnDisplayCustomer = new Button("Display Customer")
         {

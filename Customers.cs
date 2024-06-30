@@ -208,7 +208,7 @@ public class Customers
                 customerCommand.ExecuteNonQuery();
 
                 long customerId = customerCommand.LastInsertedId;
-                string userQuery = "INSERT INTO users (username, password_hash, role, user_customer_id) VALUES (@Username, @PasswordHash, user, @CustomerId)";
+                string userQuery = "INSERT INTO users (username, password_hash, role, user_customer_id) VALUES (@Username, @PasswordHash, 'user', @CustomerId)";
                 MySqlCommand userCommand = new MySqlCommand(userQuery, connection, transaction);
                 userCommand.Parameters.AddWithValue("@Username", us.Username);
                 userCommand.Parameters.AddWithValue("@PasswordHash", us.PasswordHash);
