@@ -533,7 +533,8 @@ public class Customers
                         using (MySqlConnection connection = new MySqlConnection(connectionString))
                         {
                             connection.Open();
-                            string customerquery = "DELETE FROM customers WHERE customer_id = @customerid";
+                            string customerquery = "DELETE FROM customers WHERE customer_id = @customerid"+
+                                                    "DELETE FROM users WHERE user_customer_id = @customerid";
                             MySqlCommand customercommand = new MySqlCommand(customerquery, connection);
                             customercommand.Parameters.AddWithValue("@customerid", kh.CustomerID);
                             customercommand.ExecuteNonQuery();
@@ -725,7 +726,7 @@ public class Customers
         program.Register("user");
     }
    
- public void FindCustomer()
+    public void FindCustomer()
     {
         List<string[]> customers = new List<string[]>();
         var top = Application.Top;

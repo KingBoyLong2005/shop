@@ -28,6 +28,29 @@ public class Admin
     
     public static List<Users> ListUsers = new List<Users>();
     public static List<Admin> ListAdmin = new List<Admin>();
+    static List<Admin> LoadAdmin(string connectionString)
+    {
+        List<Admin> ListAdmin = new List<Admin>();
+
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {   
+            string query = "SELECT * FROM admins"; 
+            MySqlCommand command = new MySqlCommand(query, connection);
+            connection.Open();
+            MySqlDataReader read = command.ExecuteReader();
+            while (read.Read())
+            {
+                Admin ad = new Admin(); // các thuộc tính 
+                ad.AdminID = read.GetInt32("admin_id");
+                ad.AdminName = read.GetString("admin_name");
+                ad.AdminPhone = read.GetString("admin_phone");
+                ad.AdminEmail = read.GetString("cusmin_email");
+
+                ListAdmin.Add(ad);
+            }
+        }
+        return ListAdmin;
+    }
     public void AdminMenu()
     {
         Application.Init();
@@ -348,7 +371,578 @@ public class Admin
                         registerButton, closeButton);
 
     
-}
+    }   
+    public void FindStaff()
+    {
+        List<string[]> admin = new List<string[]>();
+        var top = Application.Top;
+
+        var findAdminWindow = new Window("Find Admin")
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(findAdminWindow);
+        findAdminWindow.FocusNext();
+
+        var searchLabel = new Label("Enter staff name:")
+        {
+            X = 1,
+            Y = 1
+        };
+        var searchField = new TextField("")
+        {
+            X = Pos.Right(searchLabel) + 1,
+            Y = 1,
+            Width = 40
+        };
+        var searchButton = new Button("Search")
+        {
+            X = Pos.Right(searchField) + 1,
+            Y = 1
+        };
+
+        findAdminWindow.Add(searchLabel, searchField, searchButton);
+
+        var resultLabel = new Label("Results:")
+        {
+            X = 1,
+            Y = 3
+        };
+        findAdminWindow.Add(resultLabel);
+
+        var columnDisplayListAdmin = new string[]
+        {
+            "Admin's name", "Phone number", "Email", "Gender", "Username", "Pass"
+        };
+
+        int columnWidth = 20; // Tăng độ rộng cột
+
+        // Thêm các Label cho tiêu đề cột
+        for (int i = 0; i < columnDisplayListAdmin.Length; i++)
+        {
+            findAdminWindow.Add(new Label(columnDisplayListAdmin[i])
+            {
+                X = i * columnWidth,
+                Y = 4,
+                Width = columnWidth,
+                Height = 1
+            });
+        }
+
+        // Xử lý sự kiện Clicked của nút tìm kiếm
+        searchButton.Clicked += () =>
+        {
+            admin.Clear(); // Xóa dữ liệu khách hàng cũ
+
+            string searchTerm = searchField.Text.ToString();
+
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                string query = @"
+                    SELECT 
+                        adm.admin_name,
+                        adm.admin_phone AS admin_phone_number,
+                        adm.admin_email,
+                        adm.admin_gender,
+                        usr.username,
+                        usr.password_hash
+                    FROM admins adm
+                    INNER JOIN users usr ON adm.admin_id = usr.user_customer_id
+                    WHERE adm.admin_name LIKE @SearchTerm AND usr.role = 'admin' ";
+
+                MySqlCommand command = new MySqlCommand(query, connection);
+                command.Parameters.AddWithValue("@SearchTerm", "%" + searchTerm + "%");
+
+                connection.Open();
+                MySqlDataReader reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    admin.Add(new string[]
+                    {
+                        reader["admin_name"].ToString(),
+                        reader["admin_phone_number"].ToString(),
+                        reader["admin_email"].ToString(),
+                        reader["admin_gender"].ToString(),
+                        reader["username"].ToString(),
+                        reader["password_hash"].ToString()
+                    });
+                }
+
+                // Hiển thị kết quả tìm kiếm
+                for (int i = 0; i < admin.Count; i++)
+                {
+                    for (int j = 0; j < admin[i].Length; j++)
+                    {
+                        findAdminWindow.Add(new Label(admin[i][j])
+                        {
+                            X = j * columnWidth,
+                            Y = i + 5,
+                            Width = columnWidth,
+                            Height = 1
+                        });
+                    }
+                }
+            }
+        };
+
+                var btnClose = new Button("Close")
+                {
+                    X = Pos.Center(),
+                    Y = Pos.Percent(100) - 1
+                };
+                btnClose.Clicked += () =>
+                {
+                    top.Remove(findAdminWindow);
+                    superadmin.SuperAdminMenu();
+                };
+
+                findAdminWindow.Add(btnClose);
+    }
+    public void DeleteStaff()
+    {
+        ListAdmin = LoadAdmin(connectionString);
+        var top = Application.Top;
+        var deleteCustomerWin = new Window("Delete Admin")
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill() - 4,
+            Height = Dim.Fill() - 4
+        };
+        top.Add(deleteCustomerWin);
+
+        var adminIDLabel = new Label("Admin ID:")
+        {
+            X = 1,
+            Y = 1
+        };
+
+        var adminIDField = new TextField("")
+        {
+            X = Pos.Right(adminIDLabel) + 1,
+            Y = 1,
+            Width = Dim.Fill() - 4
+        };
+
+        var deleteButton = new Button("Delete")
+        {
+            X = Pos.Center(),
+            Y = Pos.Bottom(adminIDField) + 1
+        };
+
+        deleteButton.Clicked += () =>
+        {
+            try
+            {
+
+                if(int.TryParse(adminIDField.Text.ToString(), out int adminID))
+                {
+                    Admin ad = ListAdmin.Find(k => k.AdminID == adminID);
+
+                    if (ad!= null)
+                    {
+                        using (MySqlConnection connection = new MySqlConnection(connectionString))
+                        {
+                            connection.Open();
+                            string customerquery = "DELETE FROM admins WHERE admin_id = @adminid"+
+                                                    "DELETE FROM users WHERE user_customer_id = @adminid";
+                            MySqlCommand customercommand = new MySqlCommand(customerquery, connection);
+                            customercommand.Parameters.AddWithValue("@adminid", ad.AdminID);
+                            customercommand.ExecuteNonQuery();
+                        }
+                        ListAdmin.Remove(ad);
+                        MessageBox.Query("Success", "Successfully deleted Staff!", "OK");
+                        top.Remove(deleteCustomerWin);
+                        superadmin.SuperAdminMenu();
+                    }
+                    else
+                    {
+                        MessageBox.ErrorQuery("Error", "Staff not found!", "OK");
+                    }
+                }
+                else
+                {
+                    MessageBox.ErrorQuery("Error", "Invalid Staff ID!", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+
+    };
+
+    var closeButton = new Button("Close")
+    {
+        X = Pos.Center(),
+        Y = Pos.Bottom(deleteButton) + 1
+    };
+    closeButton.Clicked += () =>
+    {
+        top.Remove(deleteCustomerWin);
+        superadmin.SuperAdminMenu();
+    };
+
+    deleteCustomerWin.Add(adminIDLabel, adminIDField, deleteButton, closeButton);
+    }
+    public void DisplayStaff()
+{
+    List<Admin> adminList = LoadAdmin(connectionString);
+    var top = Application.Top;
+
+    var displayStaffWindow = new Window("Display Staff")
+    {
+        X = 0,
+        Y = 0,
+        Width = Dim.Fill(),
+        Height = Dim.Fill()
+    };
+    top.Add(displayStaffWindow);
+
+    displayStaffWindow.FocusNext();
+
+    using (MySqlConnection connection = new MySqlConnection(connectionString))
+    {
+        string query = @"SELECT 
+                            adm.admin_name,
+                            adm.admin_phone AS admin_phone_number,
+                            adm.admin_email,
+                            adm.admin_gender,
+                            usr.username,
+                            usr.password_hash
+                        FROM admins adm
+                        INNER JOIN users usr ON adm.admin_id = usr.user_customer_id
+                        WHERE  usr.role = 'admin'";
+        MySqlCommand command = new MySqlCommand(query, connection);
+        connection.Open();
+        MySqlDataReader reader = command.ExecuteReader();
+
+        var columnDisplayListAdmin = new string[]
+        {
+            "Staff ID", "Name", "Phone Number", "Email", "Gender", "Username", "Password"
+        };
+
+        // Add column headers
+        for (int i = 0; i < columnDisplayListAdmin.Length; i++)
+        {
+            displayStaffWindow.Add(new Label(columnDisplayListAdmin[i])
+            {
+                X = i * 20,
+                Y = 0,
+                Width = 20,
+                Height = 1
+            });
+        }
+
+        int rowOffset = 1;
+        while (reader.Read())
+        {
+            int adminId = Convert.ToInt32(reader["admin_id"]);
+            string adminName = reader["admin_name"].ToString();
+            string adminPhone = reader["admin_phone"].ToString();
+            string adminEmail = reader["admin_email"].ToString();
+            string adminGender = reader["admin_gender"].ToString();
+            string username = reader["username"].ToString();
+            string password = reader["password_hash"].ToString();
+
+            // Add staff information
+            displayStaffWindow.Add(new Label(adminId.ToString())
+            {
+                X = 0,
+                Y = rowOffset,
+                Width = 20,
+                Height = 1
+            });
+            displayStaffWindow.Add(new Label(adminName)
+            {
+                X = 1 * 20,
+                Y = rowOffset,
+                Width = 20,
+                Height = 1
+            });
+            displayStaffWindow.Add(new Label(adminPhone)
+            {
+                X = 2 * 20,
+                Y = rowOffset,
+                Width = 20,
+                Height = 1
+            });
+            displayStaffWindow.Add(new Label(adminEmail)
+            {
+                X = 3 * 20,
+                Y = rowOffset,
+                Width = 20,
+                Height = 1
+            });
+            displayStaffWindow.Add(new Label(adminGender)
+            {
+                X = 4 * 20,
+                Y = rowOffset,
+                Width = 20,
+                Height = 1
+            });
+            displayStaffWindow.Add(new Label(username)
+            {
+                X = 5 * 20,
+                Y = rowOffset,
+                Width = 20,
+                Height = 1
+            });
+            displayStaffWindow.Add(new Label(password)
+            {
+                X = 6 * 20,
+                Y = rowOffset,
+                Width = 20,
+                Height = 1
+            });
+
+
+            rowOffset++;
+        }
+
+        reader.Close();
+    }
+    var btnClose = new Button("Close")
+    {
+        X = Pos.Center(),
+        Y = Pos.Percent(100) - 1
+    };
+    btnClose.Clicked += () =>
+    {
+        top.Remove(displayStaffWindow);
+        superadmin.SuperAdminMenu();
+    };
+
+    displayStaffWindow.Add(btnClose);
+    }
+    public void EditStaff()
+    {
+        Admin admin = new Admin();
+        ListAdmin = LoadAdmin(connectionString);
+
+        var top = Application.Top;
+        var editStaffWin = new Window("Edit Staff")
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill() - 4,
+            Height = Dim.Fill() - 4
+        };
+        top.Add(editStaffWin);
+
+        var findAdminIDLabel = new Label("Find Staff ID:")
+        {
+            X = 1,
+            Y = 1
+        };
+        var findAdminIDField = new TextField("")
+        {
+            X = Pos.Right(findAdminIDLabel) + 1,
+            Y = 1,
+            Width = Dim.Fill() - 4
+        };
+
+        var editAdminNameLabel = new Label("Staff Name:")
+        {
+            X = 1,
+            Y = 5,
+            Visible = false
+        };
+
+        var editAdminNameField = new TextField("")
+        {
+            X = Pos.Right(editAdminNameLabel) + 1,
+            Y = 5,
+            Width = Dim.Fill() - 4,
+            Visible = false
+        };
+
+        var editAdminPhoneLabel = new Label("Staff Phone:")
+        {
+            X = 1,
+            Y = 7,
+            Visible = false
+        };
+        var editAdminPhoneField = new TextField("")
+        {
+            X = Pos.Right(editAdminPhoneLabel) + 1,
+            Y = 7,
+            Width = Dim.Fill() - 4,
+            Visible = false
+        };
+        var editAdminEmailLabel = new Label("Staff Email:")
+        {
+            X = 1,
+            Y = 9,
+            Visible = false
+        };
+
+        var editAdminEmailField = new TextField("")
+        {
+            X = Pos.Right(editAdminEmailLabel) + 1,
+            Y = 9,
+            Width = Dim.Fill() - 4,
+            Visible = false
+        };
+
+        var editAdminGenderLabel = new Label("Staff Gender:")
+        {
+            X = 1,
+            Y = 11,
+            Visible = false
+        };
+        var editAdminGenderField = new TextField("")
+        {
+            X = Pos.Right(editAdminGenderLabel) + 1,
+            Y = 11,
+            Width = Dim.Fill() - 4,
+            Visible = false
+        };
+        var editAdminUserName = new Label("Username's Staff")
+        {
+            X =1,
+            Y = 13,
+        };
+        var editAdminUserNameField = new TextField("")
+        {
+            X = Pos.Right(editAdminUserName) + 1,
+            Y = 13,
+            Width = Dim.Fill() - 4,
+            Visible = false
+        };
+
+        var editAdminPassword = new Label("Password's Staff")
+        {
+            X =1,
+            Y = 13,
+        };
+        var editAdminPasswordField = new TextField("")
+        {
+            X = Pos.Right(editAdminPassword) + 1,
+            Y = 13,
+            Width = Dim.Fill() - 4,
+            Visible = false
+        };
+
+        var saveButton = new Button("Save")
+        {
+            X = Pos.Center(),
+            Y = 17,
+            Visible = false
+        };
+        saveButton.Clicked += () =>
+        {
+            try
+            {
+                admin.AdminID = int.Parse(findAdminIDField.Text.ToString());
+                admin.AdminName = editAdminNameField.Text.ToString();
+                admin.AdminPhone = editAdminPhoneField.Text.ToString();
+                admin.AdminEmail = editAdminEmailField.Text.ToString();
+                admin.AdminGender = editAdminGenderField.Text.ToString();
+                string username = editAdminUserNameField.Text.ToString();
+                string password = editAdminPasswordField.Text.ToString();
+
+                using (MySqlConnection connection = new MySqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string query = "UPDATE admins SET admin_name = @adminName, admin_phone = @adminPhone, admin_email = @adminEmail, admin_gender = @adminGender WHERE admin_id = @adminID"+
+                                    "UPATE users SET username = @adminUserName, password_hash = @adminPassword WHERE user_customer_id = @adminID";
+                    MySqlCommand command = new MySqlCommand(query, connection);
+                    command.Parameters.AddWithValue("@adminID", admin.AdminID);
+                    command.Parameters.AddWithValue("@adminName", admin.AdminName);
+                    command.Parameters.AddWithValue("@adminPhone", admin.AdminPhone);
+                    command.Parameters.AddWithValue("@adminEmail", admin.AdminEmail);
+                    command.Parameters.AddWithValue("@adminGender", admin.AdminGender);
+                    command.Parameters.AddWithValue("@adminUserName", username);
+                    command.Parameters.AddWithValue("@adminPassword", password);
+
+                    command.ExecuteNonQuery();
+                }
+                MessageBox.Query("Success", "Staff information has been updated!", "OK");
+                top.Remove(editStaffWin);
+                superadmin.SuperAdminMenu();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+
+        var findButton = new Button("Find")
+        {
+            X = Pos.Center(),
+            Y = 3
+        };
+        findButton.Clicked += () =>
+        {
+            try
+            {
+                int adminID = int.Parse(findAdminIDField.Text.ToString());
+                var foundAdmin = ListAdmin.FirstOrDefault(a => a.AdminID == adminID);
+
+                if (foundAdmin != null)
+                {
+                    // Populate fields with staff information
+                    editAdminNameField.Text = foundAdmin.AdminName;
+                    editAdminPhoneField.Text = foundAdmin.AdminPhone;
+                    editAdminEmailField.Text = foundAdmin.AdminEmail;
+                    editAdminGenderField.Text = foundAdmin.AdminGender;
+
+                    // Show edit fields and hide find controls
+                    findAdminIDLabel.Visible = false;
+                    findAdminIDField.Visible = false;
+                    findButton.Visible = false;
+
+                    editAdminNameLabel.Visible = true;
+                    editAdminNameField.Visible = true;
+                    editAdminPhoneLabel.Visible = true;
+                    editAdminPhoneField.Visible = true;
+                    editAdminEmailLabel.Visible = true;
+                    editAdminEmailField.Visible = true;
+                    editAdminGenderLabel.Visible = true;
+                    editAdminGenderField.Visible = true;
+
+                    saveButton.Visible = true;
+                }
+                else
+                {
+                    MessageBox.ErrorQuery("Error", "Admin not found!", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+
+        var closeButton = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = 19
+        };
+        closeButton.Clicked += () =>
+        {
+            bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to close?", "Yes", "No") == 0;
+            if (confirmed)
+            {
+            top.Remove(editStaffWin);
+            admin.AdminMenu();
+            }
+        };
+
+        editStaffWin.Add(findAdminIDLabel, findAdminIDField, findButton,
+                            editAdminNameLabel, editAdminNameField,
+                            editAdminPhoneLabel, editAdminPhoneField,
+                            editAdminEmailLabel, editAdminEmailField,
+                            editAdminGenderLabel, editAdminGenderField,
+                            editAdminUserName, editAdminUserNameField,
+                            editAdminPassword, editAdminPasswordField,
+                            saveButton, closeButton);
+    }
     public void RegisterAdmin()
     {
         program.Register("admin");

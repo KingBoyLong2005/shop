@@ -23,8 +23,8 @@ public class SuperAdmin
     public void SuperAdminMenu()
     {
         var top = Application.Top;
-
-        var adminMenu = new Window()
+        Application.Init();
+        var SuperAdminMenu = new Window()
         {
             Title = "Manager Menu",
             X = 0,
@@ -32,7 +32,7 @@ public class SuperAdmin
             Width = Dim.Fill(),
             Height = Dim.Fill()
         };
-        top.Add(adminMenu);
+        top.Add(SuperAdminMenu);
 
         var leftFrame = new FrameView("Function")
         {
@@ -41,7 +41,7 @@ public class SuperAdmin
             Width = Dim.Percent(30), // Chiếm 30% chiều rộng cửa sổ
             Height = Dim.Fill() // Chiếm toàn bộ chiều cao
         };
-        adminMenu.Add(leftFrame);
+        SuperAdminMenu.Add(leftFrame);
 
         var rightTopFrame = new FrameView("Welcome")
         {
@@ -50,7 +50,7 @@ public class SuperAdmin
             Width = Dim.Fill(), // Chiếm toàn bộ phần còn lại của chiều rộng
             Height = Dim.Percent(50) // Chiếm 50% chiều cao
         };
-        adminMenu.Add(rightTopFrame);
+        SuperAdminMenu.Add(rightTopFrame);
 
         var rightBottomFrame = new FrameView("Number of products sold")
         {
@@ -59,7 +59,7 @@ public class SuperAdmin
             Width = Dim.Fill(), // Chiếm toàn bộ phần còn lại của chiều rộng
             Height = Dim.Fill() // Chiếm phần còn lại của chiều cao
         };
-        adminMenu.Add(rightBottomFrame);
+        SuperAdminMenu.Add(rightBottomFrame);
         
         var btnAddStaff = new Button("Add Staff")
         {
@@ -68,11 +68,65 @@ public class SuperAdmin
         };
         btnAddStaff.Clicked += () =>
         {
-            top.Remove(adminMenu);
+            top.Remove(SuperAdminMenu);
             admin.RegisterAdmin();
         };
-        
-        leftFrame.Add(btnAddStaff);
+
+        var btnFindStaff = new Button("Fnd Staff")
+        {
+            X = 2,
+            Y = 4,
+        };
+        btnFindStaff.Clicked += () =>
+        {
+            top.Remove(SuperAdminMenu);
+            admin.FindStaff();
+        };
+
+        var btnEditStaff = new Button("Edit Staff")
+        {
+            X = 2,
+            Y = 6
+        };
+        btnEditStaff.Clicked += () =>
+        {
+            top.Remove(SuperAdminMenu);
+            admin.EditStaff();
+        };
+
+        var btnDeleteStaff = new Button("Delete Staff")
+        {
+            X = 2,
+            Y = 8
+        };
+        btnDeleteStaff.Clicked += () =>
+        {
+            top.Remove(SuperAdminMenu);
+            admin.DeleteStaff();
+        };
+
+        var btnDisplayStaff = new Button("Display Staff")
+        {
+            X = 2,
+            Y = 10
+        };
+        btnDisplayStaff.Clicked += () =>
+        {
+            top.Remove(SuperAdminMenu);
+            admin.DisplayStaff();
+        };
+
+        var btnLogout = new Button("Logout")
+        {
+            X = Pos.Center(),
+            Y = Pos.Percent(100)-1,
+        };
+        btnLogout.Clicked += () =>
+        {
+            top.Remove(SuperAdminMenu);
+            program.Login();
+        };
+        leftFrame.Add(btnAddStaff, btnFindStaff, btnEditStaff, btnDeleteStaff, btnDisplayStaff,btnLogout);
 
         var rightTopLabel = new Label("Manager")
         {
@@ -82,17 +136,17 @@ public class SuperAdmin
         rightTopFrame.Add(rightTopLabel);
         using(MySqlConnection connection = new MySqlConnection(connectionString))
         {
+            connection.Open();
             string query = "SELECT COUNT(*) FROM orders";
             MySqlCommand command = new MySqlCommand(query, connection);
             object result = command.ExecuteScalar(); // Thực thi truy vấn và lấy kết quả
             int count = Convert.ToInt32(result);
-            var countOrder = new Label($"count")
+            var countOrder = new Label($"Total orders: {count}")
             {
                 X = 1 ,
                 Y = 1
             };
         rightBottomFrame.Add(countOrder);
-        
         }
 
     }

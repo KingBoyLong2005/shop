@@ -103,7 +103,9 @@ public class Program
     }
     public void Login()
     {
+
         var top = Application.Top;
+        Application.Init();
         var loginWin = new Window()
         {
             Title = "Login",
@@ -230,6 +232,7 @@ public class Program
         Users  us = new Users();
         Customers cus = new Customers();
         var top = Application.Top;
+        Application.Init();
         var registerWin = new Window()
         {
             Title = $"Register {role}",
