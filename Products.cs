@@ -31,153 +31,173 @@ public class Products
 
 
     public void DisplayProduct(string role)
+{
+    List<string[]> products = new List<string[]>();
+    var top = Application.Top;
+
+    var displayProductWindow = new Window("Product List")
     {
-        List<string[]> products = new List<string[]>();
-        var top = Application.Top;
+        X = 0,
+        Y = 0,
+        Width = Dim.Fill(),
+        Height = Dim.Fill()
+    };
+    top.Add(displayProductWindow);
+    displayProductWindow.FocusNext();
 
-        var displayProductWindow = new Window("Product List")
+    using (MySqlConnection connection = new MySqlConnection(connectionString))
+    {
+        string query = @"SELECT 
+                            p.product_id,
+                            p.product_name, 
+                            p.product_stock_quantity, 
+                            p.product_description, 
+                            p.product_price, 
+                            c.category_name, 
+                            p.product_brand
+                        FROM products p
+                        INNER JOIN categories c ON p.product_category_id = c.category_id;";
+        MySqlCommand command = new MySqlCommand(query, connection);
+        connection.Open();
+        MySqlDataReader reader = command.ExecuteReader();
+        var columnDisplayListProduct = new string[]
         {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
+            "Product's name", "Stock quantity", "Description", "Price", "Category's name", "Brand", "Quantity", "Action"
         };
-        top.Add(displayProductWindow);
-        displayProductWindow.FocusNext();
 
-        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        int columnWidth = 20; // Set column width
+
+        // Display column headers
+        for (int i = 0; i < columnDisplayListProduct.Length; i++)
         {
-            string query = @"SELECT 
-                                p.product_id,
-                                p.product_name, 
-                                p.product_stock_quantity, 
-                                p.product_description, 
-                                p.product_price, 
-                                c.category_name, 
-                                p.product_brand
-                            FROM products p
-                            INNER JOIN categories c ON p.product_category_id = c.category_id;";
-            MySqlCommand command = new MySqlCommand(query, connection);
-            connection.Open();
-            MySqlDataReader reader = command.ExecuteReader();
-            var columnDisplayListProduct = new string[]
+            displayProductWindow.Add(new Label(columnDisplayListProduct[i])
             {
-                "Product's name", "Stock quantity", "Description", "Price", "Category's name", "Brand", "Quantity", "Action"
-            };
-
-            int columnWidth = 20; // Set column width
-
-            // Display column headers
-            for (int i = 0; i < columnDisplayListProduct.Length; i++)
-            {
-                displayProductWindow.Add(new Label(columnDisplayListProduct[i])
-                {
-                    X = i * columnWidth,
-                    Y = 0,
-                    Width = columnWidth,
-                    Height = 1,
-                    Visible = !(role == "admin" && (columnDisplayListProduct[i] == "Quantity" || columnDisplayListProduct[i] == "Chosse product to your cart"))
-                });
-            }
-
-            int row = 1;
-            while (reader.Read())
-            {
-                int productID = int.Parse(reader["product_id"].ToString());
-
-                var productLabel = new Label($"{reader["product_name"]}")
-                {
-                    X = 0,
-                    Y = row
-                };
-                var stockQuantityLabel = new Label($"{reader["product_stock_quantity"]}")
-                {
-                    X = 1 * columnWidth,
-                    Y = row
-                };
-                var descriptionLabel = new Label($"{reader["product_description"]}")
-                {
-                    X = 2 * columnWidth,
-                    Y = row
-                };
-                var priceLabel = new Label($"{reader["product_price"]}")
-                {
-                    X = 3 * columnWidth,
-                    Y = row
-                };
-                var categoryLabel = new Label($"{reader["category_name"]}")
-                {
-                    X = 4 * columnWidth,
-                    Y = row
-                };
-                var brandLabel = new Label($"{reader["product_brand"]}")
-                {
-                    X = 5 * columnWidth,
-                    Y = row
-                };
-
-                var textQuantity = new TextField()
-                {
-                    X = 6 * columnWidth,
-                    Y = row,
-                    Width = 10
-                };
-
-                var addButton = new Button("Add to Cart")
-                {
-                    X = 7 * columnWidth,
-                    Y = row
-                };
-                addButton.Clicked += () =>
-                {
-                    int quantity;
-                    if (int.TryParse(textQuantity.Text.ToString(), out quantity) && quantity > 0)
-                    {
-                        userCart.AddToCart(productID, quantity);
-                    }
-                    else
-                    {
-                        MessageBox.ErrorQuery("Error", "Invalid quantity.", "OK");
-                    }
-                };
-
-                displayProductWindow.Add(productLabel, stockQuantityLabel, descriptionLabel, priceLabel, categoryLabel, brandLabel, textQuantity, addButton);
-                row++;
-                if (role == "user")
-                {
-                    textQuantity.Visible = true;
-                    addButton.Visible = true;
-                }
-                else if (role == "admin")
-                {
-                    textQuantity.Visible = false;
-                    addButton.Visible = false;
-                }
-            }
-
-            var btnBack = new Button("Back")
-            {
-                X = Pos.Center(),
-                Y = Pos.Percent(100) - 1
-            };
-            btnBack.Clicked += () =>
-            {
-                top.Remove(displayProductWindow);
-                switch (role)
-                {
-                    case "user":
-                        customer.UserMenu();
-                        break;
-                    case "admin":
-                        admin.AdminMenu();
-                        break;
-                }
-            };
-
-            displayProductWindow.Add(btnBack);
+                X = i * columnWidth,
+                Y = 0,
+                Width = columnWidth,
+                Height = 1,
+                Visible = !(role == "admin" && (columnDisplayListProduct[i] == "Quantity" || columnDisplayListProduct[i] == "Action"))
+            });
         }
 
+        int row = 1;
+        while (reader.Read())
+        {
+            int productID = int.Parse(reader["product_id"].ToString());
+
+            var productLabel = new Label($"{reader["product_name"]}")
+            {
+                X = 0,
+                Y = row,
+                Width = columnWidth,
+                Height = 1,
+                TextAlignment = TextAlignment.Left // Left text if it exceeds column width
+            };
+            var stockQuantityLabel = new Label($"{reader["product_stock_quantity"]}")
+            {
+                X = 1 * columnWidth,
+                Y = row,
+                Width = columnWidth,
+                Height = 1,
+                TextAlignment = TextAlignment.Left // Left text if it exceeds column width
+            };
+            var descriptionLabel = new Label($"{reader["product_description"]}")
+            {
+                X = 2 * columnWidth,
+                Y = row,
+                Width = columnWidth,
+                Height = 1,
+                TextAlignment = TextAlignment.Left // Left text if it exceeds column width
+            };
+            var priceLabel = new Label($"{reader["product_price"]}")
+            {
+                X = 3 * columnWidth,
+                Y = row,
+                Width = columnWidth,
+                Height = 1,
+                TextAlignment = TextAlignment.Left // Left text if it exceeds column width
+            };
+            var categoryLabel = new Label($"{reader["category_name"]}")
+            {
+                X = 4 * columnWidth,
+                Y = row,
+                Width = columnWidth,
+                Height = 1,
+                TextAlignment = TextAlignment.Left // Left text if it exceeds column width
+            };
+            var brandLabel = new Label($"{reader["product_brand"]}")
+            {
+                X = 5 * columnWidth,
+                Y = row,
+                Width = columnWidth,
+                Height = 1,
+                TextAlignment = TextAlignment.Left // Left text if it exceeds column width
+            };
+
+            var textQuantity = new TextField()
+            {
+                X = 6 * columnWidth,
+                Y = row,
+                Width = columnWidth,
+                Height = 1
+            };
+
+            var addButton = new Button("Add to Cart")
+            {
+                X = 7 * columnWidth,
+                Y = row,
+                Width = columnWidth,
+                Height = 1
+            };
+            addButton.Clicked += () =>
+            {
+                int quantity;
+                if (int.TryParse(textQuantity.Text.ToString(), out quantity) && quantity > 0)
+                {
+                    userCart.AddToCart(productID, quantity);
+                }
+                else
+                {
+                    MessageBox.ErrorQuery("Error", "Invalid quantity.", "OK");
+                }
+            };
+
+            displayProductWindow.Add(productLabel, stockQuantityLabel, descriptionLabel, priceLabel, categoryLabel, brandLabel, textQuantity, addButton);
+            row++;
+            if (role == "user")
+            {
+                textQuantity.Visible = true;
+                addButton.Visible = true;
+            }
+            else if (role == "admin")
+            {
+                textQuantity.Visible = false;
+                addButton.Visible = false;
+            }
+        }
+
+        var btnBack = new Button("Back")
+        {
+            X = Pos.Center(),
+            Y = Pos.Percent(100) - 1
+        };
+        btnBack.Clicked += () =>
+        {
+            top.Remove(displayProductWindow);
+            switch (role)
+            {
+                case "user":
+                    customer.UserMenu();
+                    break;
+                case "admin":
+                    admin.AdminMenu();
+                    break;
+            }
+        };
+
+        displayProductWindow.Add(btnBack);
     }
+}
     public void AddProduct()
     {
     Products pd = new Products();
