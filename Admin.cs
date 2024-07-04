@@ -272,7 +272,7 @@ public class Admin
         };
         var usernameField = new TextField("")
         {
-            X = Pos.Right(usernameLabel) + 1,
+            X = 16,
             Y = 2,
             Width = Dim.Fill() - 4
         };
@@ -285,7 +285,7 @@ public class Admin
         var passwordField = new TextField("")
         {
             Secret = true,
-            X = Pos.Right(passwordLabel) + 1,
+            X = 16,
             Y = 4,
             Width = Dim.Fill() - 4
         };
@@ -296,7 +296,7 @@ public class Admin
         };
         var AdminNameField = new TextField("")
         {
-            X = Pos.Right(AdminNameLabel) + 1,
+            X = 16,
             Y  = 6,
             Width = Dim.Fill() - 4
         };
@@ -307,7 +307,7 @@ public class Admin
         };
         var AdminPhoneNumberField = new TextField("")
         {
-            X = Pos.Right(AdminPhoneNumberLabel) + 1,
+            X = 16,
             Y  = 8,
             Width = Dim.Fill() - 4
         };
@@ -315,23 +315,23 @@ public class Admin
         var AdminEmailLabel = new Label("Email: ")
         {
             X = 2,
-            Y = 12
+            Y = 10
         };
         var AdminEmailField = new TextField("")
         {
-            X = Pos.Right(AdminEmailLabel) + 1,
-            Y  = 12,
+            X = 16,
+            Y  = 10,
             Width = Dim.Fill() - 4
         };
         var AdminGenderLabel = new Label("Gender: ")
         {
             X = 2,
-            Y = 14
+            Y = 12
         };
         var AdminGenderField = new TextField("")
         {
-            X = Pos.Right(AdminGenderLabel) + 1,
-            Y  = 14,
+            X = 16,
+            Y  = 12,
             Width = Dim.Fill() - 4
         };
         
@@ -353,45 +353,44 @@ public class Admin
             
 
             using (MySqlConnection connection = new MySqlConnection(connectionString))
-        {
-            connection.Open();
-            MySqlTransaction transaction = connection.BeginTransaction();
-            try
             {
-                string adminQuery = "INSERT INTO admins (admin_name, admin_phone, admin_email, admin_gender)" +
-                                       "VALUES (@adminname, @adminphonenumber, @adminemail, @admingender)";
-                MySqlCommand adminCommand = new MySqlCommand(adminQuery, connection, transaction);
-                adminCommand.Parameters.AddWithValue("@adminname", ad.AdminName);
-                adminCommand.Parameters.AddWithValue("@adminphonenumber", ad.AdminPhone);
-                adminCommand.Parameters.AddWithValue("@adminemail", ad.AdminEmail);
-                adminCommand.Parameters.AddWithValue("@admingender", ad.AdminGender);
-                adminCommand.ExecuteNonQuery();
+                connection.Open();
+                MySqlTransaction transaction = connection.BeginTransaction();
+                try
+                {
+                    string adminQuery = "INSERT INTO admins (admin_name, admin_phone, admin_email, admin_gender)" +
+                                        "VALUES (@adminname, @adminphonenumber, @adminemail, @admingender)";
+                    MySqlCommand adminCommand = new MySqlCommand(adminQuery, connection, transaction);
+                    adminCommand.Parameters.AddWithValue("@adminname", ad.AdminName);
+                    adminCommand.Parameters.AddWithValue("@adminphonenumber", ad.AdminPhone);
+                    adminCommand.Parameters.AddWithValue("@adminemail", ad.AdminEmail);
+                    adminCommand.Parameters.AddWithValue("@admingender", ad.AdminGender);
+                    adminCommand.ExecuteNonQuery();
 
-                long adminId = adminCommand.LastInsertedId;
-                string userQuery = "INSERT INTO users (username, password_hash, role, user_customer_id) VALUES (@Username, @PasswordHash, admin, @CustomerId)";
-                MySqlCommand userCommand = new MySqlCommand(userQuery, connection, transaction);
-                userCommand.Parameters.AddWithValue("@Username", us.Username);
-                userCommand.Parameters.AddWithValue("@PasswordHash", us.PasswordHash);
-                userCommand.Parameters.AddWithValue("@CustomerId", adminId);
-                userCommand.ExecuteNonQuery();
+                    long adminId = adminCommand.LastInsertedId;
+                    string userQuery = "INSERT INTO users (username, password_hash, role, user_customer_id) VALUES (@Username, @PasswordHash, admin, @CustomerId)";
+                    MySqlCommand userCommand = new MySqlCommand(userQuery, connection, transaction);
+                    userCommand.Parameters.AddWithValue("@Username", us.Username);
+                    userCommand.Parameters.AddWithValue("@PasswordHash", us.PasswordHash);
+                    userCommand.Parameters.AddWithValue("@CustomerId", adminId);
+                    userCommand.ExecuteNonQuery();
 
-                transaction.Commit();
+                    transaction.Commit();
 
-                ListUsers.Add(us);
-                ListAdmin.Add(ad);
-                MessageBox.Query("Success", "Registration successful!", "OK");
-                
-                top.Remove(registerWin);
-                superadmin.SuperAdminMenu();
+                    ListUsers.Add(us);
+                    ListAdmin.Add(ad);
+                    MessageBox.Query("Success", "Registration successful!", "OK");
+                    
+                    top.Remove(registerWin);
+                    superadmin.SuperAdminMenu();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                }
             }
-            catch (Exception ex)
-            {
-                transaction.Rollback();
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        }
-    };
-
+        };
 
         var closeButton = new Button("Close")
         {
@@ -409,8 +408,6 @@ public class Admin
                         AdminPhoneNumberField,
                         AdminEmailLabel, AdminEmailField, AdminGenderLabel, AdminGenderField,
                         registerButton, closeButton);
-
-    
     }   
     public void FindStaff()
     {
@@ -529,18 +526,18 @@ public class Admin
             }
         };
 
-                var btnClose = new Button("Close")
-                {
-                    X = Pos.Center(),
-                    Y = Pos.Percent(100) - 1
-                };
-                btnClose.Clicked += () =>
-                {
-                    top.Remove(findAdminWindow);
-                    superadmin.SuperAdminMenu();
-                };
+        var btnClose = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = Pos.Percent(100) - 1
+        };
+        btnClose.Clicked += () =>
+        {
+            top.Remove(findAdminWindow);
+            superadmin.SuperAdminMenu();
+        };
 
-                findAdminWindow.Add(btnClose);
+        findAdminWindow.Add(btnClose);
     }
     public void DeleteStaff()
     {
@@ -614,150 +611,150 @@ public class Admin
                 MessageBox.ErrorQuery("Error", ex.Message, "OK");
             }
 
-    };
-
-    var closeButton = new Button("Close")
-    {
-        X = Pos.Center(),
-        Y = Pos.Bottom(deleteButton) + 1
-    };
-    closeButton.Clicked += () =>
-    {
-        top.Remove(deleteCustomerWin);
-        superadmin.SuperAdminMenu();
-    };
-
-    deleteCustomerWin.Add(adminIDLabel, adminIDField, deleteButton, closeButton);
-    }
-    public void DisplayStaff()
-{
-    List<Admin> adminList = LoadAdmin(connectionString);
-    var top = Application.Top;
-
-    var displayStaffWindow = new Window("Display Staff")
-    {
-        X = 0,
-        Y = 0,
-        Width = Dim.Fill(),
-        Height = Dim.Fill()
-    };
-    top.Add(displayStaffWindow);
-
-    displayStaffWindow.FocusNext();
-
-    using (MySqlConnection connection = new MySqlConnection(connectionString))
-    {
-        string query = @"SELECT 
-                            adm.admin_name,
-                            adm.admin_phone AS admin_phone_number,
-                            adm.admin_email,
-                            adm.admin_gender,
-                            usr.username,
-                            usr.password_hash
-                        FROM admins adm
-                        INNER JOIN users usr ON adm.admin_id = usr.user_customer_id
-                        WHERE  usr.role = 'admin'";
-        MySqlCommand command = new MySqlCommand(query, connection);
-        connection.Open();
-        MySqlDataReader reader = command.ExecuteReader();
-
-        var columnDisplayListAdmin = new string[]
-        {
-            "Staff ID", "Name", "Phone Number", "Email", "Gender", "Username", "Password"
         };
 
-        // Add column headers
-        for (int i = 0; i < columnDisplayListAdmin.Length; i++)
+        var closeButton = new Button("Close")
         {
-            displayStaffWindow.Add(new Label(columnDisplayListAdmin[i])
-            {
-                X = i * 20,
-                Y = 0,
-                Width = 20,
-                Height = 1
-            });
-        }
-
-        int rowOffset = 1;
-        while (reader.Read())
+            X = Pos.Center(),
+            Y = Pos.Bottom(deleteButton) + 1
+        };
+        closeButton.Clicked += () =>
         {
-            int adminId = Convert.ToInt32(reader["admin_id"]);
-            string adminName = reader["admin_name"].ToString();
-            string adminPhone = reader["admin_phone"].ToString();
-            string adminEmail = reader["admin_email"].ToString();
-            string adminGender = reader["admin_gender"].ToString();
-            string username = reader["username"].ToString();
-            string password = reader["password_hash"].ToString();
+            top.Remove(deleteCustomerWin);
+            superadmin.SuperAdminMenu();
+        };
 
-            // Add staff information
-            displayStaffWindow.Add(new Label(adminId.ToString())
-            {
-                X = 0,
-                Y = rowOffset,
-                Width = 20,
-                Height = 1
-            });
-            displayStaffWindow.Add(new Label(adminName)
-            {
-                X = 1 * 20,
-                Y = rowOffset,
-                Width = 20,
-                Height = 1
-            });
-            displayStaffWindow.Add(new Label(adminPhone)
-            {
-                X = 2 * 20,
-                Y = rowOffset,
-                Width = 20,
-                Height = 1
-            });
-            displayStaffWindow.Add(new Label(adminEmail)
-            {
-                X = 3 * 20,
-                Y = rowOffset,
-                Width = 20,
-                Height = 1
-            });
-            displayStaffWindow.Add(new Label(adminGender)
-            {
-                X = 4 * 20,
-                Y = rowOffset,
-                Width = 20,
-                Height = 1
-            });
-            displayStaffWindow.Add(new Label(username)
-            {
-                X = 5 * 20,
-                Y = rowOffset,
-                Width = 20,
-                Height = 1
-            });
-            displayStaffWindow.Add(new Label(password)
-            {
-                X = 6 * 20,
-                Y = rowOffset,
-                Width = 20,
-                Height = 1
-            });
-
-
-            rowOffset++;
-        }
-
-        reader.Close();
+        deleteCustomerWin.Add(adminIDLabel, adminIDField, deleteButton, closeButton);
     }
-    var btnClose = new Button("Close")
+    public void DisplayStaff()
     {
-        X = Pos.Center(),
-        Y = Pos.Percent(100) - 1
-    };
-    btnClose.Clicked += () =>
-    {
-        top.Remove(displayStaffWindow);
-        superadmin.SuperAdminMenu();
-    };
+        List<Admin> adminList = LoadAdmin(connectionString);
+        var top = Application.Top;
 
-    displayStaffWindow.Add(btnClose);
+        var displayStaffWindow = new Window("Display Staff")
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(displayStaffWindow);
+
+        displayStaffWindow.FocusNext();
+
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {
+            string query = @"SELECT 
+                                adm.admin_name,
+                                adm.admin_phone AS admin_phone_number,
+                                adm.admin_email,
+                                adm.admin_gender,
+                                usr.username,
+                                usr.password_hash
+                            FROM admins adm
+                            INNER JOIN users usr ON adm.admin_id = usr.user_customer_id
+                            WHERE  usr.role = 'admin'";
+            MySqlCommand command = new MySqlCommand(query, connection);
+            connection.Open();
+            MySqlDataReader reader = command.ExecuteReader();
+
+            var columnDisplayListAdmin = new string[]
+            {
+                "Staff ID", "Name", "Phone Number", "Email", "Gender", "Username", "Password"
+            };
+
+            // Add column headers
+            for (int i = 0; i < columnDisplayListAdmin.Length; i++)
+            {
+                displayStaffWindow.Add(new Label(columnDisplayListAdmin[i])
+                {
+                    X = i * 20,
+                    Y = 0,
+                    Width = 20,
+                    Height = 1
+                });
+            }
+
+            int rowOffset = 1;
+            while (reader.Read())
+            {
+                int adminId = Convert.ToInt32(reader["admin_id"]);
+                string adminName = reader["admin_name"].ToString();
+                string adminPhone = reader["admin_phone"].ToString();
+                string adminEmail = reader["admin_email"].ToString();
+                string adminGender = reader["admin_gender"].ToString();
+                string username = reader["username"].ToString();
+                string password = reader["password_hash"].ToString();
+
+                // Add staff information
+                displayStaffWindow.Add(new Label(adminId.ToString())
+                {
+                    X = 0,
+                    Y = rowOffset,
+                    Width = 20,
+                    Height = 1
+                });
+                displayStaffWindow.Add(new Label(adminName)
+                {
+                    X = 1 * 20,
+                    Y = rowOffset,
+                    Width = 20,
+                    Height = 1
+                });
+                displayStaffWindow.Add(new Label(adminPhone)
+                {
+                    X = 2 * 20,
+                    Y = rowOffset,
+                    Width = 20,
+                    Height = 1
+                });
+                displayStaffWindow.Add(new Label(adminEmail)
+                {
+                    X = 3 * 20,
+                    Y = rowOffset,
+                    Width = 20,
+                    Height = 1
+                });
+                displayStaffWindow.Add(new Label(adminGender)
+                {
+                    X = 4 * 20,
+                    Y = rowOffset,
+                    Width = 20,
+                    Height = 1
+                });
+                displayStaffWindow.Add(new Label(username)
+                {
+                    X = 5 * 20,
+                    Y = rowOffset,
+                    Width = 20,
+                    Height = 1
+                });
+                displayStaffWindow.Add(new Label(password)
+                {
+                    X = 6 * 20,
+                    Y = rowOffset,
+                    Width = 20,
+                    Height = 1
+                });
+
+
+                rowOffset++;
+            }
+
+            reader.Close();
+        }
+        var btnClose = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = Pos.Percent(100) - 1
+        };
+        btnClose.Clicked += () =>
+        {
+            top.Remove(displayStaffWindow);
+            superadmin.SuperAdminMenu();
+        };
+
+        displayStaffWindow.Add(btnClose);
     }
     public void EditStaff()
     {
@@ -982,9 +979,5 @@ public class Admin
                             editAdminUserName, editAdminUserNameField,
                             editAdminPassword, editAdminPasswordField,
                             saveButton, closeButton);
-    }
-    public void RegisterAdmin()
-    {
-        program.Register("admin");
     }
 }

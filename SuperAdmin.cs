@@ -69,10 +69,10 @@ public class SuperAdmin
         btnAddStaff.Clicked += () =>
         {
             top.Remove(SuperAdminMenu);
-            admin.RegisterAdmin();
+            admin.AddStaff();
         };
 
-        var btnFindStaff = new Button("Fnd Staff")
+        var btnFindStaff = new Button("Find Staff")
         {
             X = 2,
             Y = 4,
@@ -158,6 +158,5 @@ public class SuperAdmin
             };
         rightBottomFrame.Add(countOrder);
         }
-
     }
 }

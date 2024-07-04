@@ -27,6 +27,8 @@ public class Cart
     public static Customers customer = new Customers();
     public static Cart userCart = new Cart();
     public static Orders order = new Orders();
+
+    public static List<CartItem> CartItems { get; set; } = new List<CartItem>();
     public static List<Cart> ListCarts = new List<Cart>();
     public static List<Products> ListProducts = new List<Products>();
 
@@ -59,11 +61,6 @@ public class Cart
         }
         return ListProduct;
     }
-
-    
-
-    public static List<CartItem> CartItems { get; set; } = new List<CartItem>();
-
     public void AddItem(Products product, int quantity)
     {
         var cartItem = CartItems.FirstOrDefault(c => c.Product.ProductID == product.ProductID);
@@ -86,90 +83,90 @@ public class Cart
         }
     }
    public void DisplayCart(string role)
-{
-    var top = Application.Top;
-
-    var cartWindow = new Window("Cart")
     {
-        X = 0,
-        Y = 0,
-        Width = Dim.Fill(),
-        Height = Dim.Fill()
-    };
-    top.Add(cartWindow);
+        var top = Application.Top;
 
-    int row = 1;
-
-    // Kết nối cơ sở dữ liệu để lấy thông tin giỏ hàng của khách hàng
-    using (MySqlConnection connection = new MySqlConnection(connectionString))
-    {
-        string query = @"SELECT 
-                            p.product_id,
-                            p.product_name, 
-                            p.product_price, 
-                            c.cart_quantity 
-                        FROM cart c
-                        INNER JOIN products p ON c.cart_product_id = p.product_id
-                        WHERE c.cart_customer_id = @CustomerID";
-        MySqlCommand command = new MySqlCommand(query, connection);
-        command.Parameters.AddWithValue("@CustomerID", currentCustomerID);
-        connection.Open();
-        MySqlDataReader reader = command.ExecuteReader();
-
-        while (reader.Read())
+        var cartWindow = new Window("Cart")
         {
-            int productID = reader.GetInt32("product_id");
-            string productName = reader["product_name"].ToString();
-            decimal productPrice = reader.GetDecimal("product_price");
-            int quantity = reader.GetInt32("cart_quantity");
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(cartWindow);
 
-            var productLabel = new Label($"{productName} - ${productPrice} x {quantity}")
-            {
-                X = 1,
-                Y = row
-            };
-            var removeButton = new Button("Remove")
-            {
-                X = Pos.Right(productLabel) + 1,
-                Y = row
-            };
-            var orderButton = new Button("Order")
-            {
-                X = Pos.Right(removeButton) + 2,
-                Y = row
-            };
+        int row = 1;
 
-            removeButton.Clicked += () =>
-            {
-                RemoveItemFromCart(productID);
-                top.Remove(cartWindow);
-                DisplayCart(role);
-            };
+        // Kết nối cơ sở dữ liệu để lấy thông tin giỏ hàng của khách hàng
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {
+            string query = @"SELECT 
+                                p.product_id,
+                                p.product_name, 
+                                p.product_price, 
+                                c.cart_quantity 
+                            FROM cart c
+                            INNER JOIN products p ON c.cart_product_id = p.product_id
+                            WHERE c.cart_customer_id = @CustomerID";
+            MySqlCommand command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@CustomerID", currentCustomerID);
+            connection.Open();
+            MySqlDataReader reader = command.ExecuteReader();
 
-            orderButton.Clicked += () =>
+            while (reader.Read())
             {
-                top.Remove(cartWindow);
-                order.OrderProduct(productID, productName, productPrice);
-            };
+                int productID = reader.GetInt32("product_id");
+                string productName = reader["product_name"].ToString();
+                decimal productPrice = reader.GetDecimal("product_price");
+                int quantity = reader.GetInt32("cart_quantity");
 
-            cartWindow.Add(productLabel, removeButton, orderButton);
-            row++;
+                var productLabel = new Label($"{productName} - ${productPrice} x {quantity}")
+                {
+                    X = 1,
+                    Y = row
+                };
+                var removeButton = new Button("Remove")
+                {
+                    X = Pos.Right(productLabel) + 1,
+                    Y = row
+                };
+                var orderButton = new Button("Order")
+                {
+                    X = Pos.Right(removeButton) + 2,
+                    Y = row
+                };
+
+                removeButton.Clicked += () =>
+                {
+                    RemoveItemFromCart(productID);
+                    top.Remove(cartWindow);
+                    DisplayCart(role);
+                };
+
+                orderButton.Clicked += () =>
+                {
+                    top.Remove(cartWindow);
+                    order.OrderProduct(productID, productName, productPrice);
+                };
+
+                cartWindow.Add(productLabel, removeButton, orderButton);
+                row++;
+            }
         }
+
+        var btnBack = new Button("Back")
+        {
+            X = 2,
+            Y = row + 1
+        };
+        btnBack.Clicked += () =>
+        {
+            top.Remove(cartWindow);
+            customer.UserMenu();
+        };
+
+        cartWindow.Add(btnBack);
     }
-
-    var btnBack = new Button("Back")
-    {
-        X = 2,
-        Y = row + 1
-    };
-    btnBack.Clicked += () =>
-    {
-        top.Remove(cartWindow);
-        customer.UserMenu();
-    };
-
-    cartWindow.Add(btnBack);
-}
     public void RemoveItemFromCart(int productID)
     {
         userCart.RemoveItem(productID);
@@ -218,10 +215,7 @@ public class Cart
             MessageBox.ErrorQuery("Error", "Product not found.", "OK");
         }
     }
-    
 }
-
-
 public class CartItem
 {
     public Products Product { get; set; }

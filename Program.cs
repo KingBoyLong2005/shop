@@ -74,7 +74,7 @@ public class Program
     static void Main()
     {
         Application.Init();
-        Colors.Base.Normal = Application.Driver.MakeAttribute(Color.Cyan, Color.Black); // Xanh Zalo
+        Colors.Base.Normal = Application.Driver.MakeAttribute(Color.Blue, Color.Black); // Xanh Zalo
         Colors.Base.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
 
         // Thiết lập màu sắc cho Dialog
@@ -205,7 +205,7 @@ public class Program
         btnRegister.Clicked += () =>
         {
             top.Remove(loginWin);
-            customer.RegisterUser();
+            program.Register();
         };
 
         var closeButton = new Button("Close")
@@ -221,14 +221,7 @@ public class Program
 
         loginWin.Add(usernameLabel, usernameField, passwordLabel, passwordField, loginButton, btnRegister, closeButton);
     }
-
-
-    static void RegisterSuperAdmin()
-    {
-        program.Register("superadmin");
-    }
-
-    public void Register(string role)
+    public void Register()
     {
         Users  us = new Users();
         Customers cus = new Customers();
@@ -236,7 +229,7 @@ public class Program
         Application.Init();
         var registerWin = new Window()
         {
-            Title = $"Register {role}",
+            Title = $"Register user",
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
@@ -359,50 +352,49 @@ public class Program
             cus.CustomerDateOfBirth = customerDateOfBirth;
 
             using (MySqlConnection connection = new MySqlConnection(connectionString))
-        {
-            connection.Open();
-            MySqlTransaction transaction = connection.BeginTransaction();
-            try
             {
-                string customerQuery = "INSERT INTO customers (customer_name, customer_phone_number, customer_address, customer_email, customer_gender, customer_dateofbirth, customer_count, customer_totalspent)" +
-                                       "VALUES (@customername, @customerphonenumber, @customeraddress, @customeremail, @customergender, @customerdateofbirth, 0, 0)";
-                MySqlCommand customerCommand = new MySqlCommand(customerQuery, connection, transaction);
-                customerCommand.Parameters.AddWithValue("@customername", cus.CustomerName);
-                customerCommand.Parameters.AddWithValue("@customerphonenumber", cus.CustomerPhone);
-                customerCommand.Parameters.AddWithValue("@customeraddress", cus.CustomerAddress);
-                customerCommand.Parameters.AddWithValue("@customeremail", cus.CustomerEmail);
-                customerCommand.Parameters.AddWithValue("@customergender", cus.CustomerGender);
-                customerCommand.Parameters.AddWithValue("@customerdateofbirth", cus.CustomerDateOfBirth);
-                customerCommand.ExecuteNonQuery();
+                connection.Open();
+                MySqlTransaction transaction = connection.BeginTransaction();
+                try
+                {
+                    string customerQuery = "INSERT INTO customers (customer_name, customer_phone_number, customer_address, customer_email, customer_gender, customer_dateofbirth, customer_count, customer_totalspent)" +
+                                        "VALUES (@customername, @customerphonenumber, @customeraddress, @customeremail, @customergender, @customerdateofbirth, 0, 0)";
+                    MySqlCommand customerCommand = new MySqlCommand(customerQuery, connection, transaction);
+                    customerCommand.Parameters.AddWithValue("@customername", cus.CustomerName);
+                    customerCommand.Parameters.AddWithValue("@customerphonenumber", cus.CustomerPhone);
+                    customerCommand.Parameters.AddWithValue("@customeraddress", cus.CustomerAddress);
+                    customerCommand.Parameters.AddWithValue("@customeremail", cus.CustomerEmail);
+                    customerCommand.Parameters.AddWithValue("@customergender", cus.CustomerGender);
+                    customerCommand.Parameters.AddWithValue("@customerdateofbirth", cus.CustomerDateOfBirth);
+                    customerCommand.ExecuteNonQuery();
 
-                long customerId = customerCommand.LastInsertedId;
-                string userQuery = "INSERT INTO users (username, password_hash, role, user_customer_id) VALUES (@Username, @PasswordHash, @Role, @CustomerId)";
-                MySqlCommand userCommand = new MySqlCommand(userQuery, connection, transaction);
-                userCommand.Parameters.AddWithValue("@Username", us.Username);
-                userCommand.Parameters.AddWithValue("@PasswordHash", us.PasswordHash);
-                userCommand.Parameters.AddWithValue("@Role", role);
-                userCommand.Parameters.AddWithValue("@CustomerId", customerId);
-                userCommand.ExecuteNonQuery();
+                    long customerId = customerCommand.LastInsertedId;
+                    string userQuery = "INSERT INTO users (username, password_hash, role, user_customer_id) VALUES (@Username, @PasswordHash, @Role, @CustomerId)";
+                    MySqlCommand userCommand = new MySqlCommand(userQuery, connection, transaction);
+                    userCommand.Parameters.AddWithValue("@Username", us.Username);
+                    userCommand.Parameters.AddWithValue("@PasswordHash", us.PasswordHash);
+                    userCommand.Parameters.AddWithValue("@Role", "user");
+                    userCommand.Parameters.AddWithValue("@CustomerId", customerId);
+                    userCommand.ExecuteNonQuery();
 
-                transaction.Commit();
+                    transaction.Commit();
 
-                ListUsers.Add(us);
-                ListCustomers.Add(cus);
-                MessageBox.Query("Success", "Registration successful!", "OK");
-                
-                top.Remove(registerWin);
+                    ListUsers.Add(us);
+                    ListCustomers.Add(cus);
+                    MessageBox.Query("Success", "Registration successful!", "OK");
+                    
+                    top.Remove(registerWin);
 
-                Login();
+                    Login();
 
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                }
             }
-            catch (Exception ex)
-            {
-                transaction.Rollback();
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        }
-    };
-
+        };
 
         var closeButton = new Button("Close")
         {
@@ -420,6 +412,5 @@ public class Program
                         CustomerPhoneNumberField, CustomerAddressLabel, CustomerAddressField,
                         CustomerEmailLabel, CustomerEmailField, CustomerGenderLabel, CustomerGenderField,
                         CustomerDateOfBirthLabel, CustomerDateOfBirthField, registerButton, closeButton);
-
     }
-  }
+}

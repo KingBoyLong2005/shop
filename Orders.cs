@@ -65,7 +65,7 @@ public class Orders
         return ListCustomers;
     }
 
-static List<Products> LoadProducts(string connectionString)
+    static List<Products> LoadProducts(string connectionString)
     {
         List<Products> ListProduct = new List<Products>();
 
@@ -86,9 +86,7 @@ static List<Products> LoadProducts(string connectionString)
                 pd.ProductStockQuantity = read.GetInt32("product_stock_quantity");
                 pd.ProductBrand = read.GetString("product_brand");
                 pd.ProductCategoryID = read.GetInt32("product_category_id");
-
-
-                ListProduct.Add(pd);
+            ListProduct.Add(pd);
             }
         }
         return ListProduct;
@@ -221,8 +219,6 @@ static List<Products> LoadProducts(string connectionString)
 
         DisplayProductToOrderWin.Add(btnClose);
     }
-
-    
     public void DisplayMyOrder()
     {
         Application.Init();
@@ -651,14 +647,11 @@ static List<Products> LoadProducts(string connectionString)
                     }
                 }
             }
-            
             else
             {
                 MessageBox.ErrorQuery("Error", "Invalid Customer ID.", "OK");
             }
-
         };
-
         var btnSubmitOrder = new Button("Submit Order")
         {
             X = 1,
@@ -727,4 +720,4 @@ static List<Products> LoadProducts(string connectionString)
         }
     }
 
-    }
+}
