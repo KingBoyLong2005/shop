@@ -220,7 +220,7 @@ public class Products
     {
         X = Pos.Right(productNameLabel) + 1,
         Y = 2,
-        Width = Dim.Fill() - 4
+        Width = 100
     };
 
     var productStockQuantityLabel = new Label("Stock Quantity:")
@@ -232,7 +232,7 @@ public class Products
     {
         X = Pos.Right(productStockQuantityLabel) + 1,
         Y = 4,
-        Width = Dim.Fill() - 4
+        Width = 100
     };
 
     var productCategoryIDLabel = new Label("Category ID:")
@@ -244,7 +244,7 @@ public class Products
     {
         X = Pos.Right(productCategoryIDLabel) + 1,
         Y = 6,
-        Width = Dim.Fill() - 4
+        Width = 100
     };
 
     var productPriceLabel = new Label("Price:")
@@ -256,7 +256,7 @@ public class Products
     {
         X = Pos.Right(productPriceLabel) + 1,
         Y = 8,
-        Width = Dim.Fill() - 4
+        Width = 100
     };
 
     var productDescriptionLabel = new Label("Description:")
@@ -280,7 +280,7 @@ public class Products
     {
         X = Pos.Right(productBrandLabel) + 1,
         Y = 12,
-        Width = Dim.Fill() - 4
+        Width = 100
     };
 
     var saveButton = new Button("Save")
@@ -345,9 +345,8 @@ public class Products
                       saveButton, closeButton);
 
 }
-  public void EditProductInformations()
-{
-    Products pd = new Products();
+    public void EditProductInformations()
+    {
     var top = Application.Top;
     var editProductWin = new Window("Edit Product Information")
     {
@@ -367,21 +366,21 @@ public class Products
     var findProductField = new TextField("")
     {
         X = Pos.Right(findProductLabel) + 1,
-        Y = 2,
-        Width = Dim.Fill() - 4
+        Y = Pos.Top(findProductLabel),
+        Width = 40
     };
 
     var confirmButton = new Button("Confirm")
     {
-        X = Pos.Right(findProductField) + 1,
-        Y = 2
+        X = Pos.Right(findProductField) + 2,
+        Y = Pos.Top(findProductLabel)
     };
 
     var productListView = new ListView(new List<string>())
     {
         X = 2,
-        Y = 4,
-        Width = Dim.Fill() - 4,
+        Y = Pos.Bottom(findProductLabel) + 2,
+        Width = 100,
         Height = 5,
         Visible = false
     };
@@ -395,8 +394,8 @@ public class Products
     var editProductNameField = new TextField("")
     {
         X = Pos.Right(editProductNameLabel) + 1,
-        Y = Pos.Bottom(productListView) + 1,
-        Width = Dim.Fill() - 4
+        Y = Pos.Top(editProductNameLabel),
+        Width = 40
     };
 
     var editProductStockQuantityLabel = new Label("Stock Quantity:")
@@ -408,8 +407,8 @@ public class Products
     var editProductStockQuantityField = new TextField("")
     {
         X = Pos.Right(editProductStockQuantityLabel) + 1,
-        Y = Pos.Bottom(editProductNameField) + 1,
-        Width = Dim.Fill() - 4
+        Y = Pos.Top(editProductStockQuantityLabel),
+        Width = 40
     };
 
     var editProductCategoryIDLabel = new Label("Category ID:")
@@ -421,8 +420,8 @@ public class Products
     var editProductCategoryIDField = new TextField("")
     {
         X = Pos.Right(editProductCategoryIDLabel) + 1,
-        Y = Pos.Bottom(editProductStockQuantityField) + 1,
-        Width = Dim.Fill() - 4
+        Y = Pos.Top(editProductCategoryIDLabel),
+        Width = 40
     };
 
     var editProductPriceLabel = new Label("Price:")
@@ -434,8 +433,8 @@ public class Products
     var editProductPriceField = new TextField("")
     {
         X = Pos.Right(editProductPriceLabel) + 1,
-        Y = Pos.Bottom(editProductCategoryIDField) + 1,
-        Width = Dim.Fill() - 4
+        Y = Pos.Top(editProductPriceLabel),
+        Width = 40
     };
 
     var editProductDescriptionLabel = new Label("Description:")
@@ -447,7 +446,7 @@ public class Products
     var editProductDescriptionField = new TextField("")
     {
         X = Pos.Right(editProductDescriptionLabel) + 1,
-        Y = Pos.Bottom(editProductPriceField) + 1,
+        Y = Pos.Top(editProductDescriptionLabel),
         Width = Dim.Fill() - 4
     };
 
@@ -460,8 +459,8 @@ public class Products
     var editProductBrandField = new TextField("")
     {
         X = Pos.Right(editProductBrandLabel) + 1,
-        Y = Pos.Bottom(editProductDescriptionField) + 1,
-        Width = Dim.Fill() - 4
+        Y = Pos.Top(editProductBrandLabel),
+        Width = 40
     };
 
     var saveButton = new Button("Save")
@@ -655,7 +654,7 @@ public class Products
     {
         X = Pos.Right(productIDLabel) + 1,
         Y = 2,
-        Width = Dim.Fill() - 4
+        Width = 100
     };
 
     var deleteButton = new Button("Delete")
@@ -743,7 +742,7 @@ public class Products
     {
         X = Pos.Right(productNameLabel) + 1,
         Y = 2,
-        Width = Dim.Fill() - 4
+        Width = 100
     };
 
     var findButton = new Button("Find")
@@ -779,13 +778,15 @@ public class Products
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 string query = @"SELECT 
+                                    p.product_id,
                                     p.product_name, 
                                     p.product_stock_quantity, 
                                     p.product_description, 
                                     p.product_price, 
-                                    p.product_category_id, 
+                                    c.category_name, 
                                     p.product_brand
                                 FROM products p
+                                INNER JOIN categories c ON p.product_category_id = c.category_id
                                 WHERE p.product_name Like @ProductName";
                 MySqlCommand command = new MySqlCommand(query, connection);
                 command.Parameters.AddWithValue("@ProductName", "%" + productName + "%");
@@ -800,7 +801,7 @@ public class Products
                         ProductStockQuantity = int.Parse(reader["product_stock_quantity"].ToString()),
                         ProductDescription = reader["product_description"].ToString(),
                         ProductPrice = decimal.Parse(reader["product_price"].ToString()),
-                        ProductCategoryID = int.Parse(reader["product_category_id"].ToString()),
+                        ProductCategoryID = int.Parse(reader["category_name"].ToString()),
                         ProductBrand = reader["product_brand"].ToString(),
                     };
                 }
@@ -878,6 +879,9 @@ public class Products
             break;
             case "admin":
             admin.AdminMenu();
+            break;
+            case "superadmin":
+            superadmin.SuperAdminMenu();
             break;
         }
     };

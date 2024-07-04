@@ -115,6 +115,16 @@ public class SuperAdmin
             top.Remove(SuperAdminMenu);
             admin.DisplayStaff();
         };
+        var btnDisplayProduct = new Button("Display Product")
+        {
+            X = 2,
+            Y = 12
+        };
+        btnDisplayProduct.Clicked += () =>
+        {
+            top.Remove(SuperAdminMenu);
+            pd.DisplayProduct("superadmin");
+        };
 
         var btnLogout = new Button("Logout")
         {
@@ -126,7 +136,7 @@ public class SuperAdmin
             top.Remove(SuperAdminMenu);
             program.Login();
         };
-        leftFrame.Add(btnAddStaff, btnFindStaff, btnEditStaff, btnDeleteStaff, btnDisplayStaff,btnLogout);
+        leftFrame.Add(btnAddStaff, btnFindStaff, btnEditStaff, btnDeleteStaff, btnDisplayStaff, btnDisplayProduct, btnLogout);
 
         var rightTopLabel = new Label("Manager")
         {

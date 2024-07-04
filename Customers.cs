@@ -87,7 +87,7 @@ public class Customers
         {
             X = Pos.Right(usernameLabel) + 1,
             Y = 2,
-            Width = Dim.Fill() - 4
+            Width = 100
         };
 
         var passwordLabel = new Label("Password:")
@@ -100,7 +100,7 @@ public class Customers
             Secret = true,
             X = Pos.Right(passwordLabel) + 1,
             Y = 4,
-            Width = Dim.Fill() - 4
+            Width = 100
         };
         var CustomerNameLabel = new Label("Name: ")
         {
@@ -111,7 +111,7 @@ public class Customers
         {
             X = Pos.Right(CustomerNameLabel) + 1,
             Y  = 6,
-            Width = Dim.Fill() - 4
+            Width = 100
         };
         var CustomerPhoneNumberLabel = new Label("Phone number: ")
         {
@@ -122,7 +122,7 @@ public class Customers
         {
             X = Pos.Right(CustomerPhoneNumberLabel) + 1,
             Y  = 8,
-            Width = Dim.Fill() - 4
+            Width = 100
         };
         var CustomerAddressLabel = new Label("Address: ")
         {
@@ -133,7 +133,7 @@ public class Customers
         {
             X = Pos.Right(CustomerAddressLabel) + 1,
             Y  = 10,
-            Width = Dim.Fill() - 4
+            Width = 100
         };
         var CustomerEmailLabel = new Label("Email: ")
         {
@@ -144,7 +144,7 @@ public class Customers
         {
             X = Pos.Right(CustomerEmailLabel) + 1,
             Y  = 12,
-            Width = Dim.Fill() - 4
+            Width = 100
         };
         var CustomerGenderLabel = new Label("Gender: ")
         {
@@ -155,7 +155,7 @@ public class Customers
         {
             X = Pos.Right(CustomerGenderLabel) + 1,
             Y  = 14,
-            Width = Dim.Fill() - 4
+            Width = 100
         };
         var CustomerDateOfBirthLabel = new Label("Date of birth (YYYY-MM-DD): ")
         {
@@ -166,7 +166,7 @@ public class Customers
         {
             X = Pos.Right(CustomerDateOfBirthLabel) + 1,
             Y  = 16,
-            Width = Dim.Fill() - 4
+            Width = 100
         };
 
         var registerButton = new Button("Register")
@@ -263,7 +263,7 @@ public class Customers
     {
         X = 0,
         Y = 0,
-        Width = Dim.Fill() - 4,
+        Width = 100,
         Height = Dim.Fill() - 4
     };
     top.Add(editCustomerWin);
@@ -277,7 +277,7 @@ public class Customers
     {
         X = Pos.Right(findCustomerIDLabel) + 1,
         Y = 1,
-        Width = Dim.Fill() - 4
+        Width = 100
     };
 
     var editCustomerNameLabel = new Label("Customer Name:")
@@ -291,7 +291,7 @@ public class Customers
     {
         X = Pos.Right(editCustomerNameLabel) + 1,
         Y = 5,
-        Width = Dim.Fill() - 4,
+        Width = 100,
         Visible = false
     };
 
@@ -305,7 +305,7 @@ public class Customers
     {
         X = Pos.Right(editCustomerPhoneLabel) + 1,
         Y = 7,
-        Width = Dim.Fill() - 4,
+        Width = 100,
         Visible = false
     };
 
@@ -320,7 +320,7 @@ public class Customers
     {
         X = Pos.Right(editCustomerAddressLabel) + 1,
         Y = 9,
-        Width = Dim.Fill() - 4,
+        Width = 100,
         Visible = false
     };
 
@@ -335,7 +335,7 @@ public class Customers
     {
         X = Pos.Right(editCustomerEmailLabel) + 1,
         Y = 11,
-        Width = Dim.Fill() - 4,
+        Width = 100,
         Visible = false
     };
 
@@ -349,7 +349,7 @@ public class Customers
     {
         X = Pos.Right(editCustomerGenderLabel) + 1,
         Y = 13,
-        Width = Dim.Fill() - 4,
+        Width = 100,
         Visible = false
     };
 
@@ -363,7 +363,7 @@ public class Customers
     {
         X = Pos.Right(editCustomerDateOfBirthLabel) + 1,
         Y = 15,
-        Width = Dim.Fill() - 4,
+        Width = 100,
         Visible = false
     };
     
@@ -496,7 +496,7 @@ public class Customers
         {
             X = 0,
             Y = 0,
-            Width = Dim.Fill() - 4,
+            Width = 100,
             Height = Dim.Fill() - 4
         };
         top.Add(deleteCustomerWin);
@@ -511,7 +511,7 @@ public class Customers
         {
             X = Pos.Right(customerIDLabel) + 1,
             Y = 1,
-            Width = Dim.Fill() - 4
+            Width = 100
         };
 
         var deleteButton = new Button("Delete")

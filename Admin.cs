@@ -92,30 +92,20 @@ public class Admin
             Height = Dim.Fill() // Chiếm phần còn lại của chiều cao
         };
         adminMenu.Add(rightBottomFrame);
-        var btnDisplayProduct = new Button("Order for customer")
+        var btnOrderForCustomer = new Button("Order for customer")
         {
             X = 2,
             Y = 2
         };
-        btnDisplayProduct.Clicked += () =>
+        btnOrderForCustomer.Clicked += () =>
         {
             top.Remove(adminMenu);
             order.DisplayProductToOrderForCustomer();
         };
-        var btnOrderForCustomer = new Button("Display Products")
-        {
-            X = 2,
-            Y = 4
-        };
-        btnOrderForCustomer.Clicked += () =>
-        {
-            top.Remove(adminMenu);
-            pd.DisplayProduct("admin");
-        };
         var btnDisplayCustomer = new Button("Display Customer")
         {
             X = 2,
-            Y = 6
+            Y = 4
         }; 
         btnDisplayCustomer.Clicked += () =>
         {
@@ -125,7 +115,7 @@ public class Admin
         var btnFindCustomer = new Button("Find Customer")
         {
             X = 2,
-            Y = 8
+            Y = 6
         };
         btnFindCustomer.Clicked += () =>
         {
@@ -135,7 +125,7 @@ public class Admin
         var btnEditCustomer = new Button("Edit Customer")
         {
             X = 2,
-            Y = 10
+            Y = 8
         };
         btnEditCustomer.Clicked += () =>
         {
@@ -145,7 +135,7 @@ public class Admin
         var btnAddCustomer = new Button("Add New Customer")
         {
             X = 2,
-            Y = 12
+            Y = 10
         };
         btnAddCustomer.Clicked += () =>
         {
@@ -155,12 +145,62 @@ public class Admin
         var btnDeleteCustomer = new Button("Delete Customer")
         {
             X = 2,
-            Y = 14
+            Y = 12
         };
         btnDeleteCustomer.Clicked += () =>
         {
             top.Remove(adminMenu);
             customer.DeleteCustomer();
+        };
+        var btnDisplayProduct = new Button("Display Products")
+        {
+            X = 2,
+            Y = 14
+        };
+        btnDisplayProduct.Clicked += () =>
+        {
+            top.Remove(adminMenu);
+            pd.DisplayProduct("admin");
+        };
+        var btnEditProduct = new Button("Edit Product")
+        {
+            X = 2,
+            Y = 16
+        };
+        btnEditProduct.Clicked += () =>
+        {
+            top.Remove(adminMenu);
+            pd.EditProductInformations();
+        };
+        var btnAddProduct = new Button("Add Product")
+        {
+            X = 2,
+            Y = 18
+        };
+        btnAddProduct.Clicked += () =>
+        {
+            top.Remove(adminMenu);
+            pd.AddProduct();
+        };
+        var btnFindProduct = new Button("Find Product")
+        {
+            X = 2,
+            Y = 20
+        };
+        btnFindProduct.Clicked += () =>
+        {
+            top.Remove(adminMenu);
+            pd.FindProduct("admin");
+        };
+        var btnDeleteProduct = new Button("Delete Product")
+        {
+            X = 2,
+            Y = 22
+        };
+        btnDeleteProduct.Clicked += () =>
+        { 
+            top.Remove(adminMenu);
+            pd.DeleteProduct();
         };
 
         var LogoutButton = new Button("Logout")
@@ -173,7 +213,7 @@ public class Admin
             top.Remove(adminMenu);
             program.Login();
         };
-        leftFrame.Add(btnDisplayProduct, btnOrderForCustomer, btnDisplayCustomer, btnFindCustomer, btnEditCustomer, btnAddCustomer, btnDeleteCustomer, LogoutButton);
+        leftFrame.Add(btnOrderForCustomer, btnDisplayCustomer, btnFindCustomer, btnEditCustomer, btnAddCustomer, btnDeleteCustomer, btnDisplayProduct, btnEditProduct, btnAddProduct, btnFindProduct, btnDeleteProduct, LogoutButton);
 
         string adminName = "";
         using (MySqlConnection connection = new MySqlConnection(connectionString))

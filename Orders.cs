@@ -192,8 +192,15 @@ static List<Products> LoadProducts(string connectionString)
                 };
                 orderButton.Clicked += () =>
                 {
+                    try
+                    {
                     top.Remove(DisplayProductToOrderWin);
                     OrderProduct(productID, productName, productPrice);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                    }
                 };
 
                 DisplayProductToOrderWin.Add(productLabel, stockQuantityLabel, descriptionLabel, priceLabel, categoryLabel, brandLabel, orderButton);
