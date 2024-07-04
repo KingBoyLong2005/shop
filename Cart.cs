@@ -22,13 +22,14 @@ public class Cart
 
 
     public static string connectionString = Configuration.ConnectionString;
+    public static int currentCustomerID = SessionData.Instance.CurrentCustomerID;
+
     public static Customers customer = new Customers();
     public static Cart userCart = new Cart();
     public static Orders order = new Orders();
-    public static int currentCustomerID = SessionData.Instance.CurrentCustomerID;
     public static List<Cart> ListCarts = new List<Cart>();
     public static List<Products> ListProducts = new List<Products>();
-    public static Program program = new Program();
+
 
     static List<Products> LoadProducts(string connectionString)
     {

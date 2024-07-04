@@ -13,14 +13,15 @@ using Microsoft.VisualBasic;
 
 public class Program
 {
-    static Window mainMenu;
     public static string connectionString;
     public static int currentCustomerID = SessionData.Instance.CurrentCustomerID;
+
     public static List<Products> ListProducts = new List<Products>();
     public static List<Categories> ListCategories = new List<Categories>();
     public static List<Users> ListUsers = new List<Users>();
     public static List<Customers> ListCustomers = new List<Customers>();
     public static List<Cart> ListCarts = new List<Cart>();
+    
     public static Cart userCart = new Cart();
     public static Products pd = new Products();
     public static Orders order = new Orders();

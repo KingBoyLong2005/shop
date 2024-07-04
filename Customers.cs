@@ -27,8 +27,10 @@ public class Customers
     public static Orders order = new Orders();
     public static Program program = new Program();
     public static Customers cus = new Customers();
+
     public static int currentCustomerID = SessionData.Instance.CurrentCustomerID;
     public static string connectionString = Configuration.ConnectionString;
+    
 
     public static List<Users> ListUsers = new List<Users>();
     public static List<Customers> ListCustomers = new List<Customers>();
@@ -226,7 +228,6 @@ public class Customers
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
                 MessageBox.ErrorQuery("Error", ex.Message, "OK");
             }
         }

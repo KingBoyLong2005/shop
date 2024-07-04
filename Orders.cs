@@ -21,6 +21,8 @@ public class Orders
 
     
     public static string connectionString = Configuration.ConnectionString;
+    public static int currentCustomerID = SessionData.Instance.CurrentCustomerID;
+
     public static Products pd = new Products();
     public static Orders order = new Orders();
     public static Cart cart= new Cart();
@@ -29,7 +31,7 @@ public class Orders
     public static Customers customer = new Customers();
     public static Admin admin = new Admin();
     public static SuperAdmin superadmin = new SuperAdmin();
-    public static int currentCustomerID = SessionData.Instance.CurrentCustomerID;
+    
     public static List<Products> ListProducts = new List<Products>();
     public static List<Customers> ListCustomers = new List<Customers>();
 

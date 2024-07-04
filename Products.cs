@@ -16,8 +16,10 @@ public class Products
     public decimal ProductPrice { get; set; }
     public int ProductCategoryID { get; set; }
     public string ProductBrand { get; set; }
+
     public static string connectionString = Configuration.ConnectionString;
     public static List<Products> ListProducts = new List<Products>();
+
     public static Products pd = new Products();
     public static Program program = new Program();
     public static Users user = new Users();
@@ -25,10 +27,6 @@ public class Products
     public static SuperAdmin superadmin = new SuperAdmin();
     public static Cart userCart = new Cart();
     public static Customers customer = new Customers();
-
-    
-
-
 
     public void DisplayProduct(string role)
 {
@@ -636,7 +634,7 @@ public class Products
                        editProductBrandLabel, editProductBrandField,
                        saveButton, closeButton);
 }
-  public void DeleteProduct()
+    public void DeleteProduct()
 {
     var top = Application.Top;
     var deleteProductWin = new Window("Delete Product")
