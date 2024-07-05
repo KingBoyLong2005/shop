@@ -4,7 +4,7 @@ using System.Data;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MySql.Data.MySqlClient;
+using MySql.Data.MySqlClient;                                   //Import namesapce to use function
 using System.Security.Cryptography.X509Certificates;
 using Terminal.Gui;
 public class Orders
@@ -37,18 +37,31 @@ public class Orders
 
     static List<Customers> LoadCustomers(string connectionString)
     {
+        // Initialize a list to store customers
         List<Customers> ListCustomers = new List<Customers>();
 
+        // Establish connection to the database using MySqlConnection
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {   
+            // SQL query to select all customers
             string query = "SELECT * FROM customers"; 
+            
+            // MySqlCommand to execute the query using the connection
             MySqlCommand command = new MySqlCommand(query, connection);
+            
+            // Open the database connection
             connection.Open();
+            
+            // Execute the query and retrieve data using ExecuteReader
             MySqlDataReader read = command.ExecuteReader();
+            
+            // Iterate through the results
             while (read.Read())
             {
+                // Create a new Customers object to hold current customer data
                 Customers cus = new Customers();
-                // Nạp các thuộc tính 
+                
+                // Populate Customers object properties from database fields
                 cus.CustomerID = read.GetInt32("customer_id");
                 cus.CustomerName = read.GetString("customer_name");
                 cus.CustomerPhone = read.GetString("customer_phone_number");
@@ -59,26 +72,42 @@ public class Orders
                 cus.CustomerCount = read.GetInt32("customer_count");
                 cus.CustomerTotalSpent = read.GetDecimal("customer_totalspent");
 
+                // Add the populated Customers object to the ListCustomers list
                 ListCustomers.Add(cus);
             }
         }
+        
+        // Return the populated list of Customers objects
         return ListCustomers;
     }
 
     static List<Products> LoadProducts(string connectionString)
     {
+        // Initialize a list to store products
         List<Products> ListProduct = new List<Products>();
 
+        // Establish connection to the database using MySqlConnection
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {   
+            // SQL query to select all products
             string query = "SELECT * FROM products"; 
+            
+            // MySqlCommand to execute the query using the connection
             MySqlCommand command = new MySqlCommand(query, connection);
+            
+            // Open the database connection
             connection.Open();
+            
+            // Execute the query and retrieve data using ExecuteReader
             MySqlDataReader read = command.ExecuteReader();
+            
+            // Iterate through the results
             while (read.Read())
             {
+                // Create a new Products object to hold current product data
                 Products pd = new Products();
-                // Nạp các thuộc tính 
+                
+                // Populate Products object properties from database fields
                 pd.ProductID = read.GetInt32("product_id");
                 pd.ProductName = read.GetString("product_name");
                 pd.ProductDescription = read.GetString("product_description");
@@ -86,16 +115,22 @@ public class Orders
                 pd.ProductStockQuantity = read.GetInt32("product_stock_quantity");
                 pd.ProductBrand = read.GetString("product_brand");
                 pd.ProductCategoryID = read.GetInt32("product_category_id");
-            ListProduct.Add(pd);
+                
+                // Add the populated Products object to the ListProduct list
+                ListProduct.Add(pd);
             }
         }
+        
+        // Return the populated list of Products objects
         return ListProduct;
     }
+
     public void DisplayProductToOrder()
     {
-        List<Products> products = new List<Products>();
+        List<Products> products = new List<Products>(); // Initialize a list to hold products
         var top = Application.Top;
 
+        // Create a new window for displaying products
         var DisplayProductToOrderWin = new Window("Product List")
         {
             X = 0,
@@ -103,9 +138,10 @@ public class Orders
             Width = Dim.Fill(),
             Height = Dim.Fill()
         };
-        top.Add(DisplayProductToOrderWin);
-        DisplayProductToOrderWin.FocusNext();
+        top.Add(DisplayProductToOrderWin); // Add window to the top application
+        DisplayProductToOrderWin.FocusNext(); // Focus on the window
 
+        // Connect to the database and retrieve product information
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
             string query = @"SELECT 
@@ -121,14 +157,16 @@ public class Orders
             MySqlCommand command = new MySqlCommand(query, connection);
             connection.Open();
             MySqlDataReader reader = command.ExecuteReader();
+
+            // Define column headers for product display
             var columnDisplayListProductToOrder = new string[]
             {
-                "Product's name", "Stock quantity", "Description", "Price", "Category's name", "Brand"
+                "Product Name", "Stock Quantity", "Description", "Price", "Category", "Brand"
             };
 
-            int columnWidth = 20; // Increase column width
+            int columnWidth = 20; // Width for each column
 
-            // Display column headers
+            // Display column headers in the window
             for (int i = 0; i < columnDisplayListProductToOrder.Length; i++)
             {
                 DisplayProductToOrderWin.Add(new Label(columnDisplayListProductToOrder[i])
@@ -140,13 +178,16 @@ public class Orders
                 });
             }
 
-            int row = 1;
+            int row = 1; // Starting row for displaying products
+
+            // Read through each product retrieved from the database
             while (reader.Read())
             {
                 int productID = reader.GetInt32("product_id");
                 string productName = reader["product_name"].ToString();
                 decimal productPrice = reader.GetDecimal("product_price");
 
+                // Create labels for each product attribute to display
                 var productLabel = new Label($"{productName}")
                 {
                     X = 0,
@@ -183,6 +224,8 @@ public class Orders
                     Y = row,
                     Width = columnWidth
                 };
+                
+                // Button to order the product
                 var orderButton = new Button("Order")
                 {
                     X = 6 * columnWidth,
@@ -192,8 +235,9 @@ public class Orders
                 {
                     try
                     {
-                    top.Remove(DisplayProductToOrderWin);
-                    OrderProduct(productID, productName, productPrice);
+                        // Remove the product display window and initiate the order process
+                        top.Remove(DisplayProductToOrderWin);
+                        OrderProduct(productID, productName, productPrice);
                     }
                     catch (Exception ex)
                     {
@@ -201,11 +245,15 @@ public class Orders
                     }
                 };
 
-                DisplayProductToOrderWin.Add(productLabel, stockQuantityLabel, descriptionLabel, priceLabel, categoryLabel, brandLabel, orderButton);
-                row++;
+                // Add labels and order button to the product display window
+                DisplayProductToOrderWin.Add(productLabel, stockQuantityLabel, descriptionLabel, 
+                                            priceLabel, categoryLabel, brandLabel, orderButton);
+                
+                row++; // Move to the next row for the next product
             }
         }
 
+        // Close button to exit the product display window
         var btnClose = new Button("Close")
         {
             X = Pos.Center(),
@@ -213,18 +261,19 @@ public class Orders
         };
         btnClose.Clicked += () =>
         {
-            top.Remove(DisplayProductToOrderWin);
-            customer.UserMenu();
+            top.Remove(DisplayProductToOrderWin); // Remove the window from the top application
+            customer.UserMenu(); // Return to the user menu
         };
 
+        // Add close button to the product display window
         DisplayProductToOrderWin.Add(btnClose);
     }
+
     public void DisplayMyOrder()
     {
-        Application.Init();
+        Application.Init(); // Initialize the Terminal.Gui application
 
-        // Tạo cửa sổ chính để hiển thị đơn hàng
-        var top = Application.Top;
+        var top = Application.Top; // Get the top-level window
         var myOrderWindow = new Window("My Orders")
         {
             X = 0,
@@ -232,13 +281,12 @@ public class Orders
             Width = Dim.Fill(),
             Height = Dim.Fill()
         };
-        top.Add(myOrderWindow);
-        int yPosition = 1;
+        top.Add(myOrderWindow); // Add the main window to the application
+        int yPosition = 1; // Starting Y position for displaying orders
 
-        // Truy vấn cơ sở dữ liệu để lấy các đơn hàng của người dùng hiện tại
+        // Connect to the database and retrieve orders for the current customer
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
-            
             string query = @"SELECT 
                                 o.order_quantity,
                                 o.order_date,
@@ -251,49 +299,51 @@ public class Orders
                             JOIN products p ON o.order_product_id = p.product_id
                             WHERE o.order_customer_id = @CustomerID";
             MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@CustomerID", currentCustomerID);
+            command.Parameters.AddWithValue("@CustomerID", currentCustomerID); // Bind current customer ID parameter
             connection.Open();
             MySqlDataReader reader = command.ExecuteReader();
 
+            // Read through each order retrieved from the database
             while (reader.Read())
             {
-                string orderDetails =$"Product: {reader["product_name"]}, " +
+                // Construct the order details string
+                string orderDetails = $"Product: {reader["product_name"]}, " +
                                     $"Quantity: {reader["order_quantity"]}, " +
                                     $"Order Date: {reader["order_date"]}, " +
                                     $"Delivery Date: {reader["order_delivery_date"]}, " +
                                     $"Payment: {reader["order_payment_method"]}, " +
                                     $"Status: {reader["order_status"]}, " +
                                     $"Total: {reader["order_total_price"]}";
-                
+
+                // Create a label for displaying order details
                 var orderLabel = new Label(orderDetails)
                 {
                     X = 1,
                     Y = yPosition,
                     Width = Dim.Fill()
                 };
-                myOrderWindow.Add(orderLabel);
-                yPosition += 2;
+                myOrderWindow.Add(orderLabel); // Add the label to the order window
+                yPosition += 2; // Increment Y position for the next order
             }
         }
 
-        var CloseButton = new Button("Close")
+        // Create a Close button to exit the order display window
+        var closeButton = new Button("Close")
         {
             X = Pos.Center(),
-            Y = yPosition + 1,
+            Y = yPosition + 1, // Position below the last order display
         };
-        CloseButton.Clicked += () =>
+        closeButton.Clicked += () =>
         {
-            top.Remove(myOrderWindow);
-            customer.UserMenu(); // Quay lại menu chính
+            top.Remove(myOrderWindow); // Remove the order window from the top application
+            customer.UserMenu(); // Return to the main menu
         };
-        myOrderWindow.Add(CloseButton);
-
+        myOrderWindow.Add(closeButton); // Add the Close button to the order window
     }
-    
 
     public void OrderProduct(int productID, string productName, decimal productPrice)
     {
-        var top = Application.Top;
+        var top = Application.Top; // Get the top-level application window
         var orderWindow = new Window("Order Product")
         {
             X = 0,
@@ -301,15 +351,17 @@ public class Orders
             Width = Dim.Fill(),
             Height = Dim.Fill()
         };
-        top.Add(orderWindow);
+        top.Add(orderWindow); // Add the order window to the top-level application
 
+        // Label to display the selected product's name
         var lblProductName = new Label($"Product: {productName}")
         {
             X = 1,
             Y = 1
         };
-        orderWindow.Add(lblProductName);
+        orderWindow.Add(lblProductName); // Add the product name label to the order window
 
+        // Label and text field for entering the quantity to order
         var lblQuantity = new Label("Quantity:")
         {
             X = 1,
@@ -321,8 +373,9 @@ public class Orders
             Y = 3,
             Width = 20
         };
-        orderWindow.Add(lblQuantity, txtQuantity);
+        orderWindow.Add(lblQuantity, txtQuantity); // Add quantity label and text field to the order window
 
+        // Label and text field for entering the delivery address
         var lblDeliveryAddress = new Label("Delivery Address:")
         {
             X = 1,
@@ -334,8 +387,9 @@ public class Orders
             Y = 5,
             Width = 40
         };
-        orderWindow.Add(lblDeliveryAddress, txtDeliveryAddress);
+        orderWindow.Add(lblDeliveryAddress, txtDeliveryAddress); // Add delivery address label and text field to the order window
 
+        // Label and text field for selecting the payment method
         var lblPaymentMethod = new Label("Payment Method:")
         {
             X = 1,
@@ -347,8 +401,9 @@ public class Orders
             Y = 7,
             Width = 20
         };
-        orderWindow.Add(lblPaymentMethod, txtPaymentMethod);
+        orderWindow.Add(lblPaymentMethod, txtPaymentMethod); // Add payment method label and text field to the order window
 
+        // Button to submit the order
         var btnSubmitOrder = new Button("Submit Order")
         {
             X = 1,
@@ -359,8 +414,13 @@ public class Orders
             int quantity;
             if (int.TryParse(txtQuantity.Text.ToString(), out quantity) && quantity > 0)
             {
+                // Remove the ordered item from the cart
                 cart.RemoveItemFromCart(productID);
+
+                // Place the order
                 PlaceOrderDirectly(productID, quantity, txtDeliveryAddress.Text.ToString(), txtPaymentMethod.Text.ToString());
+
+                // Close the order window and display the product list again
                 top.Remove(orderWindow);
                 DisplayProductToOrder();
             }
@@ -370,6 +430,7 @@ public class Orders
             }
         };
 
+        // Button to cancel the order
         var btnCancel = new Button("Cancel")
         {
             X = Pos.Right(btnSubmitOrder) + 2,
@@ -377,15 +438,17 @@ public class Orders
         };
         btnCancel.Clicked += () =>
         {
+            // Prompt for confirmation before closing the order window
             bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to close?", "Yes", "No") == 0;
             if (confirmed)
             {
+                // Close the order window and display the product list again
                 top.Remove(orderWindow);
                 DisplayProductToOrder();
             }
         };
 
-        orderWindow.Add(btnSubmitOrder, btnCancel);
+        orderWindow.Add(btnSubmitOrder, btnCancel); // Add submit and cancel buttons to the order window
     }
 
     static void PlaceOrderDirectly(int productID, int quantity, string deliveryAddress, string paymentMethod)
@@ -393,22 +456,33 @@ public class Orders
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
             connection.Open();
-            string query = @"INSERT INTO orders (order_customer_id, order_product_id, order_quantity, order_date, order_delivery_date, order_payment_method, order_status, order_delivery_address) 
-                             VALUES (@CustomerID, @ProductID, @Quantity, @OrderDate, @DeliveryDate, @PaymentMethod, @OrderStatus, @DeliveryAddress);
+            
+            // SQL query to insert a new order and update the order total price
+            string query = @"INSERT INTO orders 
+                                (order_customer_id, order_product_id, order_quantity, order_date, order_delivery_date, order_payment_method, order_status, order_delivery_address) 
+                            VALUES 
+                                (@CustomerID, @ProductID, @Quantity, @OrderDate, @DeliveryDate, @PaymentMethod, @OrderStatus, @DeliveryAddress);
 
-                            UPDATE `orders` o JOIN `products` p ON o.order_product_id = p.product_id SET o.order_total_price = o.order_quantity * p.product_price;";
+                            UPDATE `orders` o 
+                            JOIN `products` p ON o.order_product_id = p.product_id 
+                            SET 
+                                o.order_total_price = o.order_quantity * p.product_price;";
+
             MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@CustomerID", currentCustomerID);
+
+            // Parameters for the INSERT INTO orders statement
+            command.Parameters.AddWithValue("@CustomerID", currentCustomerID);  // Using static currentCustomerID
             command.Parameters.AddWithValue("@ProductID", productID);
             command.Parameters.AddWithValue("@Quantity", quantity);
             command.Parameters.AddWithValue("@OrderDate", DateTime.Now);
-            command.Parameters.AddWithValue("@DeliveryDate", DateTime.Now.AddDays(7)); // Giả sử thời gian giao hàng là 7 ngày
+            command.Parameters.AddWithValue("@DeliveryDate", DateTime.Now.AddDays(7)); // Assuming delivery time is 7 days from now
             command.Parameters.AddWithValue("@PaymentMethod", paymentMethod);
             command.Parameters.AddWithValue("@OrderStatus", "Pending");
             command.Parameters.AddWithValue("@DeliveryAddress", deliveryAddress);
 
             try
             {
+                // Execute the INSERT INTO and UPDATE queries
                 command.ExecuteNonQuery();
                 MessageBox.Query("Success", "Order placed successfully.", "OK");
             }
@@ -418,11 +492,13 @@ public class Orders
             }
         }
     }
+
     public void DisplayProductToOrderForCustomer()
     {
         List<Products> products = new List<Products>();
         var top = Application.Top;
 
+        // Create a window to display product list
         var DisplayProductToOrderForCustomerWin = new Window("Product List")
         {
             X = 0,
@@ -433,6 +509,7 @@ public class Orders
         top.Add(DisplayProductToOrderForCustomerWin);
         DisplayProductToOrderForCustomerWin.FocusNext();
 
+        // Connect to the database and retrieve product information
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
             string query = @"SELECT 
@@ -448,12 +525,14 @@ public class Orders
             MySqlCommand command = new MySqlCommand(query, connection);
             connection.Open();
             MySqlDataReader reader = command.ExecuteReader();
+
+            // Define column headers
             var columnDisplayListProductToOrder = new string[]
             {
                 "Product's name", "Stock quantity", "Description", "Price", "Category's name", "Brand"
             };
 
-            int columnWidth = 20; // Increase column width
+            int columnWidth = 20; // Column width
 
             // Display column headers
             for (int i = 0; i < columnDisplayListProductToOrder.Length; i++)
@@ -470,10 +549,12 @@ public class Orders
             int row = 1;
             while (reader.Read())
             {
+                // Read product details from the database
                 int productID = reader.GetInt32("product_id");
                 string productName = reader["product_name"].ToString();
                 decimal productPrice = reader.GetDecimal("product_price");
 
+                // Create labels for each product attribute
                 var productLabel = new Label($"{productName}")
                 {
                     X = 0,
@@ -510,6 +591,8 @@ public class Orders
                     Y = row,
                     Width = columnWidth
                 };
+
+                // Button to order the product
                 var orderButton = new Button("Order")
                 {
                     X = 6 * columnWidth,
@@ -521,11 +604,13 @@ public class Orders
                     OrderProductForCustomer(productID, productName, productPrice);
                 };
 
+                // Add labels and button to the window
                 DisplayProductToOrderForCustomerWin.Add(productLabel, stockQuantityLabel, descriptionLabel, priceLabel, categoryLabel, brandLabel, orderButton);
                 row++;
             }
         }
 
+        // Close button to exit the product display window
         var btnClose = new Button("Close")
         {
             X = Pos.Center(),
@@ -534,11 +619,13 @@ public class Orders
         btnClose.Clicked += () =>
         {
             top.Remove(DisplayProductToOrderForCustomerWin);
-            admin.AdminMenu();
+            admin.AdminMenu(); // Navigate back to admin menu (adjust as needed)
         };
 
+        // Add close button to the window
         DisplayProductToOrderForCustomerWin.Add(btnClose);
     }
+
     static void OrderProductForCustomer(int productID, string productName, decimal productPrice)
     {
         var top = Application.Top;
@@ -583,8 +670,6 @@ public class Orders
             Width = 20
         };
         orderWindow.Add(lblQuantity, txtQuantity);
-        lblQuantity.Visible = true;
-        txtQuantity.Visible = true;
 
         var lblDeliveryAddress = new Label("Delivery Address:")
         {
@@ -598,8 +683,6 @@ public class Orders
             Width = 40
         };
         orderWindow.Add(lblDeliveryAddress, txtDeliveryAddress);
-        lblDeliveryAddress.Visible = true;
-        txtDeliveryAddress.Visible = true;
 
         var lblPaymentMethod = new Label("Payment Method:")
         {
@@ -612,10 +695,9 @@ public class Orders
             Y = 11,
             Width = 20
         };
-        lblPaymentMethod.Visible = true;
-        txtPaymentMethod.Visible = true;
         orderWindow.Add(lblPaymentMethod, txtPaymentMethod);
-        var ConfirmCustomer = new Button("Comfirm")
+
+        var ConfirmCustomer = new Button("Confirm")
         {
             X = Pos.Right(txtCustomerID) + 1,
             Y = 5
@@ -625,15 +707,17 @@ public class Orders
             int customerID;
             if (int.TryParse(txtCustomerID.Text.ToString(), out customerID))
             {
+                // Check if customer exists in the database
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
                     connection.Open();
                     string query = "SELECT * FROM customers WHERE customer_id = @CustomerID";
                     MySqlCommand command = new MySqlCommand(query, connection);
                     command.Parameters.AddWithValue("@CustomerID", customerID);
-                    int customerExists = Convert.ToInt32(command.ExecuteScalar());
+                    object customerExists = command.ExecuteScalar();
                     if (customerExists != null)
                     {
+                        // Hide unnecessary fields after customer confirmation
                         lblQuantity.Visible = false;
                         txtQuantity.Visible = false;
                         lblDeliveryAddress.Visible = false;
@@ -652,6 +736,7 @@ public class Orders
                 MessageBox.ErrorQuery("Error", "Invalid Customer ID.", "OK");
             }
         };
+
         var btnSubmitOrder = new Button("Submit Order")
         {
             X = 1,
@@ -669,7 +754,6 @@ public class Orders
             {
                 MessageBox.ErrorQuery("Error", "Invalid quantity.", "OK");
             }
-                   
         };
 
         var btnCancel = new Button("Cancel")
@@ -689,28 +773,41 @@ public class Orders
 
         orderWindow.Add(ConfirmCustomer, btnSubmitOrder, btnCancel);
     }
+
     static void PlaceOrderForCustomer(int customerID, int productID, int quantity, string deliveryAddress, string paymentMethod)
     {
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
             connection.Open();
-            string query = @"INSERT INTO orders (order_customer_id, order_product_id, order_quantity, order_date, order_delivery_date, order_payment_method, order_status, order_delivery_address) 
-                            VALUES (@CustomerID, @ProductID, @Quantity, @OrderDate, @DeliveryDate, @PaymentMethod, @OrderStatus, @DeliveryAddress);
 
-                            UPDATE `orders` o JOIN `products` p ON o.order_product_id = p.product_id SET o.order_total_price = o.order_quantity * p.product_price;";
-            MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@CustomerID", customerID);
-            command.Parameters.AddWithValue("@ProductID", productID);
-            command.Parameters.AddWithValue("@Quantity", quantity);
-            command.Parameters.AddWithValue("@OrderDate", DateTime.Now);
-            command.Parameters.AddWithValue("@DeliveryDate", DateTime.Now.AddDays(7)); // Giả sử thời gian giao hàng là 7 ngày
-            command.Parameters.AddWithValue("@PaymentMethod", paymentMethod);
-            command.Parameters.AddWithValue("@OrderStatus", "Pending");
-            command.Parameters.AddWithValue("@DeliveryAddress", deliveryAddress);
+            // Insert query to add the order details
+            string insertQuery = @"INSERT INTO orders 
+                                    (order_customer_id, order_product_id, order_quantity, order_date, order_delivery_date, order_payment_method, order_status, order_delivery_address) 
+                                VALUES 
+                                    (@CustomerID, @ProductID, @Quantity, @OrderDate, @DeliveryDate, @PaymentMethod, @OrderStatus, @DeliveryAddress);";
+
+            MySqlCommand insertCommand = new MySqlCommand(insertQuery, connection);
+            insertCommand.Parameters.AddWithValue("@CustomerID", customerID);
+            insertCommand.Parameters.AddWithValue("@ProductID", productID);
+            insertCommand.Parameters.AddWithValue("@Quantity", quantity);
+            insertCommand.Parameters.AddWithValue("@OrderDate", DateTime.Now);
+            insertCommand.Parameters.AddWithValue("@DeliveryDate", DateTime.Now.AddDays(7)); // Assuming delivery time is 7 days
+            insertCommand.Parameters.AddWithValue("@PaymentMethod", paymentMethod);
+            insertCommand.Parameters.AddWithValue("@OrderStatus", "Pending");
+            insertCommand.Parameters.AddWithValue("@DeliveryAddress", deliveryAddress);
 
             try
             {
-                command.ExecuteNonQuery();
+                insertCommand.ExecuteNonQuery();
+
+                // Update query to calculate and update the order total price based on product price
+                string updateQuery = @"UPDATE orders o 
+                                    JOIN products p ON o.order_product_id = p.product_id 
+                                    SET o.order_total_price = o.order_quantity * p.product_price;";
+
+                MySqlCommand updateCommand = new MySqlCommand(updateQuery, connection);
+                updateCommand.ExecuteNonQuery();
+
                 MessageBox.Query("Success", "Order placed successfully.", "OK");
             }
             catch (Exception ex)
@@ -719,5 +816,4 @@ public class Orders
             }
         }
     }
-
 }

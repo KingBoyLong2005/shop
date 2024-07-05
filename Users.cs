@@ -12,15 +12,7 @@ public class Users
     public int UserId { get; set; }
     public string Username { get; set; }
     public string PasswordHash { get; set; }
-    public UserRole Role { get; set; }   
+    public string Roles { get; set; }   
     public int CustomerID  {get; set;}   
 
-    
-
-}
-public enum UserRole
-{
-    User,
-    Admin,
-    SuperAdmin
 }

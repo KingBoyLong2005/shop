@@ -1,7 +1,7 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
-using System.Linq;
+using System.Linq;                      //Import namesapce to use function
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using Terminal.Gui;
@@ -9,17 +9,22 @@ using Terminal.Gui;
 
 public class Products
 {
+    // Properties representing details of a product
     public int ProductID { get; set; }
-    public string ProductName { get; set;}
+    public string ProductName { get; set; }
     public int ProductStockQuantity { get; set; }
     public string ProductDescription { get; set; }
     public decimal ProductPrice { get; set; }
     public int ProductCategoryID { get; set; }
     public string ProductBrand { get; set; }
 
+    // Static field holding database connection string
     public static string connectionString = Configuration.ConnectionString;
+
+    // Static list to store instances of Products
     public static List<Products> ListProducts = new List<Products>();
 
+    // Static instances of various application components
     public static Products pd = new Products();
     public static Program program = new Program();
     public static Users user = new Users();
@@ -30,9 +35,13 @@ public class Products
 
     public void DisplayProduct(string role)
     {
+        // List to hold string arrays of product details
         List<string[]> products = new List<string[]>();
+        
+        // Get the top-level application instance
         var top = Application.Top;
 
+        // Create a window for displaying product list
         var displayProductWindow = new Window("Product List")
         {
             X = 0,
@@ -43,6 +52,7 @@ public class Products
         top.Add(displayProductWindow);
         displayProductWindow.FocusNext();
 
+        // Connect to the database and retrieve product information
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
             string query = @"SELECT 
@@ -58,6 +68,8 @@ public class Products
             MySqlCommand command = new MySqlCommand(query, connection);
             connection.Open();
             MySqlDataReader reader = command.ExecuteReader();
+            
+            // Array for column headers and their display settings
             var columnDisplayListProduct = new string[]
             {
                 "Product's name", "Stock quantity", "Description", "Price", "Category's name", "Brand", "Quantity", "Action"
@@ -65,7 +77,7 @@ public class Products
 
             int columnWidth = 20; // Set column width
 
-            // Display column headers
+            // Display column headers based on role
             for (int i = 0; i < columnDisplayListProduct.Length; i++)
             {
                 displayProductWindow.Add(new Label(columnDisplayListProduct[i])
@@ -79,10 +91,12 @@ public class Products
             }
 
             int row = 1;
+            // Iterate through each product and display its details
             while (reader.Read())
             {
                 int productID = int.Parse(reader["product_id"].ToString());
 
+                // Labels for each product detail
                 var productLabel = new Label($"{reader["product_name"]}")
                 {
                     X = 0,
@@ -132,6 +146,7 @@ public class Products
                     TextAlignment = TextAlignment.Left // Left text if it exceeds column width
                 };
 
+                // Text field and button for adding to cart (visible based on role)
                 var textQuantity = new TextField()
                 {
                     X = 6 * columnWidth,
@@ -160,8 +175,11 @@ public class Products
                     }
                 };
 
+                // Add labels, text field, and button to the display window
                 displayProductWindow.Add(productLabel, stockQuantityLabel, descriptionLabel, priceLabel, categoryLabel, brandLabel, textQuantity, addButton);
                 row++;
+
+                // Set visibility based on user role
                 if (role == "user")
                 {
                     textQuantity.Visible = true;
@@ -174,6 +192,7 @@ public class Products
                 }
             }
 
+            // 'Back' button to return to respective menus
             var btnBack = new Button("Back")
             {
                 X = Pos.Center(),
@@ -198,7 +217,7 @@ public class Products
     }
     public void AddProduct()
     {
-        Products pd = new Products();
+        Products pd = new Products(); // Create a new instance of Products
         var top = Application.Top;
         var addProductWin = new Window("Add Product")
         {
@@ -210,7 +229,7 @@ public class Products
         top.Add(addProductWin);
         addProductWin.FocusNext();
 
-        // Tạo các nhãn và trường nhập liệu
+        // Labels and text fields for inputting product details
         var productNameLabel = new Label("Product Name:")
         {
             X = 2,
@@ -283,6 +302,7 @@ public class Products
             Width = 100
         };
 
+        // Button to save the new product
         var saveButton = new Button("Save")
         {
             X = Pos.Center(),
@@ -292,6 +312,7 @@ public class Products
         {
             try
             {
+                // Assign input values to the product object
                 pd.ProductName = productNameField.Text.ToString();
                 pd.ProductStockQuantity = int.Parse(productStockQuantityField.Text.ToString());
                 pd.ProductCategoryID = int.Parse(productCategoryIDField.Text.ToString());
@@ -299,6 +320,7 @@ public class Products
                 pd.ProductDescription = productDescriptionField.Text.ToString();
                 pd.ProductBrand = productBrandField.Text.ToString();
 
+                // Insert the new product into the database
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
                     connection.Open();
@@ -313,17 +335,22 @@ public class Products
                     command.ExecuteNonQuery();
                 }
 
+                // Add the new product to the static list
                 ListProducts.Add(pd);
+
+                // Show success message and return to admin menu
                 MessageBox.Query("Success", "Successfully added new product!", "OK");
                 top.Remove(addProductWin);
                 admin.AdminMenu();
             }
             catch (Exception ex)
             {
+                // Display error message if an exception occurs
                 MessageBox.ErrorQuery("Error", ex.Message, "OK");
             }
         };
 
+        // Button to close the window
         var closeButton = new Button("Close")
         {
             X = Pos.Center(),
@@ -331,14 +358,16 @@ public class Products
         };
         closeButton.Clicked += () =>
         {
+            // Prompt confirmation before closing the window
             bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to close?", "Yes", "No") == 0;
             if (confirmed)
             {
                 top.Remove(addProductWin);
-                admin.AdminMenu();
+                admin.AdminMenu(); // Return to admin menu
             }
         };
 
+        // Add labels, text fields, and buttons to the window
         addProductWin.Add(productNameLabel, productNameField, productStockQuantityLabel, productStockQuantityField,
                         productCategoryIDLabel, productCategoryIDField, productPriceLabel, productPriceField,
                         productDescriptionLabel, productDescriptionField, productBrandLabel, productBrandField,
@@ -356,6 +385,7 @@ public class Products
         };
         top.Add(editProductWin);
 
+        // Label and field for finding a product by name
         var findProductLabel = new Label("Find Product Name:")
         {
             X = 2,
@@ -369,12 +399,14 @@ public class Products
             Width = 100
         };
 
+        // Button to confirm the search
         var confirmButton = new Button("Confirm")
         {
             X = Pos.Right(findProductField) + 2,
             Y = Pos.Top(findProductLabel)
         };
 
+        // List view to display search results
         var productListView = new ListView(new List<string>())
         {
             X = 2,
@@ -384,6 +416,7 @@ public class Products
             Visible = false
         };
 
+        // Labels and fields for editing product information
         var editProductNameLabel = new Label("Product Name:")
         {
             X = 2,
@@ -462,6 +495,7 @@ public class Products
             Width = 100
         };
 
+        // Button to save edited product information
         var saveButton = new Button("Save")
         {
             X = Pos.Center(),
@@ -471,6 +505,7 @@ public class Products
         {
             try
             {
+                // Update the product object with edited values
                 pd.ProductName = editProductNameField.Text.ToString();
                 pd.ProductStockQuantity = int.Parse(editProductStockQuantityField.Text.ToString());
                 pd.ProductCategoryID = int.Parse(editProductCategoryIDField.Text.ToString());
@@ -478,6 +513,7 @@ public class Products
                 pd.ProductDescription = editProductDescriptionField.Text.ToString();
                 pd.ProductBrand = editProductBrandField.Text.ToString();
 
+                // Update the product in the database
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
                     connection.Open();
@@ -493,16 +529,19 @@ public class Products
                     command.ExecuteNonQuery();
                 }
 
+                // Display success message and return to admin menu
                 MessageBox.Query("Success", "Successfully edited product!", "OK");
                 top.Remove(editProductWin);
                 admin.AdminMenu();
             }
             catch (Exception ex)
             {
+                // Display error message if an exception occurs
                 MessageBox.ErrorQuery("Error", ex.Message, "OK");
             }
         };
 
+        // Button to close the window
         var closeButton = new Button("Close")
         {
             X = Pos.Center(),
@@ -510,14 +549,16 @@ public class Products
         };
         closeButton.Clicked += () =>
         {
+            // Prompt confirmation before closing the window
             bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to close?", "Yes", "No") == 0;
             if (confirmed)
             {
                 top.Remove(editProductWin);
-                admin.AdminMenu();
+                admin.AdminMenu(); // Return to admin menu
             }
         };
 
+        // Action for confirming the product search
         confirmButton.Clicked += () =>
         {
             try
@@ -562,12 +603,15 @@ public class Products
 
                     if (productList.Count > 0)
                     {
+                        // Display the list of found products and allow selection
                         productListView.SetSource(productList);
                         productListView.Visible = true;
                         productListView.OpenSelectedItem += (args) =>
                         {
                             int selectedProductID = int.Parse(productList[args.Item].Split(' ')[0]);
-                            pd = productMap[selectedProductID];
+                            pd = productMap[selectedProductID]; // Assign selected product to pd for editing
+
+                            // Hide search components and show edit components with selected product's details
                             findProductLabel.Visible = false;
                             findProductField.Visible = false;
                             confirmButton.Visible = false;
@@ -580,6 +624,7 @@ public class Products
                             editProductDescriptionField.Text = pd.ProductDescription;
                             editProductBrandField.Text = pd.ProductBrand;
 
+                            // Make edit fields visible
                             editProductNameLabel.Visible = true;
                             editProductNameField.Visible = true;
                             editProductStockQuantityLabel.Visible = true;
@@ -592,7 +637,7 @@ public class Products
                             editProductDescriptionField.Visible = true;
                             editProductBrandLabel.Visible = true;
                             editProductBrandField.Visible = true;
-                            saveButton.Visible = true;
+                            saveButton.Visible = true; // Show the save button
                         };
                     }
                     else
@@ -607,7 +652,7 @@ public class Products
             }
         };
 
-        // Initial visibility
+        // Initial visibility settings
         productListView.Visible = false;
         editProductNameLabel.Visible = false;
         editProductNameField.Visible = false;
@@ -623,6 +668,7 @@ public class Products
         editProductBrandField.Visible = false;
         saveButton.Visible = false;
 
+        // Add all components to the window
         editProductWin.Add(findProductLabel, findProductField, confirmButton, productListView,
                         editProductNameLabel, editProductNameField,
                         editProductStockQuantityLabel, editProductStockQuantityField,
@@ -644,6 +690,7 @@ public class Products
         };
         top.Add(deleteProductWin);
 
+        // Label and field for entering the product ID
         var productIDLabel = new Label("Product ID:")
         {
             X = 2,
@@ -656,6 +703,7 @@ public class Products
             Width = 100
         };
 
+        // Button to delete the product
         var deleteButton = new Button("Delete")
         {
             X = Pos.Center(),
@@ -665,13 +713,15 @@ public class Products
         {
             try
             {
-
+                // Validate and parse the product ID from the text field
                 if (int.TryParse(productIDField.Text.ToString(), out int productID))
                 {
+                    // Find the product in the list based on the ID
                     Products pd = ListProducts.Find(s => s.ProductID == productID);
 
                     if (pd != null)
                     {
+                        // Delete the product from the database
                         using (MySqlConnection connection = new MySqlConnection(connectionString))
                         {
                             connection.Open();
@@ -680,27 +730,35 @@ public class Products
                             command.Parameters.AddWithValue("@ProductID", pd.ProductID);
                             command.ExecuteNonQuery();
                         }
+
+                        // Remove the product from the application list
                         ListProducts.Remove(pd);
+
+                        // Display success message and return to admin menu
                         MessageBox.Query("Success", "Successfully deleted product!", "OK");
                         top.Remove(deleteProductWin);
                         admin.AdminMenu();
                     }
                     else
                     {
+                        // Display error if product not found
                         MessageBox.ErrorQuery("Error", "Product not found!", "OK");
                     }
                 }
                 else
                 {
+                    // Display error for invalid product ID format
                     MessageBox.ErrorQuery("Error", "Invalid Product ID!", "OK");
                 }
             }
             catch (Exception ex)
             {
+                // Display error for any exception during deletion process
                 MessageBox.ErrorQuery("Error", ex.Message, "OK");
             }
         };
 
+        // Button to close the window
         var closeButton = new Button("Close")
         {
             X = Pos.Center(),
@@ -708,16 +766,17 @@ public class Products
         };
         closeButton.Clicked += () =>
         {
+            // Prompt confirmation before closing the window
             bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to close?", "Yes", "No") == 0;
             if (confirmed)
             {
-            top.Remove(deleteProductWin);
-            admin.AdminMenu();
+                top.Remove(deleteProductWin);
+                admin.AdminMenu(); // Return to admin menu
             }
         };
 
+        // Add all components to the window
         deleteProductWin.Add(productIDLabel, productIDField, deleteButton, closeButton);
-
     }
 
     public void FindProduct(string role)
@@ -732,6 +791,7 @@ public class Products
         };
         top.Add(findProductWin);
 
+        // Label and field for entering the product name
         var productNameLabel = new Label("Product name:")
         {
             X = 2,
@@ -744,18 +804,20 @@ public class Products
             Width = 100
         };
 
+        // Button to find the product
         var findButton = new Button("Find")
         {
             X = Pos.Center(),
             Y = 4
         };
 
+        // Array of column headers for product information
         var columnDisplayListProduct = new string[]
         {
             "Product's Name", "Stock Quantity", "Description", "Price", "Category ID", "Brand", "Image"
         };
 
-        // Add column headers
+        // Add column headers to the window
         for (int i = 0; i < columnDisplayListProduct.Length; i++)
         {
             findProductWin.Add(new Label(columnDisplayListProduct[i])
@@ -767,6 +829,7 @@ public class Products
             });
         }
 
+        // Event handler for the Find button
         findButton.Clicked += () =>
         {
             try
@@ -774,6 +837,7 @@ public class Products
                 string productName = productNameField.Text.ToString();
                 Products product = null;
 
+                // Query to retrieve product information based on product name
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
                     string query = @"SELECT 
@@ -794,6 +858,7 @@ public class Products
 
                     if (reader.Read())
                     {
+                        // Populate product object with retrieved data
                         product = new Products
                         {
                             ProductName = reader["product_name"].ToString(),
@@ -806,12 +871,13 @@ public class Products
                     }
                     else
                     {
+                        // Display error if product not found
                         MessageBox.ErrorQuery("Error", "Product not found!", "OK");
                         return;
                     }
                 }
 
-                // Display product information
+                // Display product information in the window
                 findProductWin.Add(new Label(product.ProductName)
                 {
                     X = 0,
@@ -858,34 +924,39 @@ public class Products
             }
             catch (Exception ex)
             {
+                // Display error message for any exception
                 MessageBox.ErrorQuery("Error", ex.Message, "OK");
             }
         };
 
+        // Button to close the window
         var closeButton = new Button("Close")
         {
             X = Pos.Center(),
             Y = Pos.Percent(100) - 1
         };
 
+        // Event handler for the Close button
         closeButton.Clicked += () =>
         {
             top.Remove(findProductWin);
+
+            // Return to respective menu based on user role
             switch(role)
             {
                 case "user":
-                customer.UserMenu();
-                break;
+                    customer.UserMenu();
+                    break;
                 case "admin":
-                admin.AdminMenu();
-                break;
+                    admin.AdminMenu();
+                    break;
                 case "superadmin":
-                superadmin.SuperAdminMenu();
-                break;
+                    superadmin.SuperAdminMenu();
+                    break;
             }
         };
 
+        // Add components to the window
         findProductWin.Add(productNameLabel, productNameField, findButton, closeButton);
     }
-
 }

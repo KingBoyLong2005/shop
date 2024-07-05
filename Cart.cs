@@ -2,7 +2,7 @@ using System;
 using System.Text;
 using System.Data;
 using System.Collections.Generic;
-using System.Linq;
+using System.Linq;                                      //Import namesapce to use function
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using System.Security.Cryptography.X509Certificates;
@@ -32,7 +32,7 @@ public class Cart
     public static List<Cart> ListCarts = new List<Cart>();
     public static List<Products> ListProducts = new List<Products>();
 
-
+    // Load products from the database
     static List<Products> LoadProducts(string connectionString)
     {
         List<Products> ListProduct = new List<Products>();
@@ -46,7 +46,7 @@ public class Cart
             while (read.Read())
             {
                 Products sp = new Products();
-                // Nạp các thuộc tính 
+                // Load product properties
                 sp.ProductID = read.GetInt32("product_id");
                 sp.ProductName = read.GetString("product_name");
                 sp.ProductDescription = read.GetString("product_description");
@@ -55,12 +55,13 @@ public class Cart
                 sp.ProductBrand = read.GetString("product_brand");
                 sp.ProductCategoryID = read.GetInt32("product_category_id");
 
-
                 ListProduct.Add(sp);
             }
         }
         return ListProduct;
     }
+
+    // Add an item to the shopping cart
     public void AddItem(Products product, int quantity)
     {
         var cartItem = CartItems.FirstOrDefault(c => c.Product.ProductID == product.ProductID);
@@ -74,6 +75,8 @@ public class Cart
         }
     }
 
+
+    // Remove an item from the shopping cart
     public void RemoveItem(int productID)
     {
         var cartItem = CartItems.FirstOrDefault(c => c.Product.ProductID == productID);
@@ -82,7 +85,9 @@ public class Cart
             CartItems.Remove(cartItem);
         }
     }
-   public void DisplayCart(string role)
+
+    // Display the shopping cart contents
+    public void DisplayCart(string role)
     {
         var top = Application.Top;
 
@@ -97,7 +102,7 @@ public class Cart
 
         int row = 1;
 
-        // Kết nối cơ sở dữ liệu để lấy thông tin giỏ hàng của khách hàng
+        // Connect to the database to retrieve the customer's cart information
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
             string query = @"SELECT 
@@ -120,6 +125,7 @@ public class Cart
                 decimal productPrice = reader.GetDecimal("product_price");
                 int quantity = reader.GetInt32("cart_quantity");
 
+                // Display product details and buttons for interaction
                 var productLabel = new Label($"{productName} - ${productPrice} x {quantity}")
                 {
                     X = 1,
@@ -136,6 +142,7 @@ public class Cart
                     Y = row
                 };
 
+                // Handle click events for removing and ordering products
                 removeButton.Clicked += () =>
                 {
                     RemoveItemFromCart(productID);
@@ -149,11 +156,13 @@ public class Cart
                     order.OrderProduct(productID, productName, productPrice);
                 };
 
+                // Add labels and buttons to the cart window
                 cartWindow.Add(productLabel, removeButton, orderButton);
                 row++;
             }
         }
 
+        // Add a back button to return to the user menu
         var btnBack = new Button("Back")
         {
             X = 2,
@@ -167,6 +176,8 @@ public class Cart
 
         cartWindow.Add(btnBack);
     }
+
+    // Remove an item from the database cart and update the UI
     public void RemoveItemFromCart(int productID)
     {
         userCart.RemoveItem(productID);
@@ -180,6 +191,8 @@ public class Cart
             command.ExecuteNonQuery();
         }
     }
+
+    // Add a product with specified quantity to the shopping cart and database cart
     public void AddToCart(int productID, int quantityProduct)
     {
         ListProducts = LoadProducts(connectionString);
@@ -190,7 +203,6 @@ public class Cart
             using(MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 connection.Open();
-                // Tạm thời bỏ cart_order_id
                 string query = "INSERT INTO cart (cart_customer_id, cart_product_id, cart_quantity, cart_product_price, cart_order_price, cart_total_products)" +
                             "VALUES(@CartCustomerID, @CartProductID, @CartQuantity, 0, 0, 0)";
                 MySqlCommand command = new MySqlCommand(query, connection);
@@ -215,6 +227,7 @@ public class Cart
             MessageBox.ErrorQuery("Error", "Product not found.", "OK");
         }
     }
+
 }
 public class CartItem
 {

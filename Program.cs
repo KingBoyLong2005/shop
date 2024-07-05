@@ -1,27 +1,29 @@
-﻿using System;
+﻿﻿using System;
 using System.Text;
 using System.Data;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MySql.Data.MySqlClient;
+using MySql.Data.MySqlClient;                            //Import namesapce to use function
+using System.Threading.Tasks;
 using System.Security.Cryptography.X509Certificates;
 using Terminal.Gui;
 using Microsoft.VisualBasic;
 
-
-
 public class Program
 {
+    // Declare static variables
     public static string connectionString;
     public static int currentCustomerID = SessionData.Instance.CurrentCustomerID;
 
+    // Initialize lists for various entities
     public static List<Products> ListProducts = new List<Products>();
     public static List<Categories> ListCategories = new List<Categories>();
     public static List<Users> ListUsers = new List<Users>();
     public static List<Customers> ListCustomers = new List<Customers>();
     public static List<Cart> ListCarts = new List<Cart>();
-    
+
+    // Create instances of various entities
     public static Cart userCart = new Cart();
     public static Products pd = new Products();
     public static Orders order = new Orders();
@@ -29,27 +31,29 @@ public class Program
     public static Program program = new Program();
     public static Users user = new Users();
     public static Admin admin = new Admin();
-    
     public static SuperAdmin superadmin = new SuperAdmin();
+
+    // Static constructor to initialize the connection string
     static Program()
     {
-        // Hỏi mật khẩu từ người dùng
+        // Prompt user for database password
         Console.Write("Enter the database password: ");
-       string password = Console.ReadLine();
+        string password = Console.ReadLine();
 
-        // Gốc chuỗi kết nối với placeholder @pass
+        // Base connection string with a placeholder for the password
         string baseConnectionString = "Server=localhost;Database=shop;Uid=root;Pwd=@pass";
 
-        // Thay thế @pass bằng mật khẩu thực
+        // Replace the placeholder with the actual password
         connectionString = baseConnectionString.Replace("@pass", password);
         Configuration.ConnectionString = connectionString;
     }
 
-
+    // Method to load categories from the database
     static List<Categories> LoadCategory(string connectionString)
     {
         List<Categories> ListCategory = new List<Categories>();
 
+        // Establish connection to the database
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {   
             string query = "SELECT * FROM categories"; 
@@ -59,7 +63,7 @@ public class Program
             while (read.Read())
             {
                 Categories c = new Categories();
-                // Nạp các thuộc tính 
+                // Load category properties from the database
                 c.CategoryID = read.GetInt32("category_id");
                 c.CategoryName = read.GetString("category_name");
                 c.CategoryDescription = read.GetString("category_description");
@@ -70,41 +74,44 @@ public class Program
         return ListCategory;
     }
 
-
+    // Main method
     static void Main()
     {
+        // Initialize the application and set colors
         Application.Init();
-        Colors.Base.Normal = Application.Driver.MakeAttribute(Color.Blue, Color.Black); // Xanh Zalo
+        Colors.Base.Normal = Application.Driver.MakeAttribute(Color.Blue, Color.Black); // blue
         Colors.Base.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
 
-        // Thiết lập màu sắc cho Dialog
-        Colors.Dialog.Normal = Application.Driver.MakeAttribute(Color.BrightCyan, Color.Black); // Xanh dương sáng Zalo
+        // Set colors for dialogs
+        Colors.Dialog.Normal = Application.Driver.MakeAttribute(Color.BrightCyan, Color.Black); // Bright cyan 
         Colors.Dialog.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
-        Colors.Dialog.HotNormal = Application.Driver.MakeAttribute(Color.Red, Color.Black); // Giữ nguyên màu mặc định
-        Colors.Dialog.HotFocus = Application.Driver.MakeAttribute(Color.Red, Color.DarkGray); // Giữ nguyên màu mặc định
+        Colors.Dialog.HotNormal = Application.Driver.MakeAttribute(Color.Red, Color.Black); // Default colors
+        Colors.Dialog.HotFocus = Application.Driver.MakeAttribute(Color.Red, Color.DarkGray); // Default colors
 
-        // Thiết lập màu sắc cho Menu
-        Colors.Menu.Normal = Application.Driver.MakeAttribute(Color.White, Color.Blue); // Xanh dương đậm Zalo
+        // Set colors for menus
+        Colors.Menu.Normal = Application.Driver.MakeAttribute(Color.White, Color.Blue); // Dark blue 
         Colors.Menu.Focus = Application.Driver.MakeAttribute(Color.Black, Color.Gray);
-        Colors.Menu.HotNormal = Application.Driver.MakeAttribute(Color.BrightYellow, Color.Blue); // Vàng Zalo
+        Colors.Menu.HotNormal = Application.Driver.MakeAttribute(Color.BrightYellow, Color.Blue); // Yellow 
         Colors.Menu.HotFocus = Application.Driver.MakeAttribute(Color.BrightYellow, Color.Gray);
 
-        // Thiết lập màu sắc cho Error
-        Colors.Error.Normal = Application.Driver.MakeAttribute(Color.Red, Color.White); // Giữ nguyên màu mặc định
-        Colors.Error.Focus = Application.Driver.MakeAttribute(Color.White, Color.Red); // Giữ nguyên màu mặc định
+        // Set colors for errors
+        Colors.Error.Normal = Application.Driver.MakeAttribute(Color.Red, Color.White); // Default colors
+        Colors.Error.Focus = Application.Driver.MakeAttribute(Color.White, Color.Red); // Default colors
 
-        // Thiết lập màu sắc cho TopLevel
-        Colors.TopLevel.Normal = Application.Driver.MakeAttribute(Color.Magenta, Color.Black); // Hồng tím Zalo
+        // Set colors for top level
+        Colors.TopLevel.Normal = Application.Driver.MakeAttribute(Color.Magenta, Color.Black); // Magenta 
         Colors.TopLevel.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
 
-
+        // Initialize the application and run the login method
         Application.Init();
         program.Login();
         Application.Run();
     }
+
+    // Login method
     public void Login()
     {
-
+        // Create and configure the login window
         var top = Application.Top;
         Application.Init();
         var loginWin = new Window()
@@ -117,6 +124,7 @@ public class Program
         };
         top.Add(loginWin);
 
+        // Create and configure the username label and field
         var usernameLabel = new Label("Username:")
         {
             X = 2,
@@ -129,6 +137,7 @@ public class Program
             Width = Dim.Fill() - 4
         };
 
+        // Create and configure the password label and field
         var passwordLabel = new Label("Password:")
         {
             X = 2,
@@ -142,6 +151,7 @@ public class Program
             Width = Dim.Fill() - 4
         };
 
+        // Create and configure the login button
         var loginButton = new Button("Login")
         {
             X = Pos.Center(),
@@ -154,6 +164,7 @@ public class Program
             bool isAuthenticated = false;
             string role = "";
 
+            // Authenticate the user
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 connection.Open();
@@ -175,6 +186,7 @@ public class Program
                 }
             }
 
+            // Handle authentication result
             if (isAuthenticated)
             {
                 MessageBox.Query("Success", $"Welcome {role}!", "OK");
@@ -197,6 +209,8 @@ public class Program
                 MessageBox.ErrorQuery("Error", "Invalid username or password!", "OK");
             }
         };
+
+        // Create and configure the register button
         var btnRegister = new Button("Register")
         {
             X = Pos.Center(),
@@ -208,6 +222,7 @@ public class Program
             program.Register();
         };
 
+        // Create and configure the close button
         var closeButton = new Button("Close")
         {
             X = Pos.Center(),
@@ -219,11 +234,14 @@ public class Program
             Application.Shutdown();
         };
 
+        // Add controls to the login window
         loginWin.Add(usernameLabel, usernameField, passwordLabel, passwordField, loginButton, btnRegister, closeButton);
     }
+
+    // Register method
     public void Register()
     {
-        Users  us = new Users();
+        Users us = new Users();
         Customers cus = new Customers();
         var top = Application.Top;
         Application.Init();
@@ -237,6 +255,7 @@ public class Program
         };
         top.Add(registerWin);
 
+        // Create and configure registration fields
         var usernameLabel = new Label("Username:")
         {
             X = 2,
@@ -261,6 +280,7 @@ public class Program
             Y = 4,
             Width = Dim.Fill() - 4
         };
+
         var CustomerNameLabel = new Label("Name: ")
         {
             X = 2,
@@ -272,6 +292,7 @@ public class Program
             Y  = 6,
             Width = Dim.Fill() - 4
         };
+
         var CustomerPhoneNumberLabel = new Label("Phone number: ")
         {
             X = 2,
@@ -283,6 +304,7 @@ public class Program
             Y  = 8,
             Width = Dim.Fill() - 4
         };
+
         var CustomerAddressLabel = new Label("Address: ")
         {
             X = 2,
@@ -294,112 +316,67 @@ public class Program
             Y  = 10,
             Width = Dim.Fill() - 4
         };
-        var CustomerEmailLabel = new Label("Email: ")
+
+        var roleLabel = new Label("Role:")
         {
             X = 2,
             Y = 12
         };
-        var CustomerEmailField = new TextField("")
+        var roleField = new TextField("")
         {
-            X = Pos.Right(CustomerEmailLabel) + 1,
-            Y  = 12,
-            Width = Dim.Fill() - 4
-        };
-        var CustomerGenderLabel = new Label("Gender: ")
-        {
-            X = 2,
-            Y = 14
-        };
-        var CustomerGenderField = new TextField("")
-        {
-            X = Pos.Right(CustomerGenderLabel) + 1,
-            Y  = 14,
-            Width = Dim.Fill() - 4
-        };
-        var CustomerDateOfBirthLabel = new Label("Date of birth (YYYY-MM-DD): ")
-        {
-            X = 2,
-            Y = 16
-        };
-        var CustomerDateOfBirthField = new TextField("")
-        {
-            X = Pos.Right(CustomerDateOfBirthLabel) + 1,
-            Y  = 16,
+            X = Pos.Right(roleLabel) + 1,
+            Y = 12,
             Width = Dim.Fill() - 4
         };
 
+        // Create and configure register button
         var registerButton = new Button("Register")
         {
             X = Pos.Center(),
-            Y = Pos.Bottom(CustomerDateOfBirthField),
+            Y = 14
         };
         registerButton.Clicked += () =>
         {
-            us.Username = usernameField.Text.ToString();
-            us.PasswordHash = passwordField.Text.ToString();
-            cus.CustomerName = CustomerNameField.Text.ToString();
-            cus.CustomerPhone = CustomerPhoneNumberField.Text.ToString();
-            cus.CustomerAddress = CustomerAddressField.Text.ToString();
-            cus.CustomerEmail = CustomerEmailField.Text.ToString();
-            cus.CustomerGender = CustomerGenderField.Text.ToString();
-            
-            DateTime customerDateOfBirth;
-            if (!DateTime.TryParse(CustomerDateOfBirthField.Text.ToString(), out customerDateOfBirth))
-            {
-                MessageBox.ErrorQuery("Error", "Invalid date format. Please use YYYY-MM-DD.", "OK");
-                return;
-            }
-            cus.CustomerDateOfBirth = customerDateOfBirth;
+            string username = usernameField.Text.ToString();
+            string password = passwordField.Text.ToString();
+            string role = roleField.Text.ToString();
+            string name = CustomerNameField.Text.ToString();
+            string phonenumber = CustomerPhoneNumberField.Text.ToString();
+            string address = CustomerAddressField.Text.ToString();
 
+            // Insert new user and customer into the database
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 connection.Open();
-                MySqlTransaction transaction = connection.BeginTransaction();
-                try
+                using (MySqlCommand command = new MySqlCommand())
                 {
-                    string customerQuery = "INSERT INTO customers (customer_name, customer_phone_number, customer_address, customer_email, customer_gender, customer_dateofbirth, customer_count, customer_totalspent)" +
-                                        "VALUES (@customername, @customerphonenumber, @customeraddress, @customeremail, @customergender, @customerdateofbirth, 0, 0)";
-                    MySqlCommand customerCommand = new MySqlCommand(customerQuery, connection, transaction);
-                    customerCommand.Parameters.AddWithValue("@customername", cus.CustomerName);
-                    customerCommand.Parameters.AddWithValue("@customerphonenumber", cus.CustomerPhone);
-                    customerCommand.Parameters.AddWithValue("@customeraddress", cus.CustomerAddress);
-                    customerCommand.Parameters.AddWithValue("@customeremail", cus.CustomerEmail);
-                    customerCommand.Parameters.AddWithValue("@customergender", cus.CustomerGender);
-                    customerCommand.Parameters.AddWithValue("@customerdateofbirth", cus.CustomerDateOfBirth);
-                    customerCommand.ExecuteNonQuery();
+                    command.Connection = connection;
+                    command.CommandText = "INSERT INTO customers (customer_name, customer_phonenumber, customer_address) VALUES (@Name, @PhoneNumber, @Address); SELECT LAST_INSERT_ID();";
+                    command.Parameters.AddWithValue("@Name", name);
+                    command.Parameters.AddWithValue("@PhoneNumber", phonenumber);
+                    command.Parameters.AddWithValue("@Address", address);
+                    int customerId = Convert.ToInt32(command.ExecuteScalar());
 
-                    long customerId = customerCommand.LastInsertedId;
-                    string userQuery = "INSERT INTO users (username, password_hash, role, user_customer_id) VALUES (@Username, @PasswordHash, @Role, @CustomerId)";
-                    MySqlCommand userCommand = new MySqlCommand(userQuery, connection, transaction);
-                    userCommand.Parameters.AddWithValue("@Username", us.Username);
-                    userCommand.Parameters.AddWithValue("@PasswordHash", us.PasswordHash);
-                    userCommand.Parameters.AddWithValue("@Role", "user");
-                    userCommand.Parameters.AddWithValue("@CustomerId", customerId);
-                    userCommand.ExecuteNonQuery();
-
-                    transaction.Commit();
-
-                    ListUsers.Add(us);
-                    ListCustomers.Add(cus);
-                    MessageBox.Query("Success", "Registration successful!", "OK");
-                    
-                    top.Remove(registerWin);
-
-                    Login();
-
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-                    MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                    command.CommandText = "INSERT INTO users (username, password_hash, role, user_customer_id) VALUES (@Username, @Password, @Role, @CustomerId)";
+                    command.Parameters.AddWithValue("@Username", username);
+                    command.Parameters.AddWithValue("@Password", password);
+                    command.Parameters.AddWithValue("@Role", role);
+                    command.Parameters.AddWithValue("@CustomerId", customerId);
+                    command.ExecuteNonQuery();
                 }
             }
+
+            // Show success message and return to login screen
+            MessageBox.Query("Success", $"Registration successful!", "OK");
+            top.Remove(registerWin);
+            program.Login();
         };
 
+        // Create and configure close button
         var closeButton = new Button("Close")
         {
             X = Pos.Center(),
-            Y = Pos.Bottom(registerButton) + 1
+            Y = 16
         };
         closeButton.Clicked += () =>
         {
@@ -407,10 +384,7 @@ public class Program
             Application.Shutdown();
         };
 
-        registerWin.Add(usernameLabel, usernameField, passwordLabel, passwordField,
-                        CustomerNameLabel, CustomerNameField, CustomerPhoneNumberLabel,
-                        CustomerPhoneNumberField, CustomerAddressLabel, CustomerAddressField,
-                        CustomerEmailLabel, CustomerEmailField, CustomerGenderLabel, CustomerGenderField,
-                        CustomerDateOfBirthLabel, CustomerDateOfBirthField, registerButton, closeButton);
+        // Add controls to the registration window
+        registerWin.Add(usernameLabel, usernameField, passwordLabel, passwordField, CustomerNameLabel, CustomerNameField, CustomerPhoneNumberLabel, CustomerPhoneNumberField, CustomerAddressLabel, CustomerAddressField, roleLabel, roleField, registerButton, closeButton);
     }
 }
