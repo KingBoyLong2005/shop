@@ -110,7 +110,6 @@ public class Orders
                 // Populate Products object properties from database fields
                 pd.ProductID = read.GetInt32("product_id");
                 pd.ProductName = read.GetString("product_name");
-                pd.ProductDescription = read.GetString("product_description");
                 pd.ProductPrice = read.GetDecimal("product_price");
                 pd.ProductStockQuantity = read.GetInt32("product_stock_quantity");
                 pd.ProductBrand = read.GetString("product_brand");

@@ -13,7 +13,6 @@ public class Products
     public int ProductID { get; set; }
     public string ProductName { get; set; }
     public int ProductStockQuantity { get; set; }
-    public string ProductDescription { get; set; }
     public decimal ProductPrice { get; set; }
     public int ProductCategoryID { get; set; }
     public string ProductBrand { get; set; }
@@ -59,7 +58,6 @@ public class Products
                                 p.product_id,
                                 p.product_name, 
                                 p.product_stock_quantity, 
-                                p.product_description, 
                                 p.product_price, 
                                 c.category_name, 
                                 p.product_brand
@@ -72,7 +70,7 @@ public class Products
             // Array for column headers and their display settings
             var columnDisplayListProduct = new string[]
             {
-                "Product's name", "Stock quantity", "Description", "Price", "Category's name", "Brand", "Quantity", "Action"
+                "Product's name", "Stock quantity", "Price", "Category's name", "Brand", "Quantity", "Action"
             };
 
             int columnWidth = 20; // Set column width
@@ -113,14 +111,7 @@ public class Products
                     Height = 1,
                     TextAlignment = TextAlignment.Left // Left text if it exceeds column width
                 };
-                var descriptionLabel = new Label($"{reader["product_description"]}")
-                {
-                    X = 2 * columnWidth,
-                    Y = row,
-                    Width = columnWidth,
-                    Height = 1,
-                    TextAlignment = TextAlignment.Left // Left text if it exceeds column width
-                };
+            
                 var priceLabel = new Label($"{reader["product_price"]}")
                 {
                     X = 3 * columnWidth,
@@ -176,7 +167,7 @@ public class Products
                 };
 
                 // Add labels, text field, and button to the display window
-                displayProductWindow.Add(productLabel, stockQuantityLabel, descriptionLabel, priceLabel, categoryLabel, brandLabel, textQuantity, addButton);
+                displayProductWindow.Add(productLabel, stockQuantityLabel, priceLabel, categoryLabel, brandLabel, textQuantity, addButton);
                 row++;
 
                 // Set visibility based on user role
@@ -278,18 +269,6 @@ public class Products
             Width = 100
         };
 
-        var productDescriptionLabel = new Label("Description:")
-        {
-            X = 2,
-            Y = 10
-        };
-        var productDescriptionField = new TextField("")
-        {
-            X = 18,
-            Y = 10,
-            Width = Dim.Fill() - 4
-        };
-
         var productBrandLabel = new Label("Brand:")
         {
             X = 2,
@@ -317,20 +296,18 @@ public class Products
                 pd.ProductStockQuantity = int.Parse(productStockQuantityField.Text.ToString());
                 pd.ProductCategoryID = int.Parse(productCategoryIDField.Text.ToString());
                 pd.ProductPrice = decimal.Parse(productPriceField.Text.ToString());
-                pd.ProductDescription = productDescriptionField.Text.ToString();
                 pd.ProductBrand = productBrandField.Text.ToString();
 
                 // Insert the new product into the database
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
                     connection.Open();
-                    string query = "INSERT INTO products (product_name, product_stock_quantity, product_category_id, product_price, product_description, product_brand) VALUES (@ProductName, @ProductStockQuantity, @ProductCategoryID, @ProductPrice, @ProductDescription, @ProductBrand)";
+                    string query = "INSERT INTO products (product_name, product_stock_quantity, product_category_id, product_price, product_brand) VALUES (@ProductName, @ProductStockQuantity, @ProductCategoryID, @ProductPrice, @ProductBrand)";
                     MySqlCommand command = new MySqlCommand(query, connection);
                     command.Parameters.AddWithValue("@ProductName", pd.ProductName);
                     command.Parameters.AddWithValue("@ProductStockQuantity", pd.ProductStockQuantity);
                     command.Parameters.AddWithValue("@ProductCategoryID", pd.ProductCategoryID);
                     command.Parameters.AddWithValue("@ProductPrice", pd.ProductPrice);
-                    command.Parameters.AddWithValue("@ProductDescription", pd.ProductDescription);
                     command.Parameters.AddWithValue("@ProductBrand", pd.ProductBrand);
                     command.ExecuteNonQuery();
                 }
@@ -370,7 +347,7 @@ public class Products
         // Add labels, text fields, and buttons to the window
         addProductWin.Add(productNameLabel, productNameField, productStockQuantityLabel, productStockQuantityField,
                         productCategoryIDLabel, productCategoryIDField, productPriceLabel, productPriceField,
-                        productDescriptionLabel, productDescriptionField, productBrandLabel, productBrandField,
+                        productBrandLabel, productBrandField,
                         saveButton, closeButton);
     }
     public void EditProductInformations()
@@ -469,23 +446,10 @@ public class Products
             Width = 100
         };
 
-        var editProductDescriptionLabel = new Label("Description:")
-        {
-            X = 2,
-            Y = Pos.Bottom(editProductPriceField) + 1
-        };
-
-        var editProductDescriptionField = new TextField("")
-        {
-            X = 18,
-            Y = Pos.Top(editProductDescriptionLabel),
-            Width = Dim.Fill() - 4
-        };
-
         var editProductBrandLabel = new Label("Brand:")
         {
             X = 2,
-            Y = Pos.Bottom(editProductDescriptionField) + 1
+            Y = Pos.Bottom(editProductPriceField) + 1
         };
 
         var editProductBrandField = new TextField("")
@@ -510,19 +474,17 @@ public class Products
                 pd.ProductStockQuantity = int.Parse(editProductStockQuantityField.Text.ToString());
                 pd.ProductCategoryID = int.Parse(editProductCategoryIDField.Text.ToString());
                 pd.ProductPrice = decimal.Parse(editProductPriceField.Text.ToString());
-                pd.ProductDescription = editProductDescriptionField.Text.ToString();
                 pd.ProductBrand = editProductBrandField.Text.ToString();
 
                 // Update the product in the database
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
                     connection.Open();
-                    string query = "UPDATE products SET product_name = @ProductName, product_stock_quantity = @ProductStockQuantity, product_description = @ProductDescription, product_price = @ProductPrice, product_category_id = @ProductCategoryID, product_brand = @ProductBrand WHERE product_id = @ProductID";
+                    string query = "UPDATE products SET product_name = @ProductName, product_stock_quantity = @ProductStockQuantity, product_price = @ProductPrice, product_category_id = @ProductCategoryID, product_brand = @ProductBrand WHERE product_id = @ProductID";
                     MySqlCommand command = new MySqlCommand(query, connection);
                     command.Parameters.AddWithValue("@ProductID", pd.ProductID);
                     command.Parameters.AddWithValue("@ProductName", pd.ProductName);
                     command.Parameters.AddWithValue("@ProductStockQuantity", pd.ProductStockQuantity);
-                    command.Parameters.AddWithValue("@ProductDescription", pd.ProductDescription);
                     command.Parameters.AddWithValue("@ProductPrice", pd.ProductPrice);
                     command.Parameters.AddWithValue("@ProductCategoryID", pd.ProductCategoryID);
                     command.Parameters.AddWithValue("@ProductBrand", pd.ProductBrand);
@@ -570,7 +532,6 @@ public class Products
                                         product_id,
                                         product_name, 
                                         product_stock_quantity, 
-                                        product_description, 
                                         product_price, 
                                         product_category_id, 
                                         product_brand
@@ -591,7 +552,6 @@ public class Products
                             ProductID = reader.GetInt32("product_id"),
                             ProductName = reader.GetString("product_name"),
                             ProductStockQuantity = reader.GetInt32("product_stock_quantity"),
-                            ProductDescription = reader.GetString("product_description"),
                             ProductPrice = reader.GetDecimal("product_price"),
                             ProductCategoryID = reader.GetInt32("product_category_id"),
                             ProductBrand = reader.GetString("product_brand")
@@ -621,7 +581,6 @@ public class Products
                             editProductStockQuantityField.Text = pd.ProductStockQuantity.ToString();
                             editProductCategoryIDField.Text = pd.ProductCategoryID.ToString();
                             editProductPriceField.Text = pd.ProductPrice.ToString();
-                            editProductDescriptionField.Text = pd.ProductDescription;
                             editProductBrandField.Text = pd.ProductBrand;
 
                             // Make edit fields visible
@@ -633,8 +592,6 @@ public class Products
                             editProductCategoryIDField.Visible = true;
                             editProductPriceLabel.Visible = true;
                             editProductPriceField.Visible = true;
-                            editProductDescriptionLabel.Visible = true;
-                            editProductDescriptionField.Visible = true;
                             editProductBrandLabel.Visible = true;
                             editProductBrandField.Visible = true;
                             saveButton.Visible = true; // Show the save button
@@ -662,8 +619,6 @@ public class Products
         editProductCategoryIDField.Visible = false;
         editProductPriceLabel.Visible = false;
         editProductPriceField.Visible = false;
-        editProductDescriptionLabel.Visible = false;
-        editProductDescriptionField.Visible = false;
         editProductBrandLabel.Visible = false;
         editProductBrandField.Visible = false;
         saveButton.Visible = false;
@@ -674,7 +629,6 @@ public class Products
                         editProductStockQuantityLabel, editProductStockQuantityField,
                         editProductCategoryIDLabel, editProductCategoryIDField,
                         editProductPriceLabel, editProductPriceField,
-                        editProductDescriptionLabel, editProductDescriptionField,
                         editProductBrandLabel, editProductBrandField,
                         saveButton, closeButton);
     }
@@ -814,7 +768,7 @@ public class Products
         // Array of column headers for product information
         var columnDisplayListProduct = new string[]
         {
-            "Product's Name", "Stock Quantity", "Description", "Price", "Category ID", "Brand", "Image"
+            "Product's Name", "Stock Quantity", "Price", "Category ID", "Brand", "Image"
         };
 
         // Add column headers to the window
@@ -844,7 +798,6 @@ public class Products
                                         p.product_id,
                                         p.product_name, 
                                         p.product_stock_quantity, 
-                                        p.product_description, 
                                         p.product_price, 
                                         c.category_name, 
                                         p.product_brand
@@ -863,7 +816,6 @@ public class Products
                         {
                             ProductName = reader["product_name"].ToString(),
                             ProductStockQuantity = int.Parse(reader["product_stock_quantity"].ToString()),
-                            ProductDescription = reader["product_description"].ToString(),
                             ProductPrice = decimal.Parse(reader["product_price"].ToString()),
                             ProductCategoryID = int.Parse(reader["category_name"].ToString()),
                             ProductBrand = reader["product_brand"].ToString(),
@@ -888,13 +840,6 @@ public class Products
                 findProductWin.Add(new Label(product.ProductStockQuantity.ToString())
                 {
                     X = 20,
-                    Y = 7,
-                    Width = 20,
-                    Height = 1
-                });
-                findProductWin.Add(new Label(product.ProductDescription)
-                {
-                    X = 40,
                     Y = 7,
                     Width = 20,
                     Height = 1

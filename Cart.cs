@@ -49,7 +49,6 @@ public class Cart
                 // Load product properties
                 sp.ProductID = read.GetInt32("product_id");
                 sp.ProductName = read.GetString("product_name");
-                sp.ProductDescription = read.GetString("product_description");
                 sp.ProductPrice = read.GetDecimal("product_price");
                 sp.ProductStockQuantity = read.GetInt32("product_stock_quantity");
                 sp.ProductBrand = read.GetString("product_brand");

@@ -108,7 +108,7 @@ public class Customers
         };
         var usernameField = new TextField("")
         {
-            X = 26,
+            X = 31,
             Y = 2,
             Width = 100
         };
@@ -121,7 +121,7 @@ public class Customers
         var passwordField = new TextField("")
         {
             Secret = true,
-            X = 26,
+            X = 31,
             Y = 4,
             Width = 100
         };
@@ -132,7 +132,7 @@ public class Customers
         };
         var CustomerNameField = new TextField("")
         {
-            X = 26,
+            X = 31,
             Y  = 6,
             Width = 100
         };
@@ -143,7 +143,7 @@ public class Customers
         };
         var CustomerPhoneNumberField = new TextField("")
         {
-            X = 26,
+            X = 31,
             Y  = 8,
             Width = 100
         };
@@ -154,7 +154,7 @@ public class Customers
         };
         var CustomerAddressField = new TextField("")
         {
-            X = 26,
+            X = 31,
             Y  = 10,
             Width = 100
         };
@@ -165,7 +165,7 @@ public class Customers
         };
         var CustomerEmailField = new TextField("")
         {
-            X = 26,
+            X = 31,
             Y  = 12,
             Width = 100
         };
@@ -176,7 +176,7 @@ public class Customers
         };
         var CustomerGenderField = new TextField("")
         {
-            X = 26,
+            X = 31,
             Y  = 14,
             Width = 100
         };
@@ -187,7 +187,7 @@ public class Customers
         };
         var CustomerDateOfBirthField = new TextField("")
         {
-            X = 26,
+            X = 31,
             Y  = 16,
             Width = 100
         };
@@ -312,7 +312,7 @@ public class Customers
         };
         var findCustomerIDField = new TextField("")
         {
-            X = 26,
+            X = 31,
             Y = 1,
             Width = 100
         };
@@ -324,7 +324,7 @@ public class Customers
         };
         var editCustomerNameField = new TextField("")
         {
-            X = 26,
+            X = 31,
             Y = 5,
             Width = 100,
             Visible = false
@@ -337,7 +337,7 @@ public class Customers
         };
         var editCustomerPhoneField = new TextField("")
         {
-            X = 26,
+            X = 31,
             Y = 7,
             Width = 100,
             Visible = false
@@ -350,7 +350,7 @@ public class Customers
         };
         var editCustomerAddressField = new TextField("")
         {
-            X = 26,
+            X = 31,
             Y = 9,
             Width = 100,
             Visible = false
@@ -363,7 +363,7 @@ public class Customers
         };
         var editCustomerEmailField = new TextField("")
         {
-            X = 26,
+            X = 31,
             Y = 11,
             Width = 100,
             Visible = false
@@ -376,7 +376,7 @@ public class Customers
         };
         var editCustomerGenderField = new TextField("")
         {
-            X = 26,
+            X = 31,
             Y = 13,
             Width = 100,
             Visible = false
@@ -390,7 +390,7 @@ public class Customers
         };
         var editCustomerDateOfBirthField = new TextField("")
         {
-            X = 26,
+            X = 31,
             Y = 15,
             Width = 100,
             Visible = false
@@ -538,7 +538,7 @@ public class Customers
         {
             X = 0,
             Y = 0,
-            Width = 100,
+            Width = Dim.Fill() - 4,
             Height = Dim.Fill() - 4
         };
 
@@ -576,7 +576,7 @@ public class Customers
                 if (int.TryParse(customerIDField.Text.ToString(), out int customerID))
                 {
                     // Find the customer in the list with the matching ID.
-                    Customers kh = ListCustomers.Find(k => k.CustomerID == customerID);
+                    Customers kh = ListCustomers.Find(kh => kh.CustomerID == customerID);
 
                     // If the customer is found in the list.
                     if (kh != null)
@@ -585,11 +585,18 @@ public class Customers
                         using (MySqlConnection connection = new MySqlConnection(connectionString))
                         {
                             connection.Open();
-                            string customerquery = "DELETE FROM customers WHERE customer_id = @customerid" +
-                                                "DELETE FROM users WHERE user_customer_id = @customerid";
-                            MySqlCommand customercommand = new MySqlCommand(customerquery, connection);
-                            customercommand.Parameters.AddWithValue("@customerid", kh.CustomerID);
-                            customercommand.ExecuteNonQuery();
+
+                            // First delete from the 'users' table.
+                            string userQuery = "DELETE FROM users WHERE user_customer_id = @customerid";
+                            MySqlCommand userCommand = new MySqlCommand(userQuery, connection);
+                            userCommand.Parameters.AddWithValue("@customerid", customerID);
+                            userCommand.ExecuteNonQuery();
+
+                            // Then delete from the 'customers' table.
+                            string customerQuery = "DELETE FROM customers WHERE customer_id = @customerid";
+                            MySqlCommand customerCommand = new MySqlCommand(customerQuery, connection);
+                            customerCommand.Parameters.AddWithValue("@customerid", customerID);
+                            customerCommand.ExecuteNonQuery();
                         }
 
                         // Remove the customer from the local list.

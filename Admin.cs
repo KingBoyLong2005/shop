@@ -870,7 +870,7 @@ public class Admin
         };
         var findAdminIDField = new TextField("")
         {
-            X = Pos.Right(findAdminIDLabel) + 1,
+            X = 15,
             Y = 1,
             Width = Dim.Fill() - 4
         };
@@ -884,7 +884,7 @@ public class Admin
 
         var editAdminNameField = new TextField("")
         {
-            X = Pos.Right(editAdminNameLabel) + 1,
+            X = 15,
             Y = 5,
             Width = Dim.Fill() - 4,
             Visible = false
@@ -898,7 +898,7 @@ public class Admin
         };
         var editAdminPhoneField = new TextField("")
         {
-            X = Pos.Right(editAdminPhoneLabel) + 1,
+            X = 15,
             Y = 7,
             Width = Dim.Fill() - 4,
             Visible = false
@@ -912,7 +912,7 @@ public class Admin
 
         var editAdminEmailField = new TextField("")
         {
-            X = Pos.Right(editAdminEmailLabel) + 1,
+            X = 15,
             Y = 9,
             Width = Dim.Fill() - 4,
             Visible = false
@@ -926,7 +926,7 @@ public class Admin
         };
         var editAdminGenderField = new TextField("")
         {
-            X = Pos.Right(editAdminGenderLabel) + 1,
+            X = 15,
             Y = 11,
             Width = Dim.Fill() - 4,
             Visible = false
@@ -940,7 +940,7 @@ public class Admin
         };
         var editAdminUserNameField = new TextField("")
         {
-            X = Pos.Right(editAdminUserNameLabel) + 1,
+            X = 15,
             Y = 13,
             Width = Dim.Fill() - 4,
             Visible = false
@@ -954,7 +954,7 @@ public class Admin
         };
         var editAdminPasswordField = new TextField("")
         {
-            X = Pos.Right(editAdminPasswordLabel) + 1,
+            X = 15,
             Y = 15,
             Width = Dim.Fill() - 4,
             Visible = false,
