@@ -70,7 +70,7 @@ public class Products
             // Array for column headers and their display settings
             var columnDisplayListProduct = new string[]
             {
-                "Product's name", "Stock quantity", "Price", "Category's name", "Brand", "Quantity", "Action"
+                "Product's name", "Stock quantity", "Price", "Category's name", "Brand",  "Action"
             };
 
             int columnWidth = 20; // Set column width
@@ -84,7 +84,7 @@ public class Products
                     Y = 0,
                     Width = columnWidth,
                     Height = 1,
-                    Visible = !(role == "admin" && (columnDisplayListProduct[i] == "Quantity" || columnDisplayListProduct[i] == "Action"))
+                    Visible = !(role == "admin" && ( columnDisplayListProduct[i] == "Action"))
                 });
             }
 
@@ -114,7 +114,7 @@ public class Products
             
                 var priceLabel = new Label($"{reader["product_price"]}")
                 {
-                    X = 3 * columnWidth,
+                    X = 2 * columnWidth,
                     Y = row,
                     Width = columnWidth,
                     Height = 1,
@@ -122,7 +122,7 @@ public class Products
                 };
                 var categoryLabel = new Label($"{reader["category_name"]}")
                 {
-                    X = 4 * columnWidth,
+                    X = 3 * columnWidth,
                     Y = row,
                     Width = columnWidth,
                     Height = 1,
@@ -130,55 +130,43 @@ public class Products
                 };
                 var brandLabel = new Label($"{reader["product_brand"]}")
                 {
-                    X = 5 * columnWidth,
+                    X = 4 * columnWidth,
                     Y = row,
                     Width = columnWidth,
                     Height = 1,
                     TextAlignment = TextAlignment.Left // Left text if it exceeds column width
                 };
 
-                // Text field and button for adding to cart (visible based on role)
-                var textQuantity = new TextField()
-                {
-                    X = 6 * columnWidth,
-                    Y = row,
-                    Width = columnWidth,
-                    Height = 1
-                };
-
                 var addButton = new Button("Add to Cart")
                 {
-                    X = 7 * columnWidth,
+                    X = 5 * columnWidth,
                     Y = row,
                     Width = columnWidth,
                     Height = 1
                 };
                 addButton.Clicked += () =>
                 {
-                    int quantity;
-                    if (int.TryParse(textQuantity.Text.ToString(), out quantity) && quantity > 0)
+                    try
                     {
-                        userCart.AddToCart(productID, quantity);
+                        userCart.AddToCart(productID);
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        MessageBox.ErrorQuery("Error", "Invalid quantity.", "OK");
+                        MessageBox.ErrorQuery("Error", ex.Message, "OK");
                     }
                 };
 
                 // Add labels, text field, and button to the display window
-                displayProductWindow.Add(productLabel, stockQuantityLabel, priceLabel, categoryLabel, brandLabel, textQuantity, addButton);
+                displayProductWindow.Add(productLabel, stockQuantityLabel, priceLabel, categoryLabel, brandLabel, addButton);
                 row++;
 
                 // Set visibility based on user role
                 if (role == "user")
                 {
-                    textQuantity.Visible = true;
                     addButton.Visible = true;
                 }
                 else if (role == "admin")
                 {
-                    textQuantity.Visible = false;
                     addButton.Visible = false;
                 }
             }

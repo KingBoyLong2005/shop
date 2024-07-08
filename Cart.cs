@@ -61,17 +61,12 @@ public class Cart
     }
 
     // Add an item to the shopping cart
-    public void AddItem(Products product, int quantity)
+    public void AddItem(Products product)
     {
         var cartItem = CartItems.FirstOrDefault(c => c.Product.ProductID == product.ProductID);
-        if (cartItem != null)
-        {
-            cartItem.Quantity += quantity;
-        }
-        else
-        {
-            CartItems.Add(new CartItem { Product = product, Quantity = quantity });
-        }
+        
+            CartItems.Add(new CartItem { Product = product});
+        
     }
 
 
@@ -86,7 +81,7 @@ public class Cart
     }
 
     // Display the shopping cart contents
-    public void DisplayCart(string role)
+    public void DisplayCart()
     {
         var top = Application.Top;
 
@@ -107,8 +102,7 @@ public class Cart
             string query = @"SELECT 
                                 p.product_id,
                                 p.product_name, 
-                                p.product_price, 
-                                c.cart_quantity 
+                                p.product_price
                             FROM cart c
                             INNER JOIN products p ON c.cart_product_id = p.product_id
                             WHERE c.cart_customer_id = @CustomerID";
@@ -122,10 +116,9 @@ public class Cart
                 int productID = reader.GetInt32("product_id");
                 string productName = reader["product_name"].ToString();
                 decimal productPrice = reader.GetDecimal("product_price");
-                int quantity = reader.GetInt32("cart_quantity");
 
                 // Display product details and buttons for interaction
-                var productLabel = new Label($"{productName} - ${productPrice} x {quantity}")
+                var productLabel = new Label($"{productName} - ${productPrice} ")
                 {
                     X = 1,
                     Y = row
@@ -146,7 +139,7 @@ public class Cart
                 {
                     RemoveItemFromCart(productID);
                     top.Remove(cartWindow);
-                    DisplayCart(role);
+                    DisplayCart();
                 };
 
                 orderButton.Clicked += () =>
@@ -192,21 +185,20 @@ public class Cart
     }
 
     // Add a product with specified quantity to the shopping cart and database cart
-    public void AddToCart(int productID, int quantityProduct)
+    public void AddToCart(int productID)
     {
         ListProducts = LoadProducts(connectionString);
         Products sp = ListProducts.FirstOrDefault(p => p.ProductID == productID);
         if (sp != null)
         {
-            userCart.AddItem(sp, quantityProduct);
+            userCart.AddItem(sp);
             using(MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 connection.Open();
-                string query = "INSERT INTO cart (cart_customer_id, cart_product_id, cart_quantity, cart_product_price, cart_order_price, cart_total_products)" +
-                            "VALUES(@CartCustomerID, @CartProductID, @CartQuantity, 0, 0, 0)";
+                string query = "INSERT INTO cart (cart_customer_id, cart_product_id, cart_product_price, cart_order_price, cart_total_products)" +
+                            "VALUES(@CartCustomerID, @CartProductID, 0, 0, 0)";
                 MySqlCommand command = new MySqlCommand(query, connection);
                 command.Parameters.AddWithValue("@CartProductID", productID);
-                command.Parameters.AddWithValue("@CartQuantity", quantityProduct);
                 command.Parameters.AddWithValue("@CartCustomerID", currentCustomerID);
 
                 try
@@ -231,6 +223,5 @@ public class Cart
 public class CartItem
 {
     public Products Product { get; set; }
-    public int Quantity { get; set; }
     
 }

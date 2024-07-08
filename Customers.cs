@@ -1070,7 +1070,7 @@ public class Customers
             try
             {
                 top.Remove(userMenu); 
-                userCart.DisplayCart("user");
+                userCart.DisplayCart();
             }
             catch (Exception ex)
             {
