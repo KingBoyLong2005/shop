@@ -79,28 +79,28 @@ public class Program
     {
         // Initialize the application and set colors
         Application.Init();
-        Colors.Base.Normal = Application.Driver.MakeAttribute(Color.Blue, Color.Black); // blue
-        Colors.Base.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
+        Colors.Base.Normal = Application.Driver.MakeAttribute(Color.Blue, Color.Black);
+        Colors.Base.Focus = Application.Driver.MakeAttribute(Color.White, Color.Gray);
 
         // Set colors for dialogs
-        Colors.Dialog.Normal = Application.Driver.MakeAttribute(Color.BrightCyan, Color.Black); // Bright cyan 
-        Colors.Dialog.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
-        Colors.Dialog.HotNormal = Application.Driver.MakeAttribute(Color.Red, Color.Black); // Default colors
-        Colors.Dialog.HotFocus = Application.Driver.MakeAttribute(Color.Red, Color.DarkGray); // Default colors
+        Colors.Dialog.Normal = Application.Driver.MakeAttribute(Color.Blue, Color.Black);
+        Colors.Dialog.Focus = Application.Driver.MakeAttribute(Color.White, Color.Gray);
+        Colors.Dialog.HotNormal = Application.Driver.MakeAttribute(Color.Blue, Color.Black);
+        Colors.Dialog.HotFocus = Application.Driver.MakeAttribute(Color.White, Color.Gray);
 
         // Set colors for menus
-        Colors.Menu.Normal = Application.Driver.MakeAttribute(Color.White, Color.Blue); // Dark blue 
+        Colors.Menu.Normal = Application.Driver.MakeAttribute(Color.White, Color.Blue);
         Colors.Menu.Focus = Application.Driver.MakeAttribute(Color.Black, Color.Gray);
-        Colors.Menu.HotNormal = Application.Driver.MakeAttribute(Color.BrightYellow, Color.Blue); // Yellow 
-        Colors.Menu.HotFocus = Application.Driver.MakeAttribute(Color.BrightYellow, Color.Gray);
+        Colors.Menu.HotNormal = Application.Driver.MakeAttribute(Color.Blue, Color.Black);
+        Colors.Menu.HotFocus = Application.Driver.MakeAttribute(Color.White, Color.Gray);
 
         // Set colors for errors
-        Colors.Error.Normal = Application.Driver.MakeAttribute(Color.Red, Color.White); // Default colors
-        Colors.Error.Focus = Application.Driver.MakeAttribute(Color.White, Color.Red); // Default colors
+        Colors.Error.Normal = Application.Driver.MakeAttribute(Color.Black, Color.White);
+        Colors.Error.Focus = Application.Driver.MakeAttribute(Color.White, Color.Black);
 
         // Set colors for top level
-        Colors.TopLevel.Normal = Application.Driver.MakeAttribute(Color.Magenta, Color.Black); // Magenta 
-        Colors.TopLevel.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
+        Colors.TopLevel.Normal = Application.Driver.MakeAttribute(Color.White, Color.Black);
+        Colors.TopLevel.Focus = Application.Driver.MakeAttribute(Color.White, Color.Gray);
 
         // Initialize the application and run the login method
         Application.Init();
