@@ -835,8 +835,12 @@ public class Orders
         };
         btnClose.Clicked += () =>
         {
-            top.Remove(updatestatus);
-            admin.AdminMenu();
+            bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to close?", "Yes", "No") == 0;
+            if (confirmed)
+            {
+                top.Remove(updatestatus);
+                admin.AdminMenu();
+            }
         };
 
         btnUpdateStatus.Clicked += () => UpdateOrderStatus(txtOrderId.Text.ToString());

@@ -231,7 +231,7 @@ public class SuperAdmin
         };
 
         // Add all buttons to the left frame
-        leftFrame.Add(btnAddStaff, btnFindStaff, btnEditStaff, btnDeleteStaff, btnDisplayStaff, btnAddCategory, btnDeleteCategory, btnLogout);
+        leftFrame.Add(btnAddStaff, btnFindStaff, btnEditStaff, btnDeleteStaff, btnDisplayStaff, btnAddCategory, btnDeleteCategory, btnbDisplayCategory, btnLogout);
 
         // Add a welcome label to the top right frame
         var rightTopLabel = new Label("Manager")

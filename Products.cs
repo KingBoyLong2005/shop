@@ -118,7 +118,7 @@ public class Products
                 int productID = int.Parse(reader["product_id"].ToString());
                 string productName = reader["product_name"].ToString();
                 decimal productprice = decimal.Parse(reader["product_price"].ToString());
-
+                int productQuantity = reader.GetInt32("product_stock_quantity");
                 // Labels for each product detail
                 var productLabel = new Label($"{reader["product_name"]}")
                 {
@@ -128,7 +128,8 @@ public class Products
                     Height = 1,
                     TextAlignment = TextAlignment.Left // Left text if it exceeds column width
                 };
-                var stockQuantityLabel = new Label($"{reader["product_stock_quantity"]}")
+                
+                var stockQuantityLabel = new Label(productQuantity > 0 ? productQuantity.ToString() : "Sold out")
                 {
                     X = 1 * columnWidth,
                     Y = row,
@@ -136,7 +137,6 @@ public class Products
                     Height = 1,
                     TextAlignment = TextAlignment.Left // Left text if it exceeds column width
                 };
-            
                 var priceLabel = new Label($"{reader["product_price"]}")
                 {
                     X = 2 * columnWidth,
