@@ -5,6 +5,7 @@ using System.Linq;                      //Import namesapce to use function
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using Terminal.Gui;
+using Mysqlx.Crud;
 
 
 public class Products
@@ -31,6 +32,28 @@ public class Products
     public static SuperAdmin superadmin = new SuperAdmin();
     public static Cart userCart = new Cart();
     public static Customers customer = new Customers();
+    public static Orders order = new Orders();
+
+    static List<Products> LoadProducts(string connectionString)
+    {
+        using(MySqlConnection connectionproduct = new MySqlConnection(connectionString))
+        {
+            string queryproduct = @"SELECT product_id FROM products";
+            MySqlCommand commandproduct = new MySqlCommand(queryproduct, connectionproduct);
+            connectionproduct.Open();
+            MySqlDataReader read = commandproduct.ExecuteReader();
+            while (read.Read())
+            {
+                pd.ProductID = read.GetInt32("product_id");
+                pd.ProductName = read.GetString("product_name");
+                pd.ProductPrice = read.GetDecimal("product_price");
+                pd.ProductCategoryID = read.GetInt32("product_category_id");
+                pd.ProductBrand = read.GetString("product_band");
+                ListProducts.Add(pd);
+            }
+        }
+        return ListProducts;
+    }
 
     public void DisplayProduct(string role)
     {
@@ -93,6 +116,8 @@ public class Products
             while (reader.Read())
             {
                 int productID = int.Parse(reader["product_id"].ToString());
+                string productName = reader["product_name"].ToString();
+                decimal productprice = decimal.Parse(reader["product_price"].ToString());
 
                 // Labels for each product detail
                 var productLabel = new Label($"{reader["product_name"]}")
@@ -155,19 +180,40 @@ public class Products
                         MessageBox.ErrorQuery("Error", ex.Message, "OK");
                     }
                 };
+                var orderbutton = new Button("Order")
+                {
+                    X = 6 * columnWidth,
+                    Y = row,
+                    Width = columnWidth,
+                    Height = 1,
+                };
+                orderbutton.Clicked += () =>
+                {
+                    try
+                    {
+                        top.Remove(displayProductWindow);
+                        order.OrderProduct(productID, productName, ProductPrice, "display");
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                    }
+                };
 
                 // Add labels, text field, and button to the display window
-                displayProductWindow.Add(productLabel, stockQuantityLabel, priceLabel, categoryLabel, brandLabel, addButton);
+                displayProductWindow.Add(productLabel, stockQuantityLabel, priceLabel, categoryLabel, brandLabel, addButton, orderbutton);
                 row++;
 
                 // Set visibility based on user role
                 if (role == "user")
                 {
                     addButton.Visible = true;
+                    orderbutton.Visible = true;
                 }
                 else if (role == "admin")
                 {
                     addButton.Visible = false;
+                    orderbutton.Visible = false;
                 }
             }
 
@@ -622,6 +668,7 @@ public class Products
     }
     public void DeleteProduct()
     {
+        ListProducts =LoadProducts(connectionString);
         var top = Application.Top;
         var deleteProductWin = new Window("Delete Product")
         {
@@ -654,44 +701,47 @@ public class Products
         deleteButton.Clicked += () =>
         {
             try
-            {
+            {   
+                
                 // Validate and parse the product ID from the text field
-                if (int.TryParse(productIDField.Text.ToString(), out int productID))
-                {
-                    // Find the product in the list based on the ID
-                    Products pd = ListProducts.Find(s => s.ProductID == productID);
-
-                    if (pd != null)
+                    if (int.TryParse(productIDField.Text.ToString(), out int productID))
                     {
-                        // Delete the product from the database
-                        using (MySqlConnection connection = new MySqlConnection(connectionString))
+                        
+                        // Find the product in the list based on the ID
+                        Products pd = ListProducts.Find(s => s.ProductID == productID);
+
+                        if (pd != null)
                         {
-                            connection.Open();
-                            string query = "DELETE FROM products WHERE product_id = @ProductID";
-                            MySqlCommand command = new MySqlCommand(query, connection);
-                            command.Parameters.AddWithValue("@ProductID", pd.ProductID);
-                            command.ExecuteNonQuery();
+                            // Delete the product from the database
+                            using (MySqlConnection connection = new MySqlConnection(connectionString))
+                            {
+                                connection.Open();
+                                string query = "DELETE FROM products WHERE product_id = @ProductID";
+                                MySqlCommand command = new MySqlCommand(query, connection);
+                                command.Parameters.AddWithValue("@ProductID", productID);
+                                command.ExecuteNonQuery();
+                            }
+
+                            // Remove the product from the application list
+                            ListProducts.Remove(pd);
+
+                            // Display success message and return to admin menu
+                            MessageBox.Query("Success", "Successfully deleted product!", "OK");
+                            top.Remove(deleteProductWin);
+                            admin.AdminMenu();
                         }
-
-                        // Remove the product from the application list
-                        ListProducts.Remove(pd);
-
-                        // Display success message and return to admin menu
-                        MessageBox.Query("Success", "Successfully deleted product!", "OK");
-                        top.Remove(deleteProductWin);
-                        admin.AdminMenu();
+                        else
+                        {
+                            // Display error if product not found
+                            MessageBox.ErrorQuery("Error", "Product not found!", "OK");
+                        }
                     }
                     else
                     {
-                        // Display error if product not found
-                        MessageBox.ErrorQuery("Error", "Product not found!", "OK");
+                        // Display error for invalid product ID format
+                        MessageBox.ErrorQuery("Error", "Invalid Product ID!", "OK");
                     }
-                }
-                else
-                {
-                    // Display error for invalid product ID format
-                    MessageBox.ErrorQuery("Error", "Invalid Product ID!", "OK");
-                }
+                
             }
             catch (Exception ex)
             {

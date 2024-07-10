@@ -267,6 +267,16 @@ public class Admin
             top.Remove(adminMenu);
             pd.DeleteProduct();
         };
+        var btnUpdateStatus = new Button("Update Status")
+        {
+            X = 2,
+            Y = 24
+        };
+        btnUpdateStatus.Clicked += () =>
+        {
+            top.Remove(adminMenu);
+            order.UpdateStatus();
+        };
 
         var LogoutButton = new Button("Logout")
         {
@@ -281,7 +291,7 @@ public class Admin
 
         leftFrame.Add(btnOrderForCustomer, btnDisplayCustomer, btnFindCustomer, btnEditCustomer,
                     btnAddCustomer, btnDeleteCustomer, btnDisplayProduct, btnEditProduct,
-                    btnAddProduct, btnFindProduct, btnDeleteProduct, LogoutButton);
+                    btnAddProduct, btnFindProduct, btnDeleteProduct, btnUpdateStatus, LogoutButton);
 
         // Fetch admin name for display
         string adminName = "";

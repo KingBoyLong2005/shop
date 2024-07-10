@@ -15,6 +15,7 @@ public class SuperAdmin
     public static Orders order = new Orders();
     public static Admin admin= new Admin();
     public static Program program = new Program();
+    public static Categories cate = new Categories();
 
     public static string connectionString = Configuration.ConnectionString;
     public static int currentCustomerID = SessionData.Instance.CurrentCustomerID;
@@ -75,8 +76,15 @@ public class SuperAdmin
         };
         btnAddStaff.Clicked += () =>
         {
-            top.Remove(SuperAdminMenu);
-            admin.AddStaff();
+            try
+            {
+                top.Remove(SuperAdminMenu);
+                admin.AddStaff();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
         };
 
         // Add button to find staff
@@ -87,8 +95,15 @@ public class SuperAdmin
         };
         btnFindStaff.Clicked += () =>
         {
-            top.Remove(SuperAdminMenu);
-            admin.FindStaff();
+            try
+            {
+                top.Remove(SuperAdminMenu);
+                admin.FindStaff();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
         };
 
         // Add button to edit staff
@@ -99,8 +114,15 @@ public class SuperAdmin
         };
         btnEditStaff.Clicked += () =>
         {
+            try
+            {
             top.Remove(SuperAdminMenu);
             admin.EditStaff();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
         };
 
         // Add button to delete staff
@@ -111,8 +133,15 @@ public class SuperAdmin
         };
         btnDeleteStaff.Clicked += () =>
         {
+            try
+            {
             top.Remove(SuperAdminMenu);
             admin.DeleteStaff();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
         };
 
         // Add button to display staff
@@ -123,21 +152,71 @@ public class SuperAdmin
         };
         btnDisplayStaff.Clicked += () =>
         {
+            try
+            {
             top.Remove(SuperAdminMenu);
             admin.DisplayStaff();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
         };
 
         // Add button to display products
-        var btnDisplayProduct = new Button("Display Product")
+        var btnAddCategory = new Button("Add Category")
         {
             X = 2,
             Y = 12
         };
-        btnDisplayProduct.Clicked += () =>
+
+        btnAddCategory.Clicked += () =>
         {
+            try
+            {
             top.Remove(SuperAdminMenu);
-            pd.DisplayProduct("superadmin");
+            cate.AddCategory();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
         };
+        var btnDeleteCategory = new Button("Delete Category")
+        {
+            X = 2,
+            Y = 14
+        };
+        btnDeleteCategory.Clicked += () =>
+        {
+            try
+            {
+                top.Remove(SuperAdminMenu);
+                cate.DeleteCategory();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            }
+        };
+        var btnbDisplayCategory = new Button("Display Category")
+        {
+            X = 2,
+            Y = 16
+        };
+        btnbDisplayCategory.Clicked += () =>
+        {
+            try
+            {
+                top.Remove(SuperAdminMenu);
+                cate.Displaycategorys();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery ("Error", ex.Message,"OK");
+            }
+        };
+
 
         // Add logout button
         var btnLogout = new Button("Logout")
@@ -152,7 +231,7 @@ public class SuperAdmin
         };
 
         // Add all buttons to the left frame
-        leftFrame.Add(btnAddStaff, btnFindStaff, btnEditStaff, btnDeleteStaff, btnDisplayStaff, btnDisplayProduct, btnLogout);
+        leftFrame.Add(btnAddStaff, btnFindStaff, btnEditStaff, btnDeleteStaff, btnDisplayStaff, btnAddCategory, btnDeleteCategory, btnLogout);
 
         // Add a welcome label to the top right frame
         var rightTopLabel = new Label("Manager")
@@ -180,5 +259,6 @@ public class SuperAdmin
             rightBottomFrame.Add(countOrder);
         }
     }
+    
 
 }

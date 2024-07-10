@@ -47,33 +47,6 @@ public class Program
         connectionString = baseConnectionString.Replace("@pass", password);
         Configuration.ConnectionString = connectionString;
     }
-
-    // Method to load categories from the database
-    static List<Categories> LoadCategory(string connectionString)
-    {
-        List<Categories> ListCategory = new List<Categories>();
-
-        // Establish connection to the database
-        using (MySqlConnection connection = new MySqlConnection(connectionString))
-        {   
-            string query = "SELECT * FROM categories"; 
-            MySqlCommand command = new MySqlCommand(query, connection);
-            connection.Open();
-            MySqlDataReader read = command.ExecuteReader();
-            while (read.Read())
-            {
-                Categories c = new Categories();
-                // Load category properties from the database
-                c.CategoryID = read.GetInt32("category_id");
-                c.CategoryName = read.GetString("category_name");
-                c.CategoryDescription = read.GetString("category_description");
-
-                ListCategory.Add(c);
-            }
-        }
-        return ListCategory;
-    }
-
     // Main method
     static void Main()
     {
@@ -193,7 +166,18 @@ public class Program
             // Handle authentication result
             if (isAuthenticated)
             {
-                MessageBox.Query("Success", $"Welcome {role}!", "OK");
+                if (role == "user")
+                {
+                    MessageBox.Query("Success", "Welcome customer!", "OK");
+                }
+                else if (role == "admin")
+                {
+                    MessageBox.Query("Success", "Welcome staff!", "OK");
+                }
+                else if (role == "Manager")
+                {
+                    MessageBox.Query("Success", "Welcome Manager!", "OK");
+                }
                 top.Remove(loginWin);
                 switch (role)
                 {

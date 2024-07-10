@@ -145,7 +145,7 @@ public class Cart
                 orderButton.Clicked += () =>
                 {
                     top.Remove(cartWindow);
-                    order.OrderProduct(productID, productName, productPrice);
+                    order.OrderProduct(productID, productName, productPrice, "cart");
                 };
 
                 // Add labels and buttons to the cart window

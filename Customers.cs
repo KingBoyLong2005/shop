@@ -1057,9 +1057,8 @@ public class Customers
             }
         };
 
-        // Similar setup for other buttons like View Cart, Order, View My Orders, Find Product, and Logout
+        // Similar setup for other buttons like View Cart, View My Orders, Find Product, and Logout
         
-
         var btnViewCart = new Button("View Cart")
         {
             X = 2,
@@ -1077,28 +1076,10 @@ public class Customers
                 MessageBox.ErrorQuery("Error", ex.Message, "OK");
             }
         };
-
-        var btnOrder = new Button("Order")
-        {
-            X = 2,
-            Y = 4,
-        };
-        btnOrder.Clicked += () =>
-        {
-            try
-            {
-                top.Remove(userMenu);
-                order.DisplayProductToOrder();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
         var btnViewMyOrders = new Button("View My Orders")
         {
             X = 2,
-            Y = 5,
+            Y = 4,
         };
         btnViewMyOrders.Clicked += () =>
         {
@@ -1108,7 +1089,7 @@ public class Customers
         var btnFindProduct = new Button("Find Product")
         {
             X = 2,
-            Y = 6
+            Y = 5
         };
         btnFindProduct.Clicked += () =>
         {
@@ -1128,7 +1109,7 @@ public class Customers
         };
 
         // Add buttons to the left frame
-        leftFrame.Add(btnDisplayProducts, btnViewCart, btnOrder, btnViewMyOrders, btnFindProduct, btnLogout);
+        leftFrame.Add(btnDisplayProducts, btnViewCart, btnViewMyOrders, btnFindProduct, btnLogout);
 
         // Retrieve customer's name from the database
         string customerName = "";
