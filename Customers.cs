@@ -226,6 +226,19 @@ public class Customers
                 MySqlTransaction transaction = connection.BeginTransaction();
                 try
                 {
+                    // Check if the username already exists
+                    string checkUserQuery = "SELECT COUNT(*) FROM users WHERE username = @Username";
+                    MySqlCommand checkUserCommand = new MySqlCommand(checkUserQuery, connection, transaction);
+                    checkUserCommand.Parameters.AddWithValue("@Username", us.Username);
+                    int userCount = Convert.ToInt32(checkUserCommand.ExecuteScalar());
+
+                    if (userCount > 0)
+                    {
+                        // Username is duplicated
+                        MessageBox.ErrorQuery("Error", "Username is duplicated. Please choose a different username.", "OK");
+                        return;
+                    }
+
                     // Insert customer data
                     string customerQuery = "INSERT INTO customers (customer_name, customer_phone_number, customer_address, customer_email, customer_gender, customer_dateofbirth, customer_count, customer_totalspent)" +
                                         "VALUES (@customername, @customerphonenumber, @customeraddress, @customeremail, @customergender, @customerdateofbirth, 0, 0)";
@@ -261,10 +274,12 @@ public class Customers
                 }
                 catch (Exception ex)
                 {
+                    transaction.Rollback();
                     MessageBox.ErrorQuery("Error", ex.Message, "OK");
                 }
             }
         };
+
 
         // Define and position the "Close" button
         var closeButton = new Button("Close")
@@ -275,7 +290,7 @@ public class Customers
         closeButton.Clicked += () =>
         {
             top.Remove(registerWin);
-            Application.Shutdown();
+            admin.AdminMenu();
         };
 
         // Add all controls to the registration window
