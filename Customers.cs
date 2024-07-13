@@ -450,7 +450,7 @@ public class Customers
                 // Display a success message and return to the admin menu
                 MessageBox.Query("Success", "Customer information has been updated!", "OK");
                 top.Remove(editCustomerWin);
-                admin.AdminMenu();
+                cus.EditCustomer();
             }
             catch (Exception ex)
             {
@@ -622,7 +622,7 @@ public class Customers
 
                         // Remove the delete customer window and go back to the admin menu.
                         top.Remove(deleteCustomerWin);
-                        admin.AdminMenu();
+                        cus.DeleteCustomer();
                     }
                     else
                     {
@@ -1014,7 +1014,7 @@ public class Customers
         // Create the main window for user menu
         var userMenu = new Window()
         {
-            Title = "Menu",
+            Title = "Electronic Shop",
             X = 0,
             Y = 0,
             Width = Dim.Fill(),

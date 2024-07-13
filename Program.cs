@@ -170,7 +170,7 @@ public class Program
                 {
                     if (role == "user")
                     {
-                        MessageBox.Query("Success", "Welcome customer!", "OK");
+                        MessageBox.Query("Success", "Welcome to our Electronic Shop!", "OK");
                     }
                     else if (role == "admin")
                     {

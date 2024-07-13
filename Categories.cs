@@ -14,7 +14,8 @@ public class Categories
     public string CategoryDescription { get; set; }
 
     public static List<Categories> ListCategories = new List<Categories>();
-
+    
+    public static Categories cate = new Categories();
     public static SuperAdmin superadmin = new SuperAdmin();
     public static string connectionString = Configuration.ConnectionString;
 
@@ -209,7 +210,7 @@ public class Categories
                             // Display success message and return to admin menu
                             MessageBox.Query("Success", "Successfully deleted category!", "OK");
                             top.Remove(deletecategoryWin);
-                            superadmin.SuperAdminMenu();
+                            cate.DeleteCategory();
                         }
                         else
                         {

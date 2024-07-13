@@ -528,7 +528,7 @@ public class Products
                 // Display success message and return to admin menu
                 MessageBox.Query("Success", "Successfully edited product!", "OK");
                 top.Remove(editProductWin);
-                admin.AdminMenu();
+                pd.EditProductInformations();
             }
             catch (Exception ex)
             {
@@ -728,7 +728,7 @@ public class Products
                             // Display success message and return to admin menu
                             MessageBox.Query("Success", "Successfully deleted product!", "OK");
                             top.Remove(deleteProductWin);
-                            admin.AdminMenu();
+                            pd.DeleteProduct();
                         }
                         else
                         {

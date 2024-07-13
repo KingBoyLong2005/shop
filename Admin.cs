@@ -484,7 +484,7 @@ public class Admin
                 catch (Exception ex)
                 {
                     transaction.Rollback();
-                    MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                    MessageBox.ErrorQuery("Error", ex.Message, "OK");   
                 }
             }
         };
@@ -692,7 +692,7 @@ public class Admin
                         ListAdmin.Remove(ad); // Remove from local list
                         MessageBox.Query("Success", "Successfully deleted staff!", "OK");
                         top.Remove(deleteAdminWindow); // Remove window from UI
-                        superadmin.SuperAdminMenu(); // Return to super admin menu
+                        ad.DeleteStaff(); 
                     }
                     else
                     {
