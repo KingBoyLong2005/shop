@@ -53,20 +53,20 @@ public class Program
         // Initialize the application and set colors
         Application.Init();
 
-        // Set colors for base elements
-        Colors.Base.Normal = Application.Driver.MakeAttribute(Color.White, Color.Cyan);
+        // Set base colors
+        Colors.Base.Normal = Application.Driver.MakeAttribute(Color.White, Color.Black);
         Colors.Base.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
 
         // Set colors for dialogs
-        Colors.Dialog.Normal = Application.Driver.MakeAttribute(Color.White, Color.Blue);
+        Colors.Dialog.Normal = Application.Driver.MakeAttribute(Color.White, Color.Black);
         Colors.Dialog.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
-        Colors.Dialog.HotNormal = Application.Driver.MakeAttribute(Color.White, Color.Blue);
+        Colors.Dialog.HotNormal = Application.Driver.MakeAttribute(Color.White, Color.Black);
         Colors.Dialog.HotFocus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
 
         // Set colors for menus
-        Colors.Menu.Normal = Application.Driver.MakeAttribute(Color.White, Color.Blue);
+        Colors.Menu.Normal = Application.Driver.MakeAttribute(Color.White, Color.Black);
         Colors.Menu.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
-        Colors.Menu.HotNormal = Application.Driver.MakeAttribute(Color.White, Color.Blue);
+        Colors.Menu.HotNormal = Application.Driver.MakeAttribute(Color.White, Color.Black);
         Colors.Menu.HotFocus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
 
         // Set colors for errors
@@ -74,15 +74,13 @@ public class Program
         Colors.Error.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
 
         // Set colors for top level
-        Colors.TopLevel.Normal = Application.Driver.MakeAttribute(Color.White, Color.Blue);
+        Colors.TopLevel.Normal = Application.Driver.MakeAttribute(Color.White, Color.Black);
         Colors.TopLevel.Focus = Application.Driver.MakeAttribute(Color.White, Color.DarkGray);
-
-
 
         // Initialize the application and run the login method
         Application.Init();
         program.Login();
-        Application.Run();
+        Application.Run();  
     }
 
     // Login method
@@ -101,16 +99,29 @@ public class Program
         };
         top.Add(loginWin);
 
+        // Create and configure the ASCII art label
+        var asciiArt = new Label(@"███████╗██╗     ███████╗ ██████╗████████╗██████╗  ██████╗ ███╗   ██╗██╗ ██████╗    ███████╗██╗  ██╗ ██████╗ ██████╗ 
+██╔════╝██║     ██╔════╝██╔════╝╚══██╔══╝██╔══██╗██╔═══██╗████╗  ██║██║██╔════╝    ██╔════╝██║  ██║██╔═══██╗██╔══██╗
+█████╗  ██║     █████╗  ██║        ██║   ██████╔╝██║   ██║██╔██╗ ██║██║██║         ███████╗███████║██║   ██║██████╔╝
+██╔══╝  ██║     ██╔══╝  ██║        ██║   ██╔══██╗██║   ██║██║╚██╗██║██║██║         ╚════██║██╔══██║██║   ██║██╔═══╝ 
+███████╗███████╗███████╗╚██████╗   ██║   ██║  ██║╚██████╔╝██║ ╚████║██║╚██████╗    ███████║██║  ██║╚██████╔╝██║     
+╚══════╝╚══════╝╚══════╝ ╚═════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝ ╚═════╝    ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     
+                                                                                                                    ")
+        {
+            X = Pos.Center(),
+            Y = 0,
+        };
+
         // Create and configure the username label and field
         var usernameLabel = new Label("Username:")
         {
             X = 2,
-            Y = 2
+            Y = Pos.Bottom(asciiArt) + 1
         };
         var usernameField = new TextField("")
         {
             X = Pos.Right(usernameLabel) + 1,
-            Y = 2,
+            Y = Pos.Bottom(asciiArt) + 1,
             Width = Dim.Fill() - 4
         };
 
@@ -118,13 +129,13 @@ public class Program
         var passwordLabel = new Label("Password:")
         {
             X = 2,
-            Y = 4
+            Y = Pos.Bottom(usernameLabel) + 1
         };
         var passwordField = new TextField("")
         {
             Secret = true,
             X = Pos.Right(passwordLabel) + 1,
-            Y = 4,
+            Y = Pos.Bottom(usernameLabel) + 1,
             Width = Dim.Fill() - 4
         };
 
@@ -132,7 +143,7 @@ public class Program
         var loginButton = new Button("Login")
         {
             X = Pos.Center(),
-            Y = 6
+            Y = Pos.Bottom(passwordLabel) + 1
         };
         loginButton.Clicked += () =>
         {
@@ -209,7 +220,7 @@ public class Program
         var btnRegister = new Button("Register")
         {
             X = Pos.Center(),
-            Y = 8
+            Y = Pos.Bottom(loginButton) + 1
         };
         btnRegister.Clicked += () =>
         {
@@ -221,7 +232,7 @@ public class Program
         var closeButton = new Button("Close")
         {
             X = Pos.Center(),
-            Y = 10
+            Y = Pos.Bottom(btnRegister) + 1
         };
         closeButton.Clicked += () =>
         {
@@ -230,8 +241,9 @@ public class Program
         };
 
         // Add controls to the login window
-        loginWin.Add(usernameLabel, usernameField, passwordLabel, passwordField, loginButton, btnRegister, closeButton);
+        loginWin.Add(asciiArt, usernameLabel, usernameField, passwordLabel, passwordField, loginButton, btnRegister, closeButton);
     }
+
 
     // Register method
     public void Register()

@@ -152,7 +152,7 @@ public class Categories
     {
         ListCategories = LoadCategory(connectionString);
         var top = Application.Top;
-        var deletecategoryWin = new Window("Delete category")
+        var deletecategoryWin = new Window("Delete Category")
         {
             X = 0,
             Y = 0,
@@ -164,66 +164,64 @@ public class Categories
         // Label and field for entering the category ID
         var categoryIDLabel = new Label("Category ID:")
         {
-            X = 2,
-            Y = 2
+            X = Pos.Center() - 10,
+            Y = Pos.Center() - 3
         };
         var categoryIDField = new TextField("")
         {
-            X = Pos.Right(categoryIDLabel) + 1,
-            Y = 2,
-            Width = 100
+            X = Pos.Center() + 5,
+            Y = Pos.Center() - 3,
+            Width = 20
         };
 
         // Button to delete the category
         var deleteButton = new Button("Delete")
         {
             X = Pos.Center(),
-            Y = 4
+            Y = Pos.Center()
         };
         deleteButton.Clicked += () =>
         {
             try
-            {   
-                
+            {
                 // Validate and parse the category ID from the text field
-                    if (int.TryParse(categoryIDField.Text.ToString(), out int categoryID))
+                if (int.TryParse(categoryIDField.Text.ToString(), out int categoryID))
+                {
+                    // Find the category in the list based on the ID
+                    Categories cg = ListCategories.Find(s => s.CategoryID == categoryID);
+
+                    if (cg != null)
                     {
-                        
-                        // Find the category in the list based on the ID
-                        Categories cg = ListCategories.Find(s => s.CategoryID == categoryID);
-
-                        if (cg != null)
+                        // Delete the category from the database
+                        using (MySqlConnection connection = new MySqlConnection(connectionString))
                         {
-                            // Delete the category from the database
-                            using (MySqlConnection connection = new MySqlConnection(connectionString))
-                            {
-                                connection.Open();
-                                string query = "DELETE FROM categories WHERE category_id = @categoryID";
-                                MySqlCommand command = new MySqlCommand(query, connection);
-                                command.Parameters.AddWithValue("@categoryID", categoryID);
-                                command.ExecuteNonQuery();
-                            }
-
-                            // Remove the category from the application list
-                            ListCategories.Remove(cg);
-
-                            // Display success message and return to admin menu
-                            MessageBox.Query("Success", "Successfully deleted category!", "OK");
-                            top.Remove(deletecategoryWin);
-                            cate.DeleteCategory();
+                            connection.Open();
+                            string query = "DELETE FROM categories WHERE category_id = @categoryID;" +
+                                            "DELETE FROM products WHERE product_category_id = @categoryID";
+                            MySqlCommand command = new MySqlCommand(query, connection);
+                            command.Parameters.AddWithValue("@categoryID", categoryID);
+                            command.ExecuteNonQuery();
                         }
-                        else
-                        {
-                            // Display error if category not found
-                            MessageBox.ErrorQuery("Error", "Category not found!", "OK");
-                        }
+
+                        // Remove the category from the application list
+                        ListCategories.Remove(cg);
+
+                        // Display success message and return to admin menu
+                        MessageBox.Query("Success", "Successfully deleted category!", "OK");
+                        top.Remove(deletecategoryWin);
+                        cate.DeleteCategory();
                     }
                     else
                     {
-                        // Display error for invalid category ID format
-                        MessageBox.ErrorQuery("Error", "Invalid Category ID!", "OK");
+                        // Display error if category not found
+                        MessageBox.ErrorQuery("Error", "Category not found!", "OK");
                     }
-                
+                }
+                else
+                {
+                    // Display error for invalid category ID format
+                    MessageBox.ErrorQuery("Error", "Invalid Category ID!", "OK");
+                }
             }
             catch (Exception ex)
             {
@@ -236,7 +234,7 @@ public class Categories
         var closeButton = new Button("Close")
         {
             X = Pos.Center(),
-            Y = Pos.Bottom(deleteButton) + 1
+            Y = Pos.Center() + 2
         };
         closeButton.Clicked += () =>
         {

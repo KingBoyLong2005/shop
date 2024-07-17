@@ -129,7 +129,20 @@ public class Admin
         };
         adminMenu.Add(leftFrame);
 
-        var rightTopFrame = new FrameView("Welcome")
+        string adminName = "";
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {
+            string query = "SELECT admin_name FROM admins WHERE admin_id = @AdminID";
+            MySqlCommand command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@AdminID", AdminID); // Use AdminID property
+            connection.Open();
+            MySqlDataReader reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                adminName = reader["admin_name"].ToString();
+            }
+        }
+        var rightTopFrame = new FrameView("Welcome, "+adminName)
         {
             X = Pos.Percent(30),
             Y = 0,
@@ -138,7 +151,7 @@ public class Admin
         };
         adminMenu.Add(rightTopFrame);
 
-        var rightBottomFrame = new FrameView("Number of products sold")
+        var rightBottomFrame = new FrameView("Statistical")
         {
             X = Pos.Percent(30),
             Y = Pos.Percent(50),
@@ -293,52 +306,63 @@ public class Admin
                     btnAddCustomer, btnDeleteCustomer, btnDisplayProduct, btnEditProduct,
                     btnAddProduct, btnFindProduct, btnDeleteProduct, btnUpdateStatus, LogoutButton);
 
-        // Fetch admin name for display
-        string adminName = "";
-        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        var rightTopLabel = new Label(@"███████╗██╗     ███████╗ ██████╗████████╗██████╗  ██████╗ ███╗   ██╗██╗ ██████╗    ███████╗██╗  ██╗ ██████╗ ██████╗ 
+██╔════╝██║     ██╔════╝██╔════╝╚══██╔══╝██╔══██╗██╔═══██╗████╗  ██║██║██╔════╝    ██╔════╝██║  ██║██╔═══██╗██╔══██╗
+█████╗  ██║     █████╗  ██║        ██║   ██████╔╝██║   ██║██╔██╗ ██║██║██║         ███████╗███████║██║   ██║██████╔╝
+██╔══╝  ██║     ██╔══╝  ██║        ██║   ██╔══██╗██║   ██║██║╚██╗██║██║██║         ╚════██║██╔══██║██║   ██║██╔═══╝ 
+███████╗███████╗███████╗╚██████╗   ██║   ██║  ██║╚██████╔╝██║ ╚████║██║╚██████╗    ███████║██║  ██║╚██████╔╝██║     
+╚══════╝╚══════╝╚══════╝ ╚═════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝ ╚═════╝    ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     
+                                                                                                                    ")
         {
-            string query = "SELECT admin_name FROM admins WHERE admin_id = @AdminID";
-            MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@AdminID", AdminID); // Use AdminID property
-            connection.Open();
-            MySqlDataReader reader = command.ExecuteReader();
-            if (reader.Read())
-            {
-                adminName = reader["admin_name"].ToString();
-            }
-        }
-
-        var rightTopLabel = new Label($"Welcome, {adminName}")
-        {
-            X = 1,
-            Y = 1
+            X = Pos.Center(),
+            Y = Pos.Center()
         };
         rightTopFrame.Add(rightTopLabel);
 
-        // Fetch and display total number of orders
-        try
+         // Connect to the database to get the total number of orders
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
-            using (MySqlConnection connection = new MySqlConnection(connectionString))
+        connection.Open();
+        string query = @"SELECT COUNT(*) AS TotalOrders, 
+                                SUM(order_total_price) AS TotalRevenue, 
+                                SUM(order_quantity) AS TotalQuantity 
+                        FROM shop.orders";
+        MySqlCommand command = new MySqlCommand(query, connection);
+        
+            using (MySqlDataReader reader = command.ExecuteReader())
             {
-                connection.Open();
-                string query = "SELECT COUNT(*) FROM orders";
-                MySqlCommand command = new MySqlCommand(query, connection);
-                object result = command.ExecuteScalar();
-                int count = Convert.ToInt32(result);
-                var countOrder = new Label($"Total orders: {count}")
+                if (reader.Read())
                 {
-                    X = 1,
-                    Y = 1
-                };
-                rightBottomFrame.Add(countOrder);
+                    int totalOrders = reader.GetInt32("TotalOrders");
+                    decimal totalRevenue = reader.GetDecimal("TotalRevenue");
+                    int totalQuantity = reader.GetInt32("TotalQuantity");
+
+                    // Add the total order count label to the bottom right frame
+                    var countOrder = new Label($"Total orders: {totalOrders}")
+                    {
+                        X = Pos.Center(),
+                        Y = Pos.Center() - 2 // Adjust position as needed
+                    };
+                    rightBottomFrame.Add(countOrder);
+
+                    // Add the total revenue label to the bottom right frame
+                    var totalRevenueLabel = new Label($"Total revenue: {totalRevenue:C}")
+                    {
+                        X = Pos.Center(),
+                        Y = Pos.Center() // Adjust position as needed
+                    };
+                    rightBottomFrame.Add(totalRevenueLabel);
+
+                    // Add the total quantity label to the bottom right frame
+                    var totalQuantityLabel = new Label($"Total sold: {totalQuantity}")
+                    {
+                        X = Pos.Center(),
+                        Y = Pos.Center() + 2 // Adjust position as needed
+                    };
+                    rightBottomFrame.Add(totalQuantityLabel);
+                }
             }
         }
-        catch (Exception ex)
-        {
-            MessageBox.ErrorQuery("Error", ex.Message, "OK");
-        }
-
-        Application.Run();
     }
     public void AddStaff()
     {
@@ -645,28 +669,28 @@ public class Admin
         {
             X = 0,
             Y = 0,
-            Width = Dim.Fill() - 4,
-            Height = Dim.Fill() - 4
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
         };
         top.Add(deleteAdminWindow);
 
         var adminIDLabel = new Label("Admin ID:")
         {
-            X = 1,
-            Y = 1
+            X = Pos.Center() - 12,
+            Y = Pos.Center() - 5
         };
 
         var adminIDField = new TextField("")
         {
-            X = Pos.Right(adminIDLabel) + 1,
-            Y = 1,
-            Width = Dim.Fill() - 4
+            X = Pos.Center() + 1,
+            Y = Pos.Center() - 5,
+            Width = 20
         };
 
         var deleteButton = new Button("Delete")
         {
             X = Pos.Center(),
-            Y = Pos.Bottom(adminIDField) + 1
+            Y = Pos.Center() - 3
         };
 
         deleteButton.Clicked += () =>
@@ -723,7 +747,6 @@ public class Admin
 
         deleteAdminWindow.Add(adminIDLabel, adminIDField, deleteButton, closeButton);
     }
-
     public void DisplayStaff()
     {
         List<Admin> adminList = LoadAdmin(connectionString); // Load admin list from database

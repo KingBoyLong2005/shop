@@ -314,8 +314,8 @@ public class Customers
         {
             X = 0,
             Y = 0,
-            Width = Dim.Fill() - 4,
-            Height = Dim.Fill() - 4
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
         };
         top.Add(editCustomerWin);
 
@@ -553,33 +553,33 @@ public class Customers
         {
             X = 0,
             Y = 0,
-            Width = Dim.Fill() - 4,
-            Height = Dim.Fill() - 4
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
         };
 
         // Add the delete customer window to the top-level window.
         top.Add(deleteCustomerWin);
-
+        
         // Create a label for customer ID input.
         var customerIDLabel = new Label("Customer ID:")
         {
-            X = 1,
-            Y = 1
+            X = Pos.Center(),
+            Y = 2
         };
 
         // Create a text field for entering the customer ID.
         var customerIDField = new TextField("")
         {
-            X = Pos.Right(customerIDLabel) + 1,
-            Y = 1,
-            Width = 100
+            X = Pos.Center(),
+            Y = Pos.Bottom(customerIDLabel) + 1,
+            Width = 40
         };
 
         // Create a button labeled "Delete" for deleting the customer.
         var deleteButton = new Button("Delete")
         {
             X = Pos.Center(),
-            Y = Pos.Bottom(customerIDField) + 1
+            Y = Pos.Bottom(customerIDField) + 2
         };
 
         // Define the action to be taken when the delete button is clicked.
@@ -657,7 +657,7 @@ public class Customers
             admin.AdminMenu();
         };
 
-        // Add all the created UI elements to the delete customer window.
+        // Add all the created UI elements to the frame.
         deleteCustomerWin.Add(customerIDLabel, customerIDField, deleteButton, closeButton);
     }
 
@@ -1033,17 +1033,31 @@ public class Customers
         userMenu.Add(leftFrame);
 
         // Right top frame for displaying welcome message
-        var rightTopFrame = new FrameView("Welcome")
+        var rightTopFrame = new FrameView("Welcome to")
         {
+            
             X = Pos.Percent(30),
             Y = 0,
             Width = Dim.Fill(),
             Height = Dim.Percent(50)
         };
+        var sign = new Label(@"███████╗██╗     ███████╗ ██████╗████████╗██████╗  ██████╗ ███╗   ██╗██╗ ██████╗    ███████╗██╗  ██╗ ██████╗ ██████╗ 
+██╔════╝██║     ██╔════╝██╔════╝╚══██╔══╝██╔══██╗██╔═══██╗████╗  ██║██║██╔════╝    ██╔════╝██║  ██║██╔═══██╗██╔══██╗
+█████╗  ██║     █████╗  ██║        ██║   ██████╔╝██║   ██║██╔██╗ ██║██║██║         ███████╗███████║██║   ██║██████╔╝
+██╔══╝  ██║     ██╔══╝  ██║        ██║   ██╔══██╗██║   ██║██║╚██╗██║██║██║         ╚════██║██╔══██║██║   ██║██╔═══╝ 
+███████╗███████╗███████╗╚██████╗   ██║   ██║  ██║╚██████╔╝██║ ╚████║██║╚██████╗    ███████║██║  ██║╚██████╔╝██║     
+╚══════╝╚══════╝╚══════╝ ╚═════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝ ╚═════╝    ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     
+                                                                                                                    "
+        )
+        {
+            X = Pos.Center(),
+            Y = Pos.Center(),
+        };
+        rightTopFrame.Add(sign);
         userMenu.Add(rightTopFrame);
 
         // Right bottom frame for displaying top products by order count
-        var rightBottomFrame = new FrameView("Top Products in month")
+        var rightBottomFrame = new FrameView("HELLO")
         {
             X = Pos.Percent(30),
             Y = Pos.Percent(50),
@@ -1125,12 +1139,16 @@ public class Customers
 
         // Add buttons to the left frame
         leftFrame.Add(btnDisplayProducts, btnViewCart, btnViewMyOrders, btnFindProduct, btnLogout);
-
-        // Retrieve customer's name from the database
+        
         string customerName = "";
+        string customerCount = "";
+        string customerTotalSpent = "";
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
-            string query = "SELECT customer_name FROM customers WHERE customer_id = @CustomerID";
+            string query = @"SELECT customer_name,
+                                    customer_count,
+                                    customer_totalspent
+                                    FROM customers WHERE customer_id = @CustomerID";
             MySqlCommand command = new MySqlCommand(query, connection);
             command.Parameters.AddWithValue("@CustomerID", currentCustomerID);
             connection.Open();
@@ -1138,73 +1156,24 @@ public class Customers
             if (reader.Read())
             {
                 customerName = reader["customer_name"].ToString();
+                customerCount = reader["customer_count"].ToString();
+                customerTotalSpent = reader["customer_totalspent"].ToString();
             }
         }
-
-        // Display customer's name in the right top frame
-        var rightTopLabel = new Label(customerName)
+        var nameLabel = new Label()
         {
-            X = 1,
-            Y = 1
+            Text = string.Format(
+                "Name: {0}\n" +
+                "Number of times ordered: {1}\n" +
+                "Total amount spent: {2:C}",
+                customerName,
+                customerCount,
+                customerTotalSpent),
+            X = Pos.Center(),
+            Y = Pos.Center(),
         };
-        rightTopFrame.Add(rightTopLabel);
 
-        // Retrieve top products by order count from the database
-        using (MySqlConnection connection = new MySqlConnection(connectionString))
-        {
-            string query = @"SELECT 
-                                p.product_name, 
-                                COUNT(o.order_product_id) AS product_count
-                            FROM 
-                                orders o
-                            JOIN 
-                                products p ON o.order_product_id = p.product_id
-                            GROUP BY 
-                                p.product_name
-                            ORDER BY 
-                                product_count DESC
-                            LIMIT 3";
-            MySqlCommand command = new MySqlCommand(query, connection);
-            connection.Open();
-            MySqlDataReader reader = command.ExecuteReader();
 
-            int maxProductCount = 0;
-            List<(string ProductName, int ProductCount)> products = new List<(string, int)>();
-
-            // Retrieve and process each product's order count
-            while (reader.Read())
-            {
-                string productName = reader["product_name"].ToString();
-                int productCount = Convert.ToInt32(reader["product_count"]);
-                products.Add((productName, productCount));
-                if (productCount > maxProductCount)
-                {
-                    maxProductCount = productCount;
-                }
-            }
-
-            // Display products and their order counts using labels
-            int row = 0;
-            int yPosition = 1;
-            foreach (var product in products)
-            {
-                string productName = product.ProductName;
-                int productCount = product.ProductCount;
-
-                // Calculate bar length based on order count for visual representation
-                int barLength = (int)((productCount / (double)maxProductCount) * 30);
-                string bar = new string('=', barLength);
-
-                // Create label for each product with formatted text
-                var productLabel = new Label($"{productName.PadRight(15)} | {bar} {productCount} orders")
-                {
-                    X = 1,
-                    Y = yPosition
-                };
-                rightBottomFrame.Add(productLabel);
-                yPosition += 2; // Adjust Y position for the next label
-                row++;
-            }
-        }
+        rightBottomFrame.Add(nameLabel);        
     }
 }

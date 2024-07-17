@@ -16,6 +16,7 @@ public class Products
     public int ProductStockQuantity { get; set; }
     public decimal ProductPrice { get; set; }
     public int ProductCategoryID { get; set; }
+    public string ProductCategoryName { get; set; }
     public string ProductBrand { get; set; }
 
     // Static field holding database connection string
@@ -38,7 +39,7 @@ public class Products
     {
         using(MySqlConnection connectionproduct = new MySqlConnection(connectionString))
         {
-            string queryproduct = @"SELECT product_id FROM products";
+            string queryproduct = @"SELECT * FROM products";
             MySqlCommand commandproduct = new MySqlCommand(queryproduct, connectionproduct);
             connectionproduct.Open();
             MySqlDataReader read = commandproduct.ExecuteReader();
@@ -48,7 +49,7 @@ public class Products
                 pd.ProductName = read.GetString("product_name");
                 pd.ProductPrice = read.GetDecimal("product_price");
                 pd.ProductCategoryID = read.GetInt32("product_category_id");
-                pd.ProductBrand = read.GetString("product_band");
+                pd.ProductBrand = read.GetString("product_brand");
                 ListProducts.Add(pd);
             }
         }
@@ -306,12 +307,12 @@ public class Products
         var productBrandLabel = new Label("Brand:")
         {
             X = 2,
-            Y = 12
+            Y = 10
         };
         var productBrandField = new TextField("")
         {
             X = 18,
-            Y = 12,
+            Y = 10,
             Width = 100
         };
 
@@ -397,7 +398,7 @@ public class Products
         top.Add(editProductWin);
 
         // Label and field for finding a product by name
-        var findProductLabel = new Label("Find Product Name:")
+        var findProductLabel = new Label("Find Product ID:")
         {
             X = 2,
             Y = 2
@@ -421,7 +422,7 @@ public class Products
         var productListView = new ListView(new List<string>())
         {
             X = 2,
-            Y = Pos.Bottom(findProductLabel) + 2,
+            Y = Pos.Bottom(findProductLabel) + 1,
             Width = 100,
             Height = 5,
             Visible = false
@@ -504,6 +505,7 @@ public class Products
             try
             {
                 // Update the product object with edited values
+                pd.ProductID = int.Parse(findProductField.Text.ToString());
                 pd.ProductName = editProductNameField.Text.ToString();
                 pd.ProductStockQuantity = int.Parse(editProductStockQuantityField.Text.ToString());
                 pd.ProductCategoryID = int.Parse(editProductCategoryIDField.Text.ToString());
@@ -559,20 +561,19 @@ public class Products
         {
             try
             {
-                string productName = findProductField.Text.ToString();
+                int productID = int.Parse(findProductField.Text.ToString());
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
                     string query = @"SELECT 
-                                        product_id,
                                         product_name, 
                                         product_stock_quantity, 
                                         product_price, 
                                         product_category_id, 
                                         product_brand
                                     FROM products
-                                    WHERE product_name LIKE @ProductName";
+                                    WHERE product_id LIKE @ProductID";
                     MySqlCommand command = new MySqlCommand(query, connection);
-                    command.Parameters.AddWithValue("@ProductName", "%" + productName + "%");
+                    command.Parameters.AddWithValue("@ProductID", productID);
                     connection.Open();
                     MySqlDataReader reader = command.ExecuteReader();
 
@@ -583,7 +584,6 @@ public class Products
                     {
                         Products product = new Products
                         {
-                            ProductID = reader.GetInt32("product_id"),
                             ProductName = reader.GetString("product_name"),
                             ProductStockQuantity = reader.GetInt32("product_stock_quantity"),
                             ProductPrice = reader.GetDecimal("product_price"),
@@ -668,7 +668,7 @@ public class Products
     }
     public void DeleteProduct()
     {
-        ListProducts =LoadProducts(connectionString);
+        ListProducts = LoadProducts(connectionString);
         var top = Application.Top;
         var deleteProductWin = new Window("Delete Product")
         {
@@ -679,78 +679,75 @@ public class Products
         };
         top.Add(deleteProductWin);
 
-        // Label and field for entering the product ID
+        // Label và TextField để nhập Product ID
         var productIDLabel = new Label("Product ID:")
         {
-            X = 2,
+            X = Pos.Center(),
             Y = 2
         };
         var productIDField = new TextField("")
         {
-            X = Pos.Right(productIDLabel) + 1,
-            Y = 2,
-            Width = 100
+            X = Pos.Center(),
+            Y = Pos.Bottom(productIDLabel) + 1,
+            Width = 40
         };
 
-        // Button to delete the product
+        // Nút để xóa sản phẩm
         var deleteButton = new Button("Delete")
         {
             X = Pos.Center(),
-            Y = 4
+            Y = Pos.Bottom(productIDField) + 2
         };
         deleteButton.Clicked += () =>
         {
             try
-            {   
-                
-                // Validate and parse the product ID from the text field
-                    if (int.TryParse(productIDField.Text.ToString(), out int productID))
+            {
+                // Validate và parse Product ID từ TextField
+                if (int.TryParse(productIDField.Text.ToString(), out int productID))
+                {
+                    // Tìm sản phẩm trong danh sách dựa trên ID
+                    Products pd = ListProducts.Find(s => s.ProductID == productID);
+
+                    if (pd != null)
                     {
-                        
-                        // Find the product in the list based on the ID
-                        Products pd = ListProducts.Find(s => s.ProductID == productID);
-
-                        if (pd != null)
+                        // Xóa sản phẩm khỏi cơ sở dữ liệu
+                        using (MySqlConnection connection = new MySqlConnection(connectionString))
                         {
-                            // Delete the product from the database
-                            using (MySqlConnection connection = new MySqlConnection(connectionString))
-                            {
-                                connection.Open();
-                                string query = "DELETE FROM products WHERE product_id = @ProductID";
-                                MySqlCommand command = new MySqlCommand(query, connection);
-                                command.Parameters.AddWithValue("@ProductID", productID);
-                                command.ExecuteNonQuery();
-                            }
-
-                            // Remove the product from the application list
-                            ListProducts.Remove(pd);
-
-                            // Display success message and return to admin menu
-                            MessageBox.Query("Success", "Successfully deleted product!", "OK");
-                            top.Remove(deleteProductWin);
-                            pd.DeleteProduct();
+                            connection.Open();
+                            string query = "DELETE FROM products WHERE product_id = @ProductID";
+                            MySqlCommand command = new MySqlCommand(query, connection);
+                            command.Parameters.AddWithValue("@ProductID", productID);
+                            command.ExecuteNonQuery();
                         }
-                        else
-                        {
-                            // Display error if product not found
-                            MessageBox.ErrorQuery("Error", "Product not found!", "OK");
-                        }
+
+                        // Xóa sản phẩm khỏi danh sách ứng dụng
+                        ListProducts.Remove(pd);
+
+                        // Hiển thị thông báo thành công và quay lại menu admin
+                        MessageBox.Query("Success", "Successfully deleted product!", "OK");
+                        top.Remove(deleteProductWin);
+                        pd.DeleteProduct();
                     }
                     else
                     {
-                        // Display error for invalid product ID format
-                        MessageBox.ErrorQuery("Error", "Invalid Product ID!", "OK");
+                        // Hiển thị lỗi nếu không tìm thấy sản phẩm
+                        MessageBox.ErrorQuery("Error", "Product not found!", "OK");
                     }
-                
+                }
+                else
+                {
+                    // Hiển thị lỗi cho định dạng Product ID không hợp lệ
+                    MessageBox.ErrorQuery("Error", "Invalid Product ID!", "OK");
+                }
             }
             catch (Exception ex)
             {
-                // Display error for any exception during deletion process
+                // Hiển thị lỗi cho bất kỳ ngoại lệ nào trong quá trình xóa
                 MessageBox.ErrorQuery("Error", ex.Message, "OK");
             }
         };
 
-        // Button to close the window
+        // Nút để đóng cửa sổ
         var closeButton = new Button("Close")
         {
             X = Pos.Center(),
@@ -758,16 +755,16 @@ public class Products
         };
         closeButton.Clicked += () =>
         {
-            // Prompt confirmation before closing the window
+            // Xác nhận trước khi đóng cửa sổ
             bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to close?", "Yes", "No") == 0;
             if (confirmed)
             {
                 top.Remove(deleteProductWin);
-                admin.AdminMenu(); // Return to admin menu
+                admin.AdminMenu(); // Quay lại menu admin
             }
         };
 
-        // Add all components to the window
+        // Thêm tất cả các thành phần vào FrameView
         deleteProductWin.Add(productIDLabel, productIDField, deleteButton, closeButton);
     }
 
@@ -806,7 +803,7 @@ public class Products
         // Array of column headers for product information
         var columnDisplayListProduct = new string[]
         {
-            "Product's Name", "Stock Quantity", "Price", "Category ID", "Brand", "Image"
+            "Product's Name", "Stock Quantity", "Price", "Category", "Brand"
         };
 
         // Add column headers to the window
@@ -855,7 +852,7 @@ public class Products
                             ProductName = reader["product_name"].ToString(),
                             ProductStockQuantity = int.Parse(reader["product_stock_quantity"].ToString()),
                             ProductPrice = decimal.Parse(reader["product_price"].ToString()),
-                            ProductCategoryID = int.Parse(reader["category_name"].ToString()),
+                            ProductCategoryName = reader["category_name"].ToString(),
                             ProductBrand = reader["product_brand"].ToString(),
                         };
                     }
@@ -884,21 +881,21 @@ public class Products
                 });
                 findProductWin.Add(new Label(product.ProductPrice.ToString("C"))
                 {
-                    X = 60,
+                    X = 40,
                     Y = 7,
                     Width = 20,
                     Height = 1
                 });
-                findProductWin.Add(new Label(product.ProductCategoryID.ToString())
+                findProductWin.Add(new Label(product.ProductCategoryName.ToString())
                 {
-                    X = 80,
+                    X = 60,
                     Y = 7,
                     Width = 20,
                     Height = 1
                 });
                 findProductWin.Add(new Label(product.ProductBrand)
                 {
-                    X = 100,
+                    X = 80,
                     Y = 7,
                     Width = 20,
                     Height = 1

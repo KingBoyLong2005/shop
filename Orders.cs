@@ -255,6 +255,7 @@ public class Orders
     public void OrderProduct(int productID, string productName, decimal productPrice, string window)
     {
         var top = Application.Top; // Get the top-level application window
+        Application.Init();
         var orderWindow = new Window("Order Product")
         {
             X = 0,
@@ -267,21 +268,21 @@ public class Orders
         // Label to display the selected product's name
         var lblProductName = new Label($"Product: {productName}")
         {
-            X = 1,
-            Y = 1
+            X = Pos.Center(),
+            Y = Pos.Percent(10)
         };
         orderWindow.Add(lblProductName); // Add the product name label to the order window
 
         // Label and text field for entering the quantity to order
         var lblQuantity = new Label("Quantity:")
         {
-            X = 1,
-            Y = 3
+            X = Pos.Center() - 15,
+            Y = Pos.Percent(25)
         };
         var txtQuantity = new TextField("")
         {
-            X = Pos.Right(lblQuantity) + 1,
-            Y = 3,
+            X = Pos.Center() + 1,
+            Y = Pos.Percent(25),
             Width = 20
         };
         orderWindow.Add(lblQuantity, txtQuantity); // Add quantity label and text field to the order window
@@ -289,13 +290,13 @@ public class Orders
         // Label and text field for entering the delivery address
         var lblDeliveryAddress = new Label("Delivery Address:")
         {
-            X = 1,
-            Y = 5
+            X = Pos.Center() - 15,
+            Y = Pos.Percent(40)
         };
         var txtDeliveryAddress = new TextField("")
         {
-            X = Pos.Right(lblDeliveryAddress) + 1,
-            Y = 5,
+            X = Pos.Center() + 1,
+            Y = Pos.Percent(40),
             Width = 40
         };
         orderWindow.Add(lblDeliveryAddress, txtDeliveryAddress); // Add delivery address label and text field to the order window
@@ -303,13 +304,13 @@ public class Orders
         // Label and text field for selecting the payment method
         var lblPaymentMethod = new Label("Payment Method:")
         {
-            X = 1,
-            Y = 7
+            X = Pos.Center() - 15,
+            Y = Pos.Percent(55)
         };
         var txtPaymentMethod = new TextField("")
         {
-            X = Pos.Right(lblPaymentMethod) + 1,
-            Y = 7,
+            X = Pos.Center() + 1,
+            Y = Pos.Percent(55),
             Width = 20
         };
         orderWindow.Add(lblPaymentMethod, txtPaymentMethod); // Add payment method label and text field to the order window
@@ -317,8 +318,8 @@ public class Orders
         // Button to submit the order
         var btnSubmitOrder = new Button("Submit Order")
         {
-            X = 1,
-            Y = 10
+            X = Pos.Center() - 10,
+            Y = Pos.Percent(70)
         };
         btnSubmitOrder.Clicked += () =>
         {
@@ -331,7 +332,7 @@ public class Orders
                     string query = @"SELECT 
                                         p.product_stock_quantity
                                     FROM products p
-                                   WHERE product_id = @productid";
+                                WHERE product_id = @productid";
                     MySqlCommand command = new MySqlCommand(query, connection);
                     command.Parameters.AddWithValue("@productid", productID);
                     connection.Open();
@@ -364,7 +365,7 @@ public class Orders
                         MessageBox.ErrorQuery("Error", "Product not enough in stock","OK");
                     }
                 }
-    
+
             }
             else
             {
@@ -376,7 +377,7 @@ public class Orders
         var btnCancel = new Button("Cancel")
         {
             X = Pos.Right(btnSubmitOrder) + 2,
-            Y = 10
+            Y = Pos.Percent(70)
         };
         btnCancel.Clicked += () =>
         {
@@ -400,6 +401,7 @@ public class Orders
 
         orderWindow.Add(btnSubmitOrder, btnCancel); // Add submit and cancel buttons to the order window
     }
+
 
     static void PlaceOrderDirectly(int productID, int quantity, string deliveryAddress, string paymentMethod)
     {
@@ -588,19 +590,19 @@ public class Orders
 
         var lblProductName = new Label($"Product: {productName}")
         {
-            X = 1,
+            X = Pos.Center(),
             Y = 1
         };
         orderWindow.Add(lblProductName);
 
         var lblCustomerID = new Label("Customer ID:")
         {
-            X = 1,
+            X = Pos.Center() - 10,
             Y = 5
         };
         var txtCustomerID = new TextField("")
         {
-            X = Pos.Right(lblCustomerID) + 1,
+            X = Pos.Center() + 5,
             Y = 5,
             Width = 20
         };
@@ -608,12 +610,12 @@ public class Orders
 
         var lblQuantity = new Label("Quantity:")
         {
-            X = 1,
+            X = Pos.Center() - 10,
             Y = 7
         };
         var txtQuantity = new TextField("")
         {
-            X = Pos.Right(lblQuantity) + 1,
+            X = Pos.Center() + 5,
             Y = 7,
             Width = 20
         };
@@ -621,12 +623,12 @@ public class Orders
 
         var lblDeliveryAddress = new Label("Delivery Address:")
         {
-            X = 1,
+            X = Pos.Center() - 14,
             Y = 9
         };
         var txtDeliveryAddress = new TextField("")
         {
-            X = Pos.Right(lblDeliveryAddress) + 1,
+            X = Pos.Center() + 7,
             Y = 9,
             Width = 40
         };
@@ -634,12 +636,12 @@ public class Orders
 
         var lblPaymentMethod = new Label("Payment Method:")
         {
-            X = 1,
+            X = Pos.Center() - 14,
             Y = 11
         };
         var txtPaymentMethod = new TextField("")
         {
-            X = Pos.Right(lblPaymentMethod) + 1,
+            X = Pos.Center() + 7,
             Y = 11,
             Width = 20
         };
@@ -647,7 +649,7 @@ public class Orders
 
         var ConfirmCustomer = new Button("Confirm")
         {
-            X = Pos.Right(txtCustomerID) + 1,
+            X = Pos.Center() + 15,
             Y = 5
         };
         ConfirmCustomer.Clicked += () =>
@@ -687,7 +689,7 @@ public class Orders
 
         var btnSubmitOrder = new Button("Submit Order")
         {
-            X = 1,
+            X = Pos.Center() - 10,
             Y = 14
         };
         btnSubmitOrder.Clicked += () =>
@@ -699,9 +701,9 @@ public class Orders
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
                     string query = @"SELECT 
-                                        p.product_stock_quantity, 
+                                        p.product_stock_quantity 
                                     FROM products p
-                                   WHERE product_id = @productid";
+                                WHERE product_id = @productid";
                     MySqlCommand command = new MySqlCommand(query, connection);
                     command.Parameters.AddWithValue("@productid", productID);
                     connection.Open();
@@ -723,7 +725,6 @@ public class Orders
                         MessageBox.ErrorQuery("Error", "Product not enough in stock","OK");
                     }
                 }
-    
             }
             else
             {

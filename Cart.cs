@@ -94,6 +94,30 @@ public class Cart
         };
         top.Add(cartWindow);
 
+        // FrameView để căn giữa toàn bộ bảng
+        var frame = new FrameView("Your Cart")
+        {
+            X = Pos.Center(),
+            Y = Pos.Center(),
+            Width = Dim.Percent(80),
+            Height = Dim.Percent(80)
+        };
+        cartWindow.Add(frame);
+
+        // Tiêu đề cột
+        var lblNameHeader = new Label("Name")
+        {
+            X = 1,
+            Y = 0
+        };
+        var lblPriceHeader = new Label("Price")
+        {
+            X = Pos.Right(lblNameHeader) + 20,
+            Y = 0
+        };
+
+        frame.Add(lblNameHeader, lblPriceHeader);
+
         int row = 1;
 
         // Connect to the database to retrieve the customer's cart information
@@ -118,14 +142,19 @@ public class Cart
                 decimal productPrice = reader.GetDecimal("product_price");
 
                 // Display product details and buttons for interaction
-                var productLabel = new Label($"{productName} - ${productPrice} ")
+                var productLabel = new Label(productName)
                 {
                     X = 1,
                     Y = row
                 };
+                var priceLabel = new Label($"{productPrice:C}")
+                {
+                    X = Pos.Right(lblNameHeader) + 20,
+                    Y = row
+                };
                 var removeButton = new Button("Remove")
                 {
-                    X = Pos.Right(productLabel) + 1,
+                    X = Pos.Right(priceLabel) + 10,
                     Y = row
                 };
                 var orderButton = new Button("Order")
@@ -148,8 +177,8 @@ public class Cart
                     order.OrderProduct(productID, productName, productPrice, "cart");
                 };
 
-                // Add labels and buttons to the cart window
-                cartWindow.Add(productLabel, removeButton, orderButton);
+                // Add labels and buttons to the frame
+                frame.Add(productLabel, priceLabel, removeButton, orderButton);
                 row++;
             }
         }
@@ -157,8 +186,8 @@ public class Cart
         // Add a back button to return to the user menu
         var btnBack = new Button("Back")
         {
-            X = 2,
-            Y = row + 1
+            X = Pos.Center(),
+            Y = row + 2
         };
         btnBack.Clicked += () =>
         {
@@ -166,9 +195,8 @@ public class Cart
             customer.UserMenu();
         };
 
-        cartWindow.Add(btnBack);
+        frame.Add(btnBack);
     }
-
     // Remove an item from the database cart and update the UI
     public void RemoveItemFromCart(int productID)
     {

@@ -49,7 +49,7 @@ public class SuperAdmin
         SuperAdminMenu.Add(leftFrame);
 
         // Create the top right frame for the welcome message
-        var rightTopFrame = new FrameView("Welcome")
+        var rightTopFrame = new FrameView()
         {
             X = Pos.Percent(30), // Start from 30% of the window width
             Y = 0,
@@ -59,7 +59,7 @@ public class SuperAdmin
         SuperAdminMenu.Add(rightTopFrame);
 
         // Create the bottom right frame for the number of products sold
-        var rightBottomFrame = new FrameView("Number of products sold")
+        var rightBottomFrame = new FrameView("Statistical")
         {
             X = Pos.Percent(30), // Start from 30% of the window width
             Y = Pos.Percent(50), // Start from the middle of the height
@@ -234,7 +234,13 @@ public class SuperAdmin
         leftFrame.Add(btnAddStaff, btnFindStaff, btnEditStaff, btnDeleteStaff, btnDisplayStaff, btnAddCategory, btnDeleteCategory, btnbDisplayCategory, btnLogout);
 
         // Add a welcome label to the top right frame
-        var rightTopLabel = new Label("Manager")
+        var rightTopLabel = new Label(@"███████╗██╗     ███████╗ ██████╗████████╗██████╗  ██████╗ ███╗   ██╗██╗ ██████╗    ███████╗██╗  ██╗ ██████╗ ██████╗ 
+██╔════╝██║     ██╔════╝██╔════╝╚══██╔══╝██╔══██╗██╔═══██╗████╗  ██║██║██╔════╝    ██╔════╝██║  ██║██╔═══██╗██╔══██╗
+█████╗  ██║     █████╗  ██║        ██║   ██████╔╝██║   ██║██╔██╗ ██║██║██║         ███████╗███████║██║   ██║██████╔╝
+██╔══╝  ██║     ██╔══╝  ██║        ██║   ██╔══██╗██║   ██║██║╚██╗██║██║██║         ╚════██║██╔══██║██║   ██║██╔═══╝ 
+███████╗███████╗███████╗╚██████╗   ██║   ██║  ██║╚██████╔╝██║ ╚████║██║╚██████╗    ███████║██║  ██║╚██████╔╝██║     
+╚══════╝╚══════╝╚══════╝ ╚═════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝ ╚═════╝    ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     
+                                                                                                                    ")
         {
             X = Pos.Center(),
             Y = Pos.Center()
@@ -244,21 +250,46 @@ public class SuperAdmin
         // Connect to the database to get the total number of orders
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
-            connection.Open();
-            string query = "SELECT COUNT(*) FROM orders";
-            MySqlCommand command = new MySqlCommand(query, connection);
-            object result = command.ExecuteScalar(); // Execute the query and get the result
-            int count = Convert.ToInt32(result);
-
-            // Add the total order count label to the bottom right frame
-            var countOrder = new Label($"Total orders: {count}")
+        connection.Open();
+        string query = @"SELECT COUNT(*) AS TotalOrders, 
+                                SUM(order_total_price) AS TotalRevenue, 
+                                SUM(order_quantity) AS TotalQuantity 
+                        FROM shop.orders";
+        MySqlCommand command = new MySqlCommand(query, connection);
+        
+            using (MySqlDataReader reader = command.ExecuteReader())
             {
-                X = Pos.Center(),
-                Y = Pos.Center()
-            };
-            rightBottomFrame.Add(countOrder);
+                if (reader.Read())
+                {
+                    int totalOrders = reader.GetInt32("TotalOrders");
+                    decimal totalRevenue = reader.GetDecimal("TotalRevenue");
+                    int totalQuantity = reader.GetInt32("TotalQuantity");
+
+                    // Add the total order count label to the bottom right frame
+                    var countOrder = new Label($"Total orders: {totalOrders}")
+                    {
+                        X = Pos.Center(),
+                        Y = Pos.Center() - 2 // Adjust position as needed
+                    };
+                    rightBottomFrame.Add(countOrder);
+
+                    // Add the total revenue label to the bottom right frame
+                    var totalRevenueLabel = new Label($"Total revenue: {totalRevenue:C}")
+                    {
+                        X = Pos.Center(),
+                        Y = Pos.Center() // Adjust position as needed
+                    };
+                    rightBottomFrame.Add(totalRevenueLabel);
+
+                    // Add the total quantity label to the bottom right frame
+                    var totalQuantityLabel = new Label($"Total sold: {totalQuantity}")
+                    {
+                        X = Pos.Center(),
+                        Y = Pos.Center() + 2 // Adjust position as needed
+                    };
+                    rightBottomFrame.Add(totalQuantityLabel);
+                }
+            }
         }
     }
-    
-
 }
