@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;                      //Import namesapce to use function
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;  
-using Spectre.Console;
 using Terminal.Gui;
 
 public class Customers
@@ -49,7 +48,7 @@ public class Customers
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {   
             // SQL query to select all customers from the database
-            string query = "SELECT * FROM customers"; 
+            string query = "SELECT * FROM customers WHERE active = TRUE"; 
             MySqlCommand command = new MySqlCommand(query, connection);
 
             // Open the database connection
@@ -83,233 +82,230 @@ public class Customers
     }
 
     public void AddCustomer()
-{
-    // Initialize user and customer objects
-    Users us = new Users();
-    Customers cus = new Customers();
-
-    // Create the main window for the registration form
-    var top = Application.Top;
-    var registerWin = new Window()
     {
-        Title = $"Register for customer",
-        X = 0,
-        Y = 0,
-        Width = Dim.Fill(),
-        Height = Dim.Fill()
-    };
-    top.Add(registerWin);
+        // Initialize user and customer objects
+        Users us = new Users();
+        Customers cus = new Customers();
 
-    // Define and position the input fields for user and customer details
-        var usernameLabel = new Label("Username:")
-        {
-            X = 2,
-            Y = 2
-        };
-        var usernameField = new TextField("")
-        {
-            X = 31,
-            Y = 2,
-            Width = 100
-        };
-
-        var passwordLabel = new Label("Password:")
-        {
-            X = 2,
-            Y = 4
-        };
-        var passwordField = new TextField("")
-        {
-            Secret = true,
-            X = 31,
-            Y = 4,
-            Width = 100
-        };
-        var CustomerNameLabel = new Label("Name: ")
-        {
-            X = 2,
-            Y = 6
-        };
-        var CustomerNameField = new TextField("")
-        {
-            X = 31,
-            Y  = 6,
-            Width = 100
-        };
-        var CustomerPhoneNumberLabel = new Label("Phone number: ")
-        {
-            X = 2,
-            Y = 8
-        };
-        var CustomerPhoneNumberField = new TextField("")
-        {
-            X = 31,
-            Y  = 8,
-            Width = 100
-        };
-        var CustomerAddressLabel = new Label("Address: ")
-        {
-            X = 2,
-            Y = 10
-        };
-        var CustomerAddressField = new TextField("")
-        {
-            X = 31,
-            Y  = 10,
-            Width = 100
-        };
-        var CustomerEmailLabel = new Label("Email: ")
-        {
-            X = 2,
-            Y = 12
-        };
-        var CustomerEmailField = new TextField("")
-        {
-            X = 31,
-            Y  = 12,
-            Width = 100
-        };
-        var CustomerGenderLabel = new Label("Gender: ")
-        {
-            X = 2,
-            Y = 14
-        };
-        var CustomerGenderField = new TextField("")
-        {
-            X = 31,
-            Y  = 14,
-            Width = 100
-        };
-        var CustomerDateOfBirthLabel = new Label("Date of birth (YYYY-MM-DD): ")
-        {
-            X = 2,
-            Y = 16
-        };
-        var CustomerDateOfBirthField = new TextField("")
-        {
-            X = 31,
-            Y  = 16,
-            Width = 100
-        };
-
-        var registerButton = new Button("Register")
-        {
-            X = Pos.Center(),
-            Y = Pos.Bottom(CustomerDateOfBirthField),
-        };
-
-        // Define the click event for the "Register" button
-        registerButton.Clicked += () =>
-        {
-            // Assign input values to user and customer objects
-            us.Username = usernameField.Text.ToString();
-            us.PasswordHash = passwordField.Text.ToString();
-            cus.CustomerName = CustomerNameField.Text.ToString();
-            cus.CustomerPhone = CustomerPhoneNumberField.Text.ToString();
-            cus.CustomerAddress = CustomerAddressField.Text.ToString();
-            cus.CustomerEmail = CustomerEmailField.Text.ToString();
-            cus.CustomerGender = CustomerGenderField.Text.ToString();
-            
-            // Validate and assign the date of birth
-            DateTime customerDateOfBirth;
-            if (!DateTime.TryParse(CustomerDateOfBirthField.Text.ToString(), out customerDateOfBirth))
-            {
-                MessageBox.ErrorQuery("Error", "Invalid date format. Please use YYYY-MM-DD.", "OK");
-                return;
-            }
-            cus.CustomerDateOfBirth = customerDateOfBirth;
-
-            // Insert data into the database
-            using (MySqlConnection connection = new MySqlConnection(connectionString))
-            {
-                connection.Open();
-                MySqlTransaction transaction = connection.BeginTransaction();
-                try
-                {
-                    // Check if the username already exists
-                    string checkUserQuery = "SELECT COUNT(*) FROM users WHERE username = @Username";
-                    MySqlCommand checkUserCommand = new MySqlCommand(checkUserQuery, connection, transaction);
-                    checkUserCommand.Parameters.AddWithValue("@Username", us.Username);
-                    int userCount = Convert.ToInt32(checkUserCommand.ExecuteScalar());
-
-                    if (userCount > 0)
-                    {
-                        // Username is duplicated
-                        MessageBox.ErrorQuery("Error", "Username is duplicated. Please choose a different username.", "OK");
-                        return;
-                    }
-
-                    // Insert customer data
-                    string customerQuery = "INSERT INTO customers (customer_name, customer_phone_number, customer_address, customer_email, customer_gender, customer_dateofbirth, customer_count, customer_totalspent)" +
-                                        "VALUES (@customername, @customerphonenumber, @customeraddress, @customeremail, @customergender, @customerdateofbirth, 0, 0)";
-                    MySqlCommand customerCommand = new MySqlCommand(customerQuery, connection, transaction);
-                    customerCommand.Parameters.AddWithValue("@customername", cus.CustomerName);
-                    customerCommand.Parameters.AddWithValue("@customerphonenumber", cus.CustomerPhone);
-                    customerCommand.Parameters.AddWithValue("@customeraddress", cus.CustomerAddress);
-                    customerCommand.Parameters.AddWithValue("@customeremail", cus.CustomerEmail);
-                    customerCommand.Parameters.AddWithValue("@customergender", cus.CustomerGender);
-                    customerCommand.Parameters.AddWithValue("@customerdateofbirth", cus.CustomerDateOfBirth);
-                    customerCommand.ExecuteNonQuery();
-                    
-                    // Insert user data linked to the customer
-                    long customerId = customerCommand.LastInsertedId;
-                    string userQuery = "INSERT INTO users (username, password_hash, role, user_customer_id) VALUES (@Username, @PasswordHash, 'user', @CustomerId)";
-                    MySqlCommand userCommand = new MySqlCommand(userQuery, connection, transaction);
-                    userCommand.Parameters.AddWithValue("@Username", us.Username);
-                    userCommand.Parameters.AddWithValue("@PasswordHash", us.PasswordHash);
-                    userCommand.Parameters.AddWithValue("@CustomerId", customerId);
-                    userCommand.ExecuteNonQuery();
-
-                    // Commit the transaction
-                    transaction.Commit();
-
-                    // Add user and customer to the lists and show success message
-                    ListUsers.Add(us);
-                    ListCustomers.Add(cus);
-                    MessageBox.Query("Success", "Registration successful!", "OK");
-                    
-                    // Close the registration window and go back to admin menu
-                    top.Remove(registerWin);
-                    admin.AdminMenu();
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-                    MessageBox.ErrorQuery("Error", ex.Message, "OK");
-                }
-            }
-        };
-
-
-        // Define and position the "Close" button
-        var closeButton = new Button("Close")
-        {
-            X = Pos.Center(),
-            Y = Pos.Bottom(registerButton) + 1
-        };
-        closeButton.Clicked += () =>
-        {
-            top.Remove(registerWin);
-            admin.AdminMenu();
-        };
-
-        // Add all controls to the registration window
-        registerWin.Add(usernameLabel, usernameField, passwordLabel, passwordField,
-                        CustomerNameLabel, CustomerNameField, CustomerPhoneNumberLabel,
-                        CustomerPhoneNumberField, CustomerAddressLabel, CustomerAddressField,
-                        CustomerEmailLabel, CustomerEmailField, CustomerGenderLabel, CustomerGenderField,
-                        CustomerDateOfBirthLabel, CustomerDateOfBirthField, registerButton, closeButton);
-
-    
-    }
-    public void EditCustomer()
-    {
-        // Create a new Customers object and a list of customers loaded from the database
-        Customers customer = new Customers();
-        List<Customers> customersList = LoadCustomers(connectionString);
-
-        // Get the top-level application window and create a new window for editing customer details
+        // Create the main window for the registration form
         var top = Application.Top;
+        var registerWin = new Window()
+        {
+            Title = $"Register for customer",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        top.Add(registerWin);
+
+        // Define and position the input fields for user and customer details
+            var usernameLabel = new Label("Username:")
+            {
+                X = 2,
+                Y = 2
+            };
+            var usernameField = new TextField("")
+            {
+                X = 31,
+                Y = 2,
+                Width = 100
+            };
+
+            var passwordLabel = new Label("Password:")
+            {
+                X = 2,
+                Y = 4
+            };
+            var passwordField = new TextField("")
+            {
+                Secret = true,
+                X = 31,
+                Y = 4,
+                Width = 100
+            };
+            var CustomerNameLabel = new Label("Name: ")
+            {
+                X = 2,
+                Y = 6
+            };
+            var CustomerNameField = new TextField("")
+            {
+                X = 31,
+                Y  = 6,
+                Width = 100
+            };
+            var CustomerPhoneNumberLabel = new Label("Phone number: ")
+            {
+                X = 2,
+                Y = 8
+            };
+            var CustomerPhoneNumberField = new TextField("")
+            {
+                X = 31,
+                Y  = 8,
+                Width = 100
+            };
+            var CustomerAddressLabel = new Label("Address: ")
+            {
+                X = 2,
+                Y = 10
+            };
+            var CustomerAddressField = new TextField("")
+            {
+                X = 31,
+                Y  = 10,
+                Width = 100
+            };
+            var CustomerEmailLabel = new Label("Email: ")
+            {
+                X = 2,
+                Y = 12
+            };
+            var CustomerEmailField = new TextField("")
+            {
+                X = 31,
+                Y  = 12,
+                Width = 100
+            };
+            var CustomerGenderLabel = new Label("Gender: ")
+            {
+                X = 2,
+                Y = 14
+            };
+            var CustomerGenderField = new TextField("")
+            {
+                X = 31,
+                Y  = 14,
+                Width = 100
+            };
+            var CustomerDateOfBirthLabel = new Label("Date of birth (YYYY-MM-DD): ")
+            {
+                X = 2,
+                Y = 16
+            };
+            var CustomerDateOfBirthField = new TextField("")
+            {
+                X = 31,
+                Y  = 16,
+                Width = 100
+            };
+
+            var registerButton = new Button("Register")
+            {
+                X = Pos.Center(),
+                Y = Pos.Bottom(CustomerDateOfBirthField),
+            };
+
+            // Define the click event for the "Register" button
+            registerButton.Clicked += () =>
+            {
+                // Assign input values to user and customer objects
+                us.Username = usernameField.Text.ToString();
+                us.PasswordHash = passwordField.Text.ToString();
+                cus.CustomerName = CustomerNameField.Text.ToString();
+                cus.CustomerPhone = CustomerPhoneNumberField.Text.ToString();
+                cus.CustomerAddress = CustomerAddressField.Text.ToString();
+                cus.CustomerEmail = CustomerEmailField.Text.ToString();
+                cus.CustomerGender = CustomerGenderField.Text.ToString();
+                
+                // Validate and assign the date of birth
+                DateTime customerDateOfBirth;
+                if (!DateTime.TryParse(CustomerDateOfBirthField.Text.ToString(), out customerDateOfBirth))
+                {
+                    MessageBox.ErrorQuery("Error", "Invalid date format. Please use YYYY-MM-DD.", "OK");
+                    return;
+                }
+                cus.CustomerDateOfBirth = customerDateOfBirth;
+
+                // Insert data into the database
+                using (MySqlConnection connection = new MySqlConnection(connectionString))
+                {
+                    connection.Open();
+                    MySqlTransaction transaction = connection.BeginTransaction();
+                    try
+                    {
+                        // Check if the username already exists
+                        string checkUserQuery = "SELECT COUNT(*) FROM users WHERE username = @Username";
+                        MySqlCommand checkUserCommand = new MySqlCommand(checkUserQuery, connection, transaction);
+                        checkUserCommand.Parameters.AddWithValue("@Username", us.Username);
+                        int userCount = Convert.ToInt32(checkUserCommand.ExecuteScalar());
+
+                        if (userCount > 0)
+                        {
+                            // Username is duplicated
+                            MessageBox.ErrorQuery("Error", "Username is duplicated. Please choose a different username.", "OK");
+                            return;
+                        }
+
+                        // Insert customer data
+                        string customerQuery = "INSERT INTO customers (customer_name, customer_phone_number, customer_address, customer_email, customer_gender, customer_dateofbirth, customer_count, customer_totalspent)" +
+                                            "VALUES (@customername, @customerphonenumber, @customeraddress, @customeremail, @customergender, @customerdateofbirth, 0, 0)";
+                        MySqlCommand customerCommand = new MySqlCommand(customerQuery, connection, transaction);
+                        customerCommand.Parameters.AddWithValue("@customername", cus.CustomerName);
+                        customerCommand.Parameters.AddWithValue("@customerphonenumber", cus.CustomerPhone);
+                        customerCommand.Parameters.AddWithValue("@customeraddress", cus.CustomerAddress);
+                        customerCommand.Parameters.AddWithValue("@customeremail", cus.CustomerEmail);
+                        customerCommand.Parameters.AddWithValue("@customergender", cus.CustomerGender);
+                        customerCommand.Parameters.AddWithValue("@customerdateofbirth", cus.CustomerDateOfBirth);
+                        customerCommand.ExecuteNonQuery();
+                        
+                        // Insert user data linked to the customer
+                        long customerId = customerCommand.LastInsertedId;
+                        string userQuery = "INSERT INTO users (username, password_hash, role, user_customer_id) VALUES (@Username, @PasswordHash, 'user', @CustomerId)";
+                        MySqlCommand userCommand = new MySqlCommand(userQuery, connection, transaction);
+                        userCommand.Parameters.AddWithValue("@Username", us.Username);
+                        userCommand.Parameters.AddWithValue("@PasswordHash", us.PasswordHash);
+                        userCommand.Parameters.AddWithValue("@CustomerId", customerId);
+                        userCommand.ExecuteNonQuery();
+
+                        // Commit the transaction
+                        transaction.Commit();
+
+                        // Add user and customer to the lists and show success message
+                        ListUsers.Add(us);
+                        ListCustomers.Add(cus);
+                        MessageBox.Query("Success", "Registration successful!", "OK");
+                        
+                        // Close the registration window and go back to admin menu
+                        top.Remove(registerWin);
+                        admin.AdminMenu();
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                    }
+                }
+            };
+
+
+            // Define and position the "Close" button
+            var closeButton = new Button("Close")
+            {
+                X = Pos.Center(),
+                Y = Pos.Bottom(registerButton) + 1
+            };
+            closeButton.Clicked += () =>
+            {
+                top.Remove(registerWin);
+                admin.AdminMenu();
+            };
+
+            // Add all controls to the registration window
+            registerWin.Add(usernameLabel, usernameField, passwordLabel, passwordField,
+                            CustomerNameLabel, CustomerNameField, CustomerPhoneNumberLabel,
+                            CustomerPhoneNumberField, CustomerAddressLabel, CustomerAddressField,
+                            CustomerEmailLabel, CustomerEmailField, CustomerGenderLabel, CustomerGenderField,
+                            CustomerDateOfBirthLabel, CustomerDateOfBirthField, registerButton, closeButton);
+
+        
+        }
+    public void EditCustomer(int customerID, string customerName, string customerPhone, string customerAddress, string customerEmail, string customerGender, DateTime customerDateOfBirth, string username, string password)
+    {
+        var top = Application.Top;
+
+        // Create a new window for editing customer details
         var editCustomerWin = new Window("Edit Customer")
         {
             X = 0,
@@ -319,138 +315,154 @@ public class Customers
         };
         top.Add(editCustomerWin);
 
-        // Define labels and text fields for searching and editing customer details
-        var findCustomerIDLabel = new Label("Find Customer ID:")
-        {
-            X = 1,
-            Y = 1
-        };
-        var findCustomerIDField = new TextField("")
-        {
-            X = 31,
-            Y = 1,
-            Width = 100
-        };
+        // Labels and fields for editing customer information
         var editCustomerNameLabel = new Label("Customer Name:")
         {
-            X = 1,
-            Y = 5,
-            Visible = false
+            X = 2,
+            Y = 2
         };
-        var editCustomerNameField = new TextField("")
+        var editCustomerNameField = new TextField(customerName)
         {
-            X = 31,
-            Y = 5,
-            Width = 100,
-            Visible = false
+            X = 18,
+            Y = Pos.Right(editCustomerNameLabel),
+            Width = 100
         };
+
         var editCustomerPhoneLabel = new Label("Customer Phone:")
         {
-            X = 1,
-            Y = 7,
-            Visible = false
+            X = 2,
+            Y = Pos.Bottom(editCustomerNameField) + 1
         };
-        var editCustomerPhoneField = new TextField("")
+        var editCustomerPhoneField = new TextField(customerPhone)
         {
-            X = 31,
-            Y = 7,
-            Width = 100,
-            Visible = false
+            X = 18,
+            Y = Pos.Right(editCustomerPhoneLabel),
+            Width = 100
         };
+
         var editCustomerAddressLabel = new Label("Customer Address:")
         {
-            X = 1,
-            Y = 9,
-            Visible = false
+            X = 2,
+            Y = Pos.Bottom(editCustomerPhoneField) + 1
         };
-        var editCustomerAddressField = new TextField("")
+        var editCustomerAddressField = new TextField(customerAddress)
         {
-            X = 31,
-            Y = 9,
-            Width = 100,
-            Visible = false
+            X = 18,
+            Y = Pos.Right(editCustomerAddressLabel),
+            Width = 100
         };
+
         var editCustomerEmailLabel = new Label("Customer Email:")
         {
-            X = 1,
-            Y = 11,
-            Visible = false
+            X = 2,
+            Y = Pos.Bottom(editCustomerAddressField) + 1
         };
-        var editCustomerEmailField = new TextField("")
+        var editCustomerEmailField = new TextField(customerEmail)
         {
-            X = 31,
-            Y = 11,
-            Width = 100,
-            Visible = false
+            X = 18,
+            Y = Pos.Right(editCustomerEmailLabel),
+            Width = 100
         };
+
         var editCustomerGenderLabel = new Label("Customer Gender:")
         {
-            X = 1,
-            Y = 13,
-            Visible = false
+            X = 2,
+            Y = Pos.Bottom(editCustomerEmailField) + 1
         };
-        var editCustomerGenderField = new TextField("")
+        var editCustomerGenderField = new TextField(customerGender)
         {
-            X = 31,
-            Y = 13,
-            Width = 100,
-            Visible = false
+            X = 18,
+            Y = Pos.Right(editCustomerGenderLabel),
+            Width = 100
         };
 
         var editCustomerDateOfBirthLabel = new Label("Customer Date of Birth:")
         {
-            X = 1,
-            Y = 15,
-            Visible = false
+            X = 2,
+            Y = Pos.Bottom(editCustomerGenderField) + 1
         };
-        var editCustomerDateOfBirthField = new TextField("")
+        var editCustomerDateOfBirthField = new TextField(customerDateOfBirth.ToString("yyyy-MM-dd"))
         {
-            X = 31,
-            Y = 15,
-            Width = 100,
-            Visible = false
+            X = 18,
+            Y = Pos.Right(editCustomerDateOfBirthLabel),
+            Width = 100
         };
-        
-        // Define a save button for saving the edited customer details to the database
+        var usernameLabel = new Label("Username: ")
+        {
+            X = 2,
+            Y = Pos.Bottom(editCustomerDateOfBirthLabel) + 1
+        };
+        var usernamefield = new TextField(username)
+        {
+            X = 18,
+            Y = Pos.Right(usernameLabel),
+        };
+        var passLabel = new Label("Password: ")
+        {
+            X = 2,
+            Y = Pos.Bottom(usernameLabel),
+        };
+        var passfield = new TextField(password)
+        {
+            X = 18,
+            Y = Pos.Right(passLabel),
+        };
+
+        // Button to save edited customer information
         var saveButton = new Button("Save")
         {
             X = Pos.Center(),
-            Y = 17,
-            Visible = false
+            Y = Pos.Bottom(passfield) + 2
         };
         saveButton.Clicked += () =>
         {
             try
             {
                 // Update the customer object with data from the text fields
-                customer.CustomerID = int.Parse(findCustomerIDField.Text.ToString());
-                customer.CustomerName = editCustomerNameField.Text.ToString();
-                customer.CustomerPhone = editCustomerPhoneField.Text.ToString();
-                customer.CustomerAddress = editCustomerAddressField.Text.ToString();
-                customer.CustomerEmail = editCustomerEmailField.Text.ToString();
-                customer.CustomerGender = editCustomerGenderField.Text.ToString();
-                customer.CustomerDateOfBirth = DateTime.Parse(editCustomerDateOfBirthField.Text.ToString());
+                var updatedCustomerName = editCustomerNameField.Text.ToString();
+                var updatedCustomerPhone = editCustomerPhoneField.Text.ToString();
+                var updatedCustomerAddress = editCustomerAddressField.Text.ToString();
+                var updatedCustomerEmail = editCustomerEmailField.Text.ToString();
+                var updatedCustomerGender = editCustomerGenderField.Text.ToString();
+                var updatedCustomerDateOfBirth = DateTime.Parse(editCustomerDateOfBirthField.Text.ToString());
+                var updateusername = usernamefield.Text.ToString();
+                var updatepass = passfield.Text.ToString();
 
                 // Open a connection to the database and execute the update query
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
                     connection.Open();
-                    string query = "UPDATE customers SET customer_name = @CustomerName, customer_phone_number = @CustomerPhone, customer_address = @CustomerAddress, customer_email = @CustomerEmail, customer_gender = @CustomerGender, customer_dateofbirth = @CustomerDateOfBirth WHERE customer_id = @CustomerID";
+                    string query = @"UPDATE customers 
+                                    SET customer_name = @CustomerName, 
+                                        customer_phone_number = @CustomerPhone, 
+                                        customer_address = @CustomerAddress, 
+                                        customer_email = @CustomerEmail, 
+                                        customer_gender = @CustomerGender, 
+                                        customer_dateofbirth = @CustomerDateOfBirth 
+                                    WHERE customer_id = @CustomerID;
+                                    UPDATE users
+                                    SET username = @UserName,
+                                        password_hash = @Pass,
+                                    WHERE user_customer_id = @CustomerID";
                     MySqlCommand command = new MySqlCommand(query, connection);
-                    command.Parameters.AddWithValue("@CustomerID", customer.CustomerID);
-                    command.Parameters.AddWithValue("@CustomerName", customer.CustomerName);
-                    command.Parameters.AddWithValue("@CustomerPhone", customer.CustomerPhone);
-                    command.Parameters.AddWithValue("@CustomerAddress", customer.CustomerAddress);
-                    command.Parameters.AddWithValue("@CustomerEmail", customer.CustomerEmail);
-                    command.Parameters.AddWithValue("@CustomerGender", customer.CustomerGender);
-                    command.Parameters.AddWithValue("@CustomerDateOfBirth", customer.CustomerDateOfBirth);
+                    command.Parameters.AddWithValue("@CustomerID", customerID);
+                    command.Parameters.AddWithValue("@CustomerName", updatedCustomerName);
+                    command.Parameters.AddWithValue("@CustomerPhone", updatedCustomerPhone);
+                    command.Parameters.AddWithValue("@CustomerAddress", updatedCustomerAddress);
+                    command.Parameters.AddWithValue("@CustomerEmail", updatedCustomerEmail);
+                    command.Parameters.AddWithValue("@CustomerGender", updatedCustomerGender);
+                    command.Parameters.AddWithValue("@CustomerDateOfBirth", updatedCustomerDateOfBirth);
+                    command.Parameters.AddWithValue("@UserName",updateusername);
+                    command.Parameters.AddWithValue("@Pass",updatepass);
 
                     command.ExecuteNonQuery();
                 }
-                // Display a success message and return to the admin menu
+
+                // Display a success message and close the window
                 MessageBox.Query("Success", "Customer information has been updated!", "OK");
                 top.Remove(editCustomerWin);
-                cus.EditCustomer();
+                // Refresh the customer list or do something else after saving
+                // Example: cus.LoadCustomerList();
             }
             catch (Exception ex)
             {
@@ -459,80 +471,26 @@ public class Customers
             }
         };
 
-        // Define a find button for searching for a customer by ID
-        var findButton = new Button("Find")
-        {
-            X = Pos.Center(),
-            Y = 3
-        };
-        findButton.Clicked += () =>
-        {
-            try
-            {
-                int customerID = int.Parse(findCustomerIDField.Text.ToString());
-                var foundCustomer = customersList.FirstOrDefault(c => c.CustomerID == customerID);
-
-                if (foundCustomer != null)
-                {
-                    // Populate fields with customer information and show the fields
-                    editCustomerNameField.Text = foundCustomer.CustomerName;
-                    editCustomerPhoneField.Text = foundCustomer.CustomerPhone;
-                    editCustomerAddressField.Text = foundCustomer.CustomerAddress;
-                    editCustomerEmailField.Text = foundCustomer.CustomerEmail;
-                    editCustomerGenderField.Text = foundCustomer.CustomerGender;
-                    editCustomerDateOfBirthField.Text = foundCustomer.CustomerDateOfBirth.ToString();
-
-                    findCustomerIDLabel.Visible = false;
-                    findCustomerIDField.Visible = false;
-                    findButton.Visible = false;
-
-                    editCustomerNameLabel.Visible = true;
-                    editCustomerNameField.Visible = true;
-                    editCustomerPhoneLabel.Visible = true;
-                    editCustomerPhoneField.Visible = true;
-                    editCustomerAddressLabel.Visible = true;
-                    editCustomerAddressField.Visible = true;
-                    editCustomerEmailLabel.Visible = true;
-                    editCustomerEmailField.Visible = true;
-                    editCustomerGenderLabel.Visible = true;
-                    editCustomerGenderField.Visible = true;
-                    editCustomerDateOfBirthLabel.Visible = true;
-                    editCustomerDateOfBirthField.Visible = true;
-
-                    saveButton.Visible = true;
-                }
-                else
-                {
-                    // Display an error message if the customer is not found
-                    MessageBox.ErrorQuery("Error", "Customer not found!", "OK");
-                }
-            }
-            catch (Exception ex)
-            {
-                // Display an error message if an exception occurs
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-        // Define a close button for closing the edit customer window
+        // Button to close the window
         var closeButton = new Button("Close")
         {
             X = Pos.Center(),
-            Y = 19
+            Y = Pos.Bottom(saveButton) + 1
         };
         closeButton.Clicked += () =>
         {
-            // Ask for confirmation before closing the window
+            // Confirm before closing the window
             bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to close?", "Yes", "No") == 0;
             if (confirmed)
             {
-            top.Remove(editCustomerWin);
-            admin.AdminMenu();
+                top.Remove(editCustomerWin);
+                // Return to the admin menu or do something else after closing
+                // Example: admin.AdminMenu();
             }
         };
 
         // Add all controls to the edit customer window
-        editCustomerWin.Add(findCustomerIDLabel, findCustomerIDField, findButton,
-                            editCustomerNameLabel, editCustomerNameField,
+        editCustomerWin.Add(editCustomerNameLabel, editCustomerNameField,
                             editCustomerPhoneLabel, editCustomerPhoneField,
                             editCustomerAddressLabel, editCustomerAddressField,
                             editCustomerEmailLabel, editCustomerEmailField,
@@ -540,137 +498,38 @@ public class Customers
                             editCustomerDateOfBirthLabel, editCustomerDateOfBirthField,
                             saveButton, closeButton);
     }
-    public void DeleteCustomer()
+
+    public void DeleteCustomer(int customerID)
     {
-        // Load the list of customers from the database using the connection string.
-        ListCustomers = LoadCustomers(connectionString);
-
-        // Get the top-level window of the application.
-        var top = Application.Top;
-
-        // Create a new window titled "Delete Customer" with specific dimensions.
-        var deleteCustomerWin = new Window("Delete Customer")
+        try
         {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-
-        // Add the delete customer window to the top-level window.
-        top.Add(deleteCustomerWin);
-        
-        // Create a label for customer ID input.
-        var customerIDLabel = new Label("Customer ID:")
-        {
-            X = Pos.Center(),
-            Y = 2
-        };
-
-        // Create a text field for entering the customer ID.
-        var customerIDField = new TextField("")
-        {
-            X = Pos.Center(),
-            Y = Pos.Bottom(customerIDLabel) + 1,
-            Width = 40
-        };
-
-        // Create a button labeled "Delete" for deleting the customer.
-        var deleteButton = new Button("Delete")
-        {
-            X = Pos.Center(),
-            Y = Pos.Bottom(customerIDField) + 2
-        };
-
-        // Define the action to be taken when the delete button is clicked.
-        deleteButton.Clicked += () =>
-        {
-            try
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                // Check if the input is a valid integer representing customer ID.
-                if (int.TryParse(customerIDField.Text.ToString(), out int customerID))
-                {
-                    // Find the customer in the list with the matching ID.
-                    Customers kh = ListCustomers.Find(kh => kh.CustomerID == customerID);
-
-                    // If the customer is found in the list.
-                    if (kh != null)
-                    {
-                        // Connect to the database and execute the deletion queries.
-                        using (MySqlConnection connection = new MySqlConnection(connectionString))
-                        {
-                            connection.Open();
-
-                            // First delete from the 'users' table.
-                            string userQuery = "DELETE FROM users WHERE user_customer_id = @customerid";
-                            MySqlCommand userCommand = new MySqlCommand(userQuery, connection);
-                            userCommand.Parameters.AddWithValue("@customerid", customerID);
-                            userCommand.ExecuteNonQuery();
-
-                            // Then delete from the 'customers' table.
-                            string customerQuery = "DELETE FROM customers WHERE customer_id = @customerid";
-                            MySqlCommand customerCommand = new MySqlCommand(customerQuery, connection);
-                            customerCommand.Parameters.AddWithValue("@customerid", customerID);
-                            customerCommand.ExecuteNonQuery();
-                        }
-
-                        // Remove the customer from the local list.
-                        ListCustomers.Remove(kh);
-
-                        // Show a success message box.
-                        MessageBox.Query("Success", "Successfully deleted customer!", "OK");
-
-                        // Remove the delete customer window and go back to the admin menu.
-                        top.Remove(deleteCustomerWin);
-                        cus.DeleteCustomer();
-                    }
-                    else
-                    {
-                        // Show an error message if the customer is not found.
-                        MessageBox.ErrorQuery("Error", "Customer not found!", "OK");
-                    }
-                }
-                else
-                {
-                    // Show an error message if the input is not a valid customer ID.
-                    MessageBox.ErrorQuery("Error", "Invalid customer ID!", "OK");
-                }
+                connection.Open();
+                string query = @"UPDATE customer
+                                SET active = FALSE 
+                                WHERE customer_id = @CustomerID;
+                                UPDATE users
+                                SET active = FALSE
+                                WHERE user_customer_id = @CustomerID";
+                MySqlCommand command = new MySqlCommand(query, connection);
+                command.Parameters.AddWithValue("@CustomerID", customerID);
+                command.ExecuteNonQuery();
             }
-            catch (Exception ex)
-            {
-                // Show an error message if an exception occurs during the process.
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        // Create a button labeled "Close" to close the delete customer window.
-        var closeButton = new Button("Close")
+            MessageBox.Query("Success", "Customer successfully marked as inactive!", "OK");
+        }
+        catch (Exception ex)
         {
-            X = Pos.Center(),
-            Y = Pos.Bottom(deleteButton) + 1
-        };
-
-        // Define the action to be taken when the close button is clicked.
-        closeButton.Clicked += () =>
-        {
-            top.Remove(deleteCustomerWin);
-            admin.AdminMenu();
-        };
-
-        // Add all the created UI elements to the frame.
-        deleteCustomerWin.Add(customerIDLabel, customerIDField, deleteButton, closeButton);
+            MessageBox.ErrorQuery("Error", ex.Message, "OK");
+        }
     }
 
-    public void DisplayCustomers()
+    public void DisplayCustomers(string role)
     {
-        // Load the list of customers from the database using the connection string.
-        List<Customers> customersList = LoadCustomers(connectionString);
-        
-        // Get the top-level window of the application.
         var top = Application.Top;
 
-        // Create a new window titled "Display Customers" with specific dimensions.
-        var displayCustomerWindow = new Window("Display Customers")
+        // Tạo cửa sổ chính
+        var displayWindow = new Window("Customer List")
         {
             X = 0,
             Y = 0,
@@ -678,164 +537,217 @@ public class Customers
             Height = Dim.Fill()
         };
 
-        // Add the display customer window to the top-level window.
-        top.Add(displayCustomerWindow);
+        var scrollView = new ScrollView()
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            ContentSize = new Size(0, 0) // Kích thước nội dung sẽ được thiết lập sau
+        };
 
-        // Move focus to the next UI element in the window.
-        displayCustomerWindow.FocusNext();
+        displayWindow.Add(scrollView);
+        top.Add(displayWindow);
 
-        // Establish a connection to the database.
+        // Tạo một View để chứa tất cả các cửa sổ khách hàng
+        var customerContainer = new View()
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+
+        scrollView.Add(customerContainer);
+
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
-            // Define the SQL query to retrieve customer data.
             string query = @"SELECT 
-                                cus.customer_id, 
-                                cus.customer_name, 
-                                cus.customer_phone_number, 
-                                cus.customer_address, 
-                                cus.customer_email, 
-                                cus.customer_gender, 
-                                cus.customer_dateofbirth,
-                                cus.customer_count,
-                                cus.customer_totalspent
-                            FROM customers cus";
+                                c.customer_id, 
+                                c.customer_name, 
+                                c.customer_phone_number, 
+                                c.customer_address, 
+                                c.customer_email, 
+                                c.customer_gender, 
+                                c.customer_dateofbirth,
+                                c.customer_count,
+                                c.customer_totalspent,
+                                u.username,
+								u.password_hash
+                            FROM customers c
+                            inner join users u on c.customer_id = u.user_customer_id
+                            WHERE c.active = TRUE AND u.active =TRUE;";
 
-            // Create a command object to execute the query.
             MySqlCommand command = new MySqlCommand(query, connection);
-            
-            // Open the connection to the database.
             connection.Open();
-            
-            // Execute the query and obtain a data reader to read the results.
             MySqlDataReader reader = command.ExecuteReader();
 
-            // Define the column headers to be displayed in the window.
-            var columnDisplayListCustomer = new string[]
-            {
-                "Customer ID", "Name", "Phone Number", "Address", "Email", "Gender", "Date of Birth", "Order Count", "Total Spent"
-            };
+            int colCount = 3; // Number of columns per row
+            int colWidth = 40; // Width of each customer window
+            int rowHeight = 15; // Height of each customer window
+            int margin = 2; // Margin between customers
 
-            // Add column headers to the window.
-            for (int i = 0; i < columnDisplayListCustomer.Length; i++)
-            {
-                displayCustomerWindow.Add(new Label(columnDisplayListCustomer[i])
-                {
-                    X = i * 20,
-                    Y = 0,
-                    Width = 20,
-                    Height = 1
-                });
-            }
+            int col = 0;
+            int row = 0;
 
-            // Initialize the row offset for displaying data rows.
-            int rowOffset = 1;
-
-            // Read the data row by row from the data reader.
             while (reader.Read())
             {
-                // Retrieve customer details from the current row.
-                int customerId = Convert.ToInt32(reader["customer_id"]);
+                int customerId = int.Parse(reader["customer_id"].ToString());
                 string customerName = reader["customer_name"].ToString();
                 string customerPhone = reader["customer_phone_number"].ToString();
                 string customerAddress = reader["customer_address"].ToString();
                 string customerEmail = reader["customer_email"].ToString();
                 string customerGender = reader["customer_gender"].ToString();
-                DateTime customerDateOfBirth = Convert.ToDateTime(reader["customer_dateofbirth"]);
-                int orderCount = Convert.ToInt32(reader["customer_count"]);
-                decimal totalSpent = Convert.ToDecimal(reader["customer_totalspent"]);
+                DateTime customerDateOfBirth = DateTime.Parse(reader["customer_dateofbirth"].ToString());
+                int orderCount = int.Parse(reader["customer_count"].ToString());
+                decimal totalSpent = decimal.Parse(reader["customer_totalspent"].ToString());
+                string username = reader["username"].ToString();
+                string password = reader["password_hash"].ToString();
 
-                // Add customer details to the window as labels.
-                displayCustomerWindow.Add(new Label(customerId.ToString())
+                var customerWindow = new Window($"{customerName}")
                 {
-                    X = 0,
-                    Y = rowOffset,
-                    Width = 20,
-                    Height = 1
-                });
-                displayCustomerWindow.Add(new Label(customerName)
-                {
-                    X = 1 * 20,
-                    Y = rowOffset,
-                    Width = 20,
-                    Height = 1
-                });
-                displayCustomerWindow.Add(new Label(customerPhone)
-                {
-                    X = 2 * 20,
-                    Y = rowOffset,
-                    Width = 20,
-                    Height = 1
-                });
-                displayCustomerWindow.Add(new Label(customerAddress)
-                {
-                    X = 3 * 20,
-                    Y = rowOffset,
-                    Width = 20,
-                    Height = 1
-                });
-                displayCustomerWindow.Add(new Label(customerEmail)
-                {
-                    X = 4 * 20,
-                    Y = rowOffset,
-                    Width = 20,
-                    Height = 1
-                });
-                displayCustomerWindow.Add(new Label(customerGender)
-                {
-                    X = 5 * 20,
-                    Y = rowOffset,
-                    Width = 20,
-                    Height = 1
-                });
-                displayCustomerWindow.Add(new Label(customerDateOfBirth.ToString("yyyy-MM-dd"))
-                {
-                    X = 6 * 20,
-                    Y = rowOffset,
-                    Width = 20,
-                    Height = 1
-                });
-                displayCustomerWindow.Add(new Label(orderCount.ToString())
-                {
-                    X = 7 * 20,
-                    Y = rowOffset,
-                    Width = 20,
-                    Height = 1
-                });
-                displayCustomerWindow.Add(new Label(totalSpent.ToString("0.00"))
-                {
-                    X = 8 * 20,
-                    Y = rowOffset,
-                    Width = 20,
-                    Height = 1
-                });
+                    X = col * (colWidth + margin),
+                    Y = row * (rowHeight + margin),
+                    Width = colWidth,
+                    Height = rowHeight
+                };
 
-                // Increment the row offset for the next data row.
-                rowOffset++;
+                var nameLabel = new Label($"Name: {customerName}")
+                {
+                    X = 1,
+                    Y = 1,
+                    Width = Dim.Fill()
+                };
+                var phoneLabel = new Label($"Phone: {customerPhone}")
+                {
+                    X = 1,
+                    Y = 2,
+                    Width = Dim.Fill()
+                };
+                var addressLabel = new Label($"Address: {customerAddress}")
+                {
+                    X = 1,
+                    Y = 3,
+                    Width = Dim.Fill()
+                };
+                var emailLabel = new Label($"Email: {customerEmail}")
+                {
+                    X = 1,
+                    Y = 4,
+                    Width = Dim.Fill()
+                };
+                var genderLabel = new Label($"Gender: {customerGender}")
+                {
+                    X = 1,
+                    Y = 5,
+                    Width = Dim.Fill()
+                };
+                var dobLabel = new Label($"DOB: {customerDateOfBirth:yyyy-MM-dd}")
+                {
+                    X = 1,
+                    Y = 6,
+                    Width = Dim.Fill()
+                };
+                var orderCountLabel = new Label($"Orders: {orderCount}")
+                {
+                    X = 1,
+                    Y = 7,
+                    Width = Dim.Fill()
+                };
+                var totalSpentLabel = new Label($"Spent: {totalSpent:C}")
+                {
+                    X = 1,
+                    Y = 8,
+                    Width = Dim.Fill()
+                };
+
+                var usernamelabel = new Label($"Username: {username}")
+                {
+                    X = 1,
+                    Y = 9
+                };
+                var passlabel = new Label($"Password : {password}")
+                {
+                    X = 1, 
+                    Y = 10
+                };
+                if (role == "admin")
+                {
+                    var editButton = new Button("Edit")
+                    {
+                        X = 1,
+                        Y = 12
+                    };
+                    editButton.Clicked += () =>
+                    {
+                        top.Remove(displayWindow);
+                        cus.EditCustomer(customerId, customerName, customerPhone, customerAddress, customerEmail, customerGender, customerDateOfBirth, username, password);
+                    };
+
+                    var deleteButton = new Button("Delete")
+                    {
+                        X = Pos.Right(editButton) + 2,
+                        Y = 10
+                    };
+                    deleteButton.Clicked += () =>
+                    {
+                        bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to delete this customer?", "Yes", "No") == 0;
+                        if (confirmed)
+                        {
+                            try
+                            {
+                                cus.DeleteCustomer(customerId);
+                                customerWindow.Dispose(); // Remove customer window from view
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                            }
+                        }
+                    };
+
+                    customerWindow.Add(editButton, deleteButton);
+                }
+
+                customerWindow.Add(nameLabel, phoneLabel, addressLabel, emailLabel, genderLabel, dobLabel, orderCountLabel, totalSpentLabel, usernamelabel, passlabel);
+                customerContainer.Add(customerWindow);
+
+                col++;
+                if (col >= colCount)
+                {
+                    col = 0;
+                    row++;
+                }
             }
 
-            // Close the data reader.
             reader.Close();
+
+            // Cập nhật kích thước nội dung của ScrollView
+            scrollView.ContentSize = new Size((colWidth + margin) * colCount, (row + 1) * (rowHeight + margin));
         }
 
-        // Create a button labeled "Close" to close the display customer window.
-        var btnClose = new Button("Close")
+        // Tạo nút Back
+        var backButton = new Button("Back")
         {
             X = Pos.Center(),
-            Y = Pos.Percent(100) - 1
+            Y = Pos.Bottom(displayWindow) - 3
         };
-
-        // Define the action to be taken when the close button is clicked.
-        btnClose.Clicked += () =>
+        backButton.Clicked += () =>
         {
-            // Remove the display customer window and go back to the admin menu.
-            top.Remove(displayCustomerWindow);
-            admin.AdminMenu();
+            top.Remove(displayWindow);
+            switch (role)
+            {
+                case "superadmin":
+                    superadmin.SuperAdminMenu(); // Gọi menu user
+                    break;
+                case "admin":
+                    admin.AdminMenu(); // Gọi menu admin
+                    break;
+            }
         };
 
-        // Add the close button to the display customer window.
-        displayCustomerWindow.Add(btnClose);
+        displayWindow.Add(backButton);
     }
-
 
     public void FindCustomer()
     {
@@ -937,7 +849,7 @@ public class Customers
                                     cus.customer_count,
                                     cus.customer_totalspent
                                 FROM customers cus
-                                WHERE cus.customer_name LIKE @SearchTerm";
+                                WHERE cus.customer_name LIKE @SearchTerm AND active = TRUE";
 
                 // Create a command object to execute the query.
                 MySqlCommand command = new MySqlCommand(query, connection);

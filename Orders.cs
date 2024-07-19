@@ -290,7 +290,7 @@ public class Orders
         // Label and text field for entering the delivery address
         var lblDeliveryAddress = new Label("Delivery Address:")
         {
-            X = Pos.Center() - 15,
+            X = Pos.Center() - 13,
             Y = Pos.Percent(40)
         };
         var txtDeliveryAddress = new TextField("")

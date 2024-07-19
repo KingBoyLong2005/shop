@@ -81,6 +81,7 @@ public class Program
         Application.Init();
         program.Login();
         Application.Run();  
+        
     }
 
     // Login method
@@ -158,7 +159,7 @@ public class Program
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
                     connection.Open();
-                    string query = "SELECT user_customer_id, password_hash, role FROM users WHERE username = @Username";
+                    string query = "SELECT user_customer_id, password_hash, role FROM users WHERE username = @Username AND active = TRUE";
                     MySqlCommand command = new MySqlCommand(query, connection);
                     command.Parameters.AddWithValue("@Username", username);
 
