@@ -49,6 +49,14 @@ public class Program
     // Main method
     static void Main()
     {
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {
+            connection.Open();
+            string query = @"SET foreign_key_checks = 0;
+                            SET SQL_SAFE_UPDATES = 0;";
+            MySqlCommand command = new MySqlCommand(query, connection);
+            command.ExecuteNonQuery();
+        }
         // Initialize the application and set colors
         Application.Init();
 
