@@ -11,6 +11,7 @@ public class SuperAdmin
 {
 
     public static Cart userCart = new Cart();
+    public static Customers cus = new Customers();
     public static Products pd = new Products();
     public static Orders order = new Orders();
     public static Admin admin= new Admin();
@@ -18,7 +19,6 @@ public class SuperAdmin
     public static Categories cate = new Categories();
 
     public static string connectionString = Configuration.ConnectionString;
-    public static int currentCustomerID = SessionData.Instance.CurrentCustomerID;
 
     // Display the Super Admin Menu
     public void SuperAdminMenu()
@@ -67,12 +67,44 @@ public class SuperAdmin
             Height = Dim.Fill() // Occupy the remaining height
         };
         SuperAdminMenu.Add(rightBottomFrame);
-        
-        // Add button to add staff
-        var btnAddStaff = new Button("Add Staff")
+        var btnDisplayProduct = new Button("Display Product")
         {
             X = 2,
             Y = 2
+        };
+        btnDisplayProduct.Clicked += () =>
+        {
+            try
+            {
+                top.Remove(SuperAdminMenu);
+                pd.DisplayProduct("superadmin");
+            }
+            catch 
+            {
+                MessageBox.ErrorQuery("Error","", "OK");
+            }
+        };
+        var btnFindProduct = new Button("FindProduct")
+        {
+            X = 2,
+            Y = 3
+         };
+        btnFindProduct.Clicked += () =>
+        {
+            try
+            {
+                top.Remove(SuperAdminMenu);
+                pd.FindProduct("superadmin");
+            }
+            catch 
+            {
+                MessageBox.ErrorQuery("Error","", "OK");
+            }
+        };
+        var btnAddStaff = new Button("Add Staff")
+        {
+            X = 2,
+            Y = 4
         };
         btnAddStaff.Clicked += () =>
         {
@@ -81,143 +113,96 @@ public class SuperAdmin
                 top.Remove(SuperAdminMenu);
                 admin.AddStaff();
             }
-            catch (Exception ex)
+            catch 
             {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                MessageBox.ErrorQuery("Error","", "OK");
             }
         };
-
-        // Add button to find staff
-        var btnFindStaff = new Button("Find Staff")
+        var btnDisplayStaff = new Button("Dispplay Staff")
         {
             X = 2,
-            Y = 4,
-        };
-        btnFindStaff.Clicked += () =>
-        {
-            try
-            {
-                top.Remove(SuperAdminMenu);
-                admin.FindStaff();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        // Add button to edit staff
-        var btnEditStaff = new Button("Edit Staff")
-        {
-            X = 2,
-            Y = 6
-        };
-        btnEditStaff.Clicked += () =>
-        {
-            try
-            {
-            top.Remove(SuperAdminMenu);
-            admin.EditStaff();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        // Add button to delete staff
-        var btnDeleteStaff = new Button("Delete Staff")
-        {
-            X = 2,
-            Y = 8
-        };
-        btnDeleteStaff.Clicked += () =>
-        {
-            try
-            {
-            top.Remove(SuperAdminMenu);
-            admin.DeleteStaff();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        // Add button to display staff
-        var btnDisplayStaff = new Button("Display Staff")
-        {
-            X = 2,
-            Y = 10
+            Y = 5
         };
         btnDisplayStaff.Clicked += () =>
         {
             try
             {
-            top.Remove(SuperAdminMenu);
-            admin.DisplayStaff();
+                top.Remove(SuperAdminMenu);
+                admin.DisplayStaff();
             }
-            catch (Exception ex)
+            catch 
             {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                MessageBox.ErrorQuery("Error","", "OK");
             }
         };
-
-        // Add button to display products
         var btnAddCategory = new Button("Add Category")
         {
             X = 2,
-            Y = 12
+            Y = 6
         };
-
         btnAddCategory.Clicked += () =>
         {
             try
             {
-            top.Remove(SuperAdminMenu);
-            cate.AddCategory();
+                top.Remove(SuperAdminMenu);
+                cate.AddCategory();
             }
-            catch (Exception ex)
+            catch 
             {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                MessageBox.ErrorQuery("Error","", "OK");
             }
         };
-        var btnDeleteCategory = new Button("Delete Category")
+        var btnDisplayCategory = new Button("Display Category")
         {
             X = 2,
-            Y = 14
+            Y = 7
         };
-        btnDeleteCategory.Clicked += () =>
+        btnDisplayCategory.Clicked += () =>
         {
             try
             {
                 top.Remove(SuperAdminMenu);
-                cate.DeleteCategory();
+                cate.DisplayCategories("superadmin");
             }
-            catch (Exception ex)
+            catch 
             {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                MessageBox.ErrorQuery("Error","", "OK");
             }
         };
-        var btnbDisplayCategory = new Button("Display Category")
+        var btnAddCustomer = new Button("Add Customer")
         {
             X = 2,
-            Y = 16
+            Y = 8
         };
-        btnbDisplayCategory.Clicked += () =>
+        btnAddCustomer.Clicked += () =>
         {
             try
             {
                 top.Remove(SuperAdminMenu);
-                cate.Displaycategorys();
+                cus.AddCustomer();
             }
-            catch (Exception ex)
+            catch 
             {
-                MessageBox.ErrorQuery ("Error", ex.Message,"OK");
+                MessageBox.ErrorQuery("Error","", "OK");
             }
         };
-
-
+        var btnDisplayCustomer = new Button("Add Customer")
+        {
+            X = 2,
+            Y = 9
+        };
+        btnDisplayCustomer.Clicked += () =>
+        {
+            try
+            {
+                top.Remove(SuperAdminMenu);
+                cus.DisplayCustomers("superadmin");
+            }
+            catch 
+            {
+                MessageBox.ErrorQuery("Error","", "OK");
+            }
+        };
         // Add logout button
         var btnLogout = new Button("Logout")
         {
@@ -231,7 +216,7 @@ public class SuperAdmin
         };
 
         // Add all buttons to the left frame
-        leftFrame.Add(btnAddStaff, btnFindStaff, btnEditStaff, btnDeleteStaff, btnDisplayStaff, btnAddCategory, btnDeleteCategory, btnbDisplayCategory, btnLogout);
+        leftFrame.Add(btnDisplayProduct, btnFindProduct, btnAddStaff, btnDisplayStaff, btnAddCategory, btnDisplayCategory, btnAddCustomer, btnDisplayCustomer, btnLogout);
 
         // Add a welcome label to the top right frame
         var rightTopLabel = new Label(@"███████╗██╗     ███████╗ ██████╗████████╗██████╗  ██████╗ ███╗   ██╗██╗ ██████╗    ███████╗██╗  ██╗ ██████╗ ██████╗ 
@@ -239,8 +224,7 @@ public class SuperAdmin
 █████╗  ██║     █████╗  ██║        ██║   ██████╔╝██║   ██║██╔██╗ ██║██║██║         ███████╗███████║██║   ██║██████╔╝
 ██╔══╝  ██║     ██╔══╝  ██║        ██║   ██╔══██╗██║   ██║██║╚██╗██║██║██║         ╚════██║██╔══██║██║   ██║██╔═══╝ 
 ███████╗███████╗███████╗╚██████╗   ██║   ██║  ██║╚██████╔╝██║ ╚████║██║╚██████╗    ███████║██║  ██║╚██████╔╝██║     
-╚══════╝╚══════╝╚══════╝ ╚═════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝ ╚═════╝    ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     
-                                                                                                                    ")
+╚══════╝╚══════╝╚══════╝ ╚═════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝ ╚═════╝    ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     ")
         {
             X = Pos.Center(),
             Y = Pos.Center()

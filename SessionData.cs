@@ -11,7 +11,8 @@ public class SessionData
 
     private SessionData()
     {
-        // Khởi tạo các giá trị mặc định khi cần thiết
+        // Khởi tạo giá trị mặc định
+        currentCustomerID = -1; // Giá trị mặc định để chỉ ra rằng không có customer ID nào được thiết lập
     }
 
     public static SessionData Instance
@@ -29,6 +30,24 @@ public class SessionData
     public int CurrentCustomerID
     {
         get { return currentCustomerID; }
-        set { currentCustomerID = value; }
+        set 
+        { 
+            currentCustomerID = value; 
+            NotifyCustomerIDChange(); 
+        }
+    }
+
+    public void ResetCustomerID()
+    {
+        CurrentCustomerID = -1;
+    }
+
+    // Định nghĩa sự kiện
+    public event Action<int> CustomerIDChanged;
+
+    private void NotifyCustomerIDChange()
+    {
+        CustomerIDChanged?.Invoke(currentCustomerID);
     }
 }
+

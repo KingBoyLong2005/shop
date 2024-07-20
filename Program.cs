@@ -14,7 +14,6 @@ public class Program
 {
     // Declare static variables
     public static string connectionString;
-    public static int currentCustomerID = SessionData.Instance.CurrentCustomerID;
 
     // Initialize lists for various entities
     public static List<Products> ListProducts = new List<Products>();
@@ -87,6 +86,7 @@ public class Program
     // Login method
     public void Login()
     {
+        SessionData.Instance.ResetCustomerID();
         // Create and configure the login window
         var top = Application.Top;
         Application.Init();
@@ -171,7 +171,7 @@ public class Program
                         {
                             isAuthenticated = true;
                             role = reader.GetString("role");
-                            currentCustomerID = reader.GetInt32("user_customer_id");
+                            int currentCustomerID = reader.GetInt32("user_customer_id");
                             SessionData.Instance.CurrentCustomerID = currentCustomerID;
                         }
                     }

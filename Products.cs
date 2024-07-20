@@ -112,7 +112,7 @@ public class Products
 
             int colCount = 6; // Number of columns per row
             int colWidth = 30; // Width of each product window
-            int rowHeight = 10; // Height of each product window
+            int rowHeight = 12; // Height of each product window
             int margin = 2; // Margin between products
 
             int col = 0;
@@ -194,7 +194,7 @@ public class Products
                     try
                     {
                         top.Remove(displayWindow);
-                        pd.EditProductInformations(productID, productName, productQuantity,productPrice, categoryID, productBrand);
+                        pd.EditProductInformations(role, productID, productName, productQuantity,productPrice, categoryID, productBrand);
                     }
                     catch (Exception ex)
                     {
@@ -241,9 +241,25 @@ public class Products
                         MessageBox.ErrorQuery("Error", ex.Message,"OK");
                     }
                 };
+                var OrderForCustomerbutton = new Button("Order For Customer")
+                {
+                    X = 1,
+                    Y = Pos.Bottom(orderButton) + 1,
+                };
+                OrderForCustomerbutton.Clicked += () =>
+                {
+                    try
+                    {
+                        top.Remove(displayWindow);
+                        order.OrderProductForCustomer(productID, productName, productPrice, role);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                    }
+                };
 
-
-                productWindow.Add(nameLabel, quantityLabel, priceLabel, categoryLabel, brandLabel, addButton, orderButton, editproductButton);
+                productWindow.Add(nameLabel, quantityLabel, priceLabel, categoryLabel, brandLabel, addButton, orderButton, editproductButton, OrderForCustomerbutton);
                 productContainer.Add(productWindow);
 
                 col++;
@@ -256,13 +272,15 @@ public class Products
                 {
                     editproductButton.Visible = false;
                     blockproductButton.Visible = false;
+                    OrderForCustomerbutton.Visible = false;
                     addButton.Visible = true;
                     orderButton.Visible = true;
                 }
-                else if (role == "admin")
+                else if (role == "admin" || role == "superadmin")
                 {
                     editproductButton.Visible = true;
                     blockproductButton.Visible = true;
+                    OrderForCustomerbutton.Visible = true;
                     addButton.Visible = false;
                     orderButton.Visible = false;
                 }
@@ -292,6 +310,9 @@ public class Products
                 case "admin":
                     // Gọi menu admin
                     admin.AdminMenu();
+                    break;
+                case "superadmin":
+                    superadmin.SuperAdminMenu();
                     break;
             }
         };
@@ -441,7 +462,7 @@ public class Products
                         productBrandLabel, productBrandField,
                         saveButton, closeButton);
     }
-    public void EditProductInformations(int productID, string productName, int quantity, decimal price, int categoryID, string brand)
+    public void EditProductInformations(string role, int productID, string productName, int quantity, decimal price, int categoryID, string brand)
     {
         var top = Application.Top;
 
@@ -465,59 +486,59 @@ public class Products
         var editProductNameField = new TextField(productName) // Khởi tạo với giá trị hiện tại
         {
             X = 18,
-            Y = Pos.Top(editProductNameLabel),
+            Y = Pos.Right(editProductNameLabel),
             Width = 100
         };
 
         var editProductStockQuantityLabel = new Label("Stock Quantity:")
         {
             X = 2,
-            Y = Pos.Bottom(editProductNameField) + 1
+            Y = Pos.Bottom(editProductNameLabel) + 1
         };
 
         var editProductStockQuantityField = new TextField(quantity.ToString()) // Khởi tạo với giá trị hiện tại
         {
             X = 18,
-            Y = Pos.Top(editProductStockQuantityLabel),
+            Y = Pos.Right(editProductStockQuantityLabel),
             Width = 100
         };
 
         var editProductCategoryIDLabel = new Label("Category ID:")
         {
             X = 2,
-            Y = Pos.Bottom(editProductStockQuantityField) + 1
+            Y = Pos.Bottom(editProductStockQuantityLabel) + 1
         };
 
         var editProductCategoryIDField = new TextField(categoryID.ToString()) // Khởi tạo với giá trị hiện tại
         {
             X = 18,
-            Y = Pos.Top(editProductCategoryIDLabel),
+            Y = Pos.Right(editProductCategoryIDLabel),
             Width = 100
         };
 
         var editProductPriceLabel = new Label("Price:")
         {
             X = 2,
-            Y = Pos.Bottom(editProductCategoryIDField) + 1
+            Y = Pos.Bottom(editProductCategoryIDLabel) + 1
         };
 
         var editProductPriceField = new TextField(price.ToString("F2")) // Khởi tạo với giá trị hiện tại
         {
             X = 18,
-            Y = Pos.Top(editProductPriceLabel),
+            Y = Pos.Right(editProductPriceLabel),
             Width = 100
         };
 
         var editProductBrandLabel = new Label("Brand:")
         {
             X = 2,
-            Y = Pos.Bottom(editProductPriceField) + 1
+            Y = Pos.Bottom(editProductPriceLabel) + 1
         };
 
         var editProductBrandField = new TextField(brand) // Khởi tạo với giá trị hiện tại
         {
             X = 18,
-            Y = Pos.Top(editProductBrandLabel),
+            Y = Pos.Right(editProductBrandLabel),
             Width = 100
         };
 
@@ -585,8 +606,15 @@ public class Products
             if (confirmed)
             {
                 top.Remove(editProductWin);
-                // Quay về menu admin hoặc làm gì đó sau khi đóng cửa sổ
-                pd.DisplayProduct("admin");
+                switch (role)
+                {
+                    case "admin":
+                    DisplayProduct("admin");
+                    break;
+                    case "superadmin":
+                    DisplayProduct("superadmin");
+                    break;
+                }
             }
         };
 
@@ -653,63 +681,13 @@ public class Products
             Y = 4
         };
 
-        // Define column widths
-        int productNameColumnWidth = 20;
-        int stockQuantityColumnWidth = 20;
-        int priceColumnWidth = 20;
-        int categoryColumnWidth = 30; // Increased width for category
-        int brandColumnWidth = 20;
-
-        // Array of column headers for product information
-        var columnDisplayListProduct = new string[]
-        {
-            "Product's Name", "Stock Quantity", "Price", "Category", "Brand"
-        };
-
-        // Add column headers to the window
-        findProductWin.Add(new Label("Product's Name")
-        {
-            X = 0,
-            Y = 6,
-            Width = productNameColumnWidth,
-            Height = 1
-        });
-        findProductWin.Add(new Label("Stock Quantity")
-        {
-            X = productNameColumnWidth,
-            Y = 6,
-            Width = stockQuantityColumnWidth,
-            Height = 1
-        });
-        findProductWin.Add(new Label("Price")
-        {
-            X = productNameColumnWidth + stockQuantityColumnWidth,
-            Y = 6,
-            Width = priceColumnWidth,
-            Height = 1
-        });
-        findProductWin.Add(new Label("Category")
-        {
-            X = productNameColumnWidth + stockQuantityColumnWidth + priceColumnWidth,
-            Y = 6,
-            Width = categoryColumnWidth,
-            Height = 1
-        });
-        findProductWin.Add(new Label("Brand")
-        {
-            X = productNameColumnWidth + stockQuantityColumnWidth + priceColumnWidth + categoryColumnWidth,
-            Y = 6,
-            Width = brandColumnWidth,
-            Height = 1
-        });
-
         // Event handler for the Find button
         findButton.Clicked += () =>
         {
             try
             {
+                top.Remove(findProductWin);
                 string productName = productNameField.Text.ToString();
-                Products product = null;
 
                 // Query to retrieve product information based on product name
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -729,10 +707,10 @@ public class Products
                     connection.Open();
                     MySqlDataReader reader = command.ExecuteReader();
 
-                    if (reader.Read())
+                    while (reader.Read())
                     {
                         // Populate product object with retrieved data
-                        product = new Products
+                        var product = new Products
                         {
                             ProductName = reader["product_name"].ToString(),
                             ProductStockQuantity = int.Parse(reader["product_stock_quantity"].ToString()),
@@ -740,51 +718,153 @@ public class Products
                             ProductCategoryName = reader["category_name"].ToString(),
                             ProductBrand = reader["product_brand"].ToString(),
                         };
+
+                        ListProducts.Add(product);
                     }
-                    else
-                    {
-                        // Display error if product not found
-                        MessageBox.ErrorQuery("Error", "Product not found!", "OK");
-                        return;
-                    }
+
+                    reader.Close();
                 }
 
-                // Display product information in the window
-                findProductWin.Add(new Label(product.ProductName)
+                if (ListProducts.Count == 0)
                 {
-                    X = 0,
-                    Y = 7,
-                    Width = productNameColumnWidth,
-                    Height = 1
-                });
-                findProductWin.Add(new Label(product.ProductStockQuantity.ToString())
+                    // Display error if no products found
+                    MessageBox.ErrorQuery("Error", "Product not found!", "OK");
+                    return;
+                }
+                else
                 {
-                    X = productNameColumnWidth,
-                    Y = 7,
-                    Width = stockQuantityColumnWidth,
-                    Height = 1
-                });
-                findProductWin.Add(new Label(product.ProductPrice.ToString("C"))
-                {
-                    X = productNameColumnWidth + stockQuantityColumnWidth,
-                    Y = 7,
-                    Width = priceColumnWidth,
-                    Height = 1
-                });
-                findProductWin.Add(new Label(product.ProductCategoryName.ToString())
-                {
-                    X = productNameColumnWidth + stockQuantityColumnWidth + priceColumnWidth,
-                    Y = 7,
-                    Width = categoryColumnWidth,
-                    Height = 1
-                });
-                findProductWin.Add(new Label(product.ProductBrand)
-                {
-                    X = productNameColumnWidth + stockQuantityColumnWidth + priceColumnWidth + categoryColumnWidth,
-                    Y = 7,
-                    Width = brandColumnWidth,
-                    Height = 1
-                });
+
+                    // Create a new window to display the products
+                    var productsWindow = new Window("Products")
+                    {
+                        X = 0,
+                        Y = 0,
+                        Width = Dim.Fill(),
+                        Height = Dim.Fill()
+                    };
+
+                    // Create a ScrollView to hold the products
+                    var scrollView = new ScrollView()
+                    {
+                        X = 0,
+                        Y = 0,
+                        Width = Dim.Fill(),
+                        Height = Dim.Fill(),
+                        ContentSize = new Size(0, 0) // Kích thước nội dung sẽ được thiết lập sau
+                    };
+
+                    productsWindow.Add(scrollView);
+                    top.Add(productsWindow);
+
+                    var productContainer = new View()
+                    {
+                        X = 0,
+                        Y = 0,
+                        Width = Dim.Fill(),
+                        Height = Dim.Fill()
+                    };
+
+                    scrollView.Add(productContainer);
+
+                    int row = 0;
+                    int col = 0;
+                    int colCount = 2; // Số cột trong ScrollView
+                    int colWidth = 40; // Chiều rộng của mỗi cửa sổ sản phẩm
+                    int rowHeight = 12; // Chiều cao của mỗi cửa sổ sản phẩm
+                    int margin = 2; // Lề giữa các sản phẩm
+
+                    foreach (var product in ListProducts)
+                    {
+                        var productWindow = new Window($"Product {row * colCount + col + 1}")
+                        {
+                            X = col * (colWidth + margin),
+                            Y = row * (rowHeight + margin),
+                            Width = colWidth,
+                            Height = rowHeight
+                        };
+
+                        // Create labels for displaying product details
+                        var productNameLabel = new Label($"Name: {product.ProductName}")
+                        {
+                            X = 1,
+                            Y = 1,
+                            Width = Dim.Fill(),
+                            TextAlignment = TextAlignment.Left // Left text alignment
+                        };
+                        var productStockQuantityLabel = new Label($"Stock: {product.ProductStockQuantity}")
+                        {
+                            X = 1,
+                            Y = Pos.Bottom(productNameLabel) + 1,
+                            Width = Dim.Fill(),
+                            TextAlignment = TextAlignment.Left // Left text alignment
+                        };
+                        var productPriceLabel = new Label($"Price: {product.ProductPrice:C}")
+                        {
+                            X = 1,
+                            Y = Pos.Bottom(productStockQuantityLabel) + 1,
+                            Width = Dim.Fill(),
+                            TextAlignment = TextAlignment.Left // Left text alignment
+                        };
+                        var productCategoryLabel = new Label($"Category: {product.ProductCategoryName}")
+                        {
+                            X = 1,
+                            Y = Pos.Bottom(productPriceLabel) + 1,
+                            Width = Dim.Fill(),
+                            TextAlignment = TextAlignment.Left // Left text alignment
+                        };
+                        var productBrandLabel = new Label($"Brand: {product.ProductBrand}")
+                        {
+                            X = 1,
+                            Y = Pos.Bottom(productCategoryLabel) + 1,
+                            Width = Dim.Fill(),
+                            TextAlignment = TextAlignment.Left // Left text alignment
+                        };
+
+                        // Add labels to the product window
+                        productWindow.Add(productNameLabel, productStockQuantityLabel, productPriceLabel, productCategoryLabel, productBrandLabel);
+                        productContainer.Add(productWindow);
+
+                        col++;
+                        if (col >= colCount)
+                        {
+                            col = 0;
+                            row++;
+                        }
+                    }
+
+                    // Cập nhật kích thước nội dung của ScrollView
+                    scrollView.ContentSize = new Size((colWidth + margin) * colCount, (row + 1) * (rowHeight + margin));
+
+                    // Create a button labeled "Close" to close the products window
+                    var btnClose = new Button("Close")
+                    {
+                        X = Pos.Center(),
+                        Y = 1 
+                    };
+
+                    // Define the action to be taken when the close button is clicked
+                    btnClose.Clicked += () =>
+                    {
+                        ListProducts.Clear();
+                        // Remove the products window
+                        top.Remove(productsWindow);
+                        switch (role)
+                        {
+                            case "user":
+                                pd.FindProduct("user");
+                                break;
+                            case "admin":
+                                pd.FindProduct("admin");
+                                break;
+                            case "superadmin":
+                                pd.FindProduct("superadmin");
+                                break;
+                        }
+                    };
+
+                    // Add the close button to the products window
+                    productsWindow.Add(btnClose);
+                }
 
             }
             catch (Exception ex)
@@ -794,8 +874,8 @@ public class Products
             }
         };
 
-        // Button to close the window
-        var closeButton = new Button("Close")
+        // Button to close the find product window
+        var closeButton = new Button("Back")
         {
             X = Pos.Center(),
             Y = Pos.Percent(100) - 1
@@ -804,10 +884,11 @@ public class Products
         // Event handler for the Close button
         closeButton.Clicked += () =>
         {
+            ListProducts.Clear();
             top.Remove(findProductWin);
 
             // Return to respective menu based on user role
-            switch(role)
+            switch (role)
             {
                 case "user":
                     customer.UserMenu();
@@ -824,5 +905,6 @@ public class Products
         // Add components to the window
         findProductWin.Add(productNameLabel, productNameField, findButton, closeButton);
     }
+
 
 }

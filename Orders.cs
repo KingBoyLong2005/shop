@@ -18,8 +18,6 @@ public class Orders
 
     
     public static string connectionString = Configuration.ConnectionString;
-    public static int currentCustomerID = SessionData.Instance.CurrentCustomerID;
-
     public static Products pd = new Products();
     public static Orders order = new Orders();
     public static Cart cart= new Cart();
@@ -28,6 +26,7 @@ public class Orders
     public static Customers customer = new Customers();
     public static Admin admin = new Admin();
     public static SuperAdmin superadmin = new SuperAdmin();
+    public static Categories cate = new Categories();
     
     public static List<Products> ListProducts = new List<Products>();
     public static List<Customers> ListCustomers = new List<Customers>();
@@ -125,6 +124,7 @@ public class Orders
     public void DisplayMyOrder()
     {
         var top = Application.Top; // Get the top-level window
+
         var myOrderWindow = new Window("My Orders")
         {
             X = 0,
@@ -132,7 +132,25 @@ public class Orders
             Width = Dim.Fill(),
             Height = Dim.Fill()
         };
+
+        var scrollView = new ScrollView()
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            ContentSize = new Size(0, 0) // Kích thước nội dung sẽ được thiết lập sau
+        };
+
+        myOrderWindow.Add(scrollView);
         top.Add(myOrderWindow); // Add the main window to the application
+
+        int row = 0;
+        int col = 0;
+        int colCount = 2; // Số cột trong ScrollView
+        int colWidth = 40; // Chiều rộng của mỗi cửa sổ sản phẩm
+        int rowHeight = 12; // Chiều cao của mỗi cửa sổ sản phẩm
+        int margin = 2; // Lề giữa các sản phẩm
 
         // Connect to the database and retrieve orders for the current customer
         using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -147,31 +165,10 @@ public class Orders
                             JOIN products p ON o.order_product_id = p.product_id
                             WHERE o.order_customer_id = @CustomerID";
             MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@CustomerID", currentCustomerID); // Bind current customer ID parameter
+            command.Parameters.AddWithValue("@CustomerID", SessionData.Instance.CurrentCustomerID); // Bind current customer ID parameter
             connection.Open();
             MySqlDataReader reader = command.ExecuteReader();
-            var columnDisplayListProduct = new string[]
-            {
-                "Product's name", "Quantity", "Price", "Payment", "Status", "Total price"
-            };
 
-            int columnWidth = 20; // Set column width
-
-            // Display column headers based on role
-            for (int i = 0; i < columnDisplayListProduct.Length; i++)
-            {
-                myOrderWindow.Add(new Label(columnDisplayListProduct[i])
-                {
-                    X = i * columnWidth,
-                    Y = 0,
-                    Width = columnWidth,
-                    Height = 1,
-                    TextAlignment = TextAlignment.Left // Left text alignment
-                });
-            }
-            
-            int row = 1;
-            // Read through each order retrieved from the database
             while (reader.Read())
             {
                 // Construct the order details string
@@ -181,76 +178,81 @@ public class Orders
                 string status = reader["order_status"].ToString();
                 decimal totalPrice = reader.GetDecimal("order_total_price");
 
+                var orderWindow = new Window($"Order {row * colCount + col + 1}")
+                {
+                    X = col * (colWidth + margin),
+                    Y = row * (rowHeight + margin),
+                    Width = colWidth,
+                    Height = rowHeight
+                };
+
                 // Create labels for displaying order details
-                var productNameLabel = new Label(productName)
+                var productNameLabel = new Label($"Product Name: {productName}")
                 {
-                    X = 0,
-                    Y = row,
-                    Width = columnWidth,
-                    Height = 1,
+                    X = 1,
+                    Y = 1,
+                    Width = Dim.Fill(),
                     TextAlignment = TextAlignment.Left // Left text alignment
                 };
-                var productQuantityLabel = new Label(productQuantity.ToString())
+                var productQuantityLabel = new Label($"Quantity: {productQuantity}")
                 {
-                    X = 1 * columnWidth,
-                    Y = row,
-                    Width = columnWidth,
-                    Height = 1,
+                    X = 1,
+                    Y = Pos.Bottom(productNameLabel) + 1,
+                    Width = Dim.Fill(),
                     TextAlignment = TextAlignment.Left // Left text alignment
                 };
-                var productPriceLabel = new Label(payment)
+                var productPaymentLabel = new Label($"Payment: {payment}")
                 {
-                    X = 2 * columnWidth,
-                    Y = row,
-                    Width = columnWidth,
-                    Height = 1,
+                    X = 1,
+                    Y = Pos.Bottom(productQuantityLabel) + 1,
+                    Width = Dim.Fill(),
                     TextAlignment = TextAlignment.Left // Left text alignment
                 };
-                var productPaymentLabel = new Label(payment)
+                var productStatusLabel = new Label($"Status: {status}")
                 {
-                    X = 3 * columnWidth,
-                    Y = row,
-                    Width = columnWidth,
-                    Height = 1,
+                    X = 1,
+                    Y = Pos.Bottom(productPaymentLabel) + 1,
+                    Width = Dim.Fill(),
                     TextAlignment = TextAlignment.Left // Left text alignment
                 };
-                var productStatusLabel = new Label(status)
+                var productTotalPriceLabel = new Label($"Total Price: {totalPrice:C}")
                 {
-                    X = 4 * columnWidth,
-                    Y = row,
-                    Width = columnWidth,
-                    Height = 1,
-                    TextAlignment = TextAlignment.Left // Left text alignment
-                };
-                var productTotalPriceLabel = new Label(totalPrice.ToString("C"))
-                {
-                    X = 5 * columnWidth,
-                    Y = row,
-                    Width = columnWidth,
-                    Height = 1,
+                    X = 1,
+                    Y = Pos.Bottom(productStatusLabel) + 1,
+                    Width = Dim.Fill(),
                     TextAlignment = TextAlignment.Left // Left text alignment
                 };
 
                 // Add labels to the order window
-                myOrderWindow.Add(productNameLabel, productQuantityLabel, productPriceLabel, productPaymentLabel, productStatusLabel, productTotalPriceLabel);
-                row++;
+                orderWindow.Add(productNameLabel, productQuantityLabel, productPaymentLabel, productStatusLabel, productTotalPriceLabel);
+                scrollView.Add(orderWindow);
+
+                col++;
+                if (col >= colCount)
+                {
+                    col = 0;
+                    row++;
+                }
             }
         }
+
+        // Cập nhật kích thước nội dung của ScrollView
+        scrollView.ContentSize = new Size((colWidth + margin) * colCount, (row + 1) * (rowHeight + margin));
 
         // Create a Close button to exit the order display window
         var closeButton = new Button("Close")
         {
             X = Pos.Center(),
-            Y = Pos.Percent(100) - 1
+            Y = Pos.Bottom(scrollView) - 1
         };
         closeButton.Clicked += () =>
         {
             top.Remove(myOrderWindow); // Remove the order window from the top application
             customer.UserMenu(); // Return to the main menu
         };
+
         myOrderWindow.Add(closeButton); // Add the Close button to the order window
     }
-
 
     public void OrderProduct(int productID, string productName, decimal productPrice, string window)
     {
@@ -281,7 +283,7 @@ public class Orders
         };
         var txtQuantity = new TextField("")
         {
-            X = Pos.Center() + 1,
+            X = Pos.Center() + 2,
             Y = Pos.Percent(25),
             Width = 20
         };
@@ -290,12 +292,12 @@ public class Orders
         // Label and text field for entering the delivery address
         var lblDeliveryAddress = new Label("Delivery Address:")
         {
-            X = Pos.Center() - 13,
+            X = Pos.Center() - 17,
             Y = Pos.Percent(40)
         };
         var txtDeliveryAddress = new TextField("")
         {
-            X = Pos.Center() + 1,
+            X = Pos.Center() + 2,
             Y = Pos.Percent(40),
             Width = 40
         };
@@ -309,7 +311,7 @@ public class Orders
         };
         var txtPaymentMethod = new TextField("")
         {
-            X = Pos.Center() + 1,
+            X = Pos.Center() + 2,
             Y = Pos.Percent(55),
             Width = 20
         };
@@ -365,7 +367,6 @@ public class Orders
                         MessageBox.ErrorQuery("Error", "Product not enough in stock","OK");
                     }
                 }
-
             }
             else
             {
@@ -389,11 +390,14 @@ public class Orders
                 top.Remove(orderWindow);
                 switch (window)
                 {
-                    case "display":
+                    case "display" :
                     pd.DisplayProduct("user");
                     break;
                     case "cart":
                     cart.DisplayCart();
+                    break;
+                    case "category":
+                    cate.DisplayCategories("superadmins");
                     break;
                 }
             }
@@ -423,7 +427,7 @@ public class Orders
             MySqlCommand command = new MySqlCommand(query, connection);
 
             // Parameters for the INSERT INTO orders statement
-            command.Parameters.AddWithValue("@CustomerID", currentCustomerID);  // Using static currentCustomerID
+            command.Parameters.AddWithValue("@CustomerID", SessionData.Instance.CurrentCustomerID);  // Using static currentCustomerID
             command.Parameters.AddWithValue("@ProductID", productID);
             command.Parameters.AddWithValue("@Quantity", quantity);
             command.Parameters.AddWithValue("@PaymentMethod", paymentMethod);
@@ -443,140 +447,7 @@ public class Orders
         }
     }
 
-    public void DisplayProductToOrderForCustomer()
-    {
-        List<Products> products = new List<Products>();
-        var top = Application.Top;
-
-        // Create a window to display product list
-        var DisplayProductToOrderForCustomerWin = new Window("Product List")
-        {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        top.Add(DisplayProductToOrderForCustomerWin);
-        DisplayProductToOrderForCustomerWin.FocusNext();
-
-        // Connect to the database and retrieve product information
-        using (MySqlConnection connection = new MySqlConnection(connectionString))
-        {
-            string query = @"SELECT 
-                                p.product_id,
-                                p.product_name, 
-                                p.product_stock_quantity, 
-                                p.product_description, 
-                                p.product_price, 
-                                c.category_name, 
-                                p.product_brand
-                            FROM products p
-                            INNER JOIN categories c ON p.product_category_id = c.category_id;";
-            MySqlCommand command = new MySqlCommand(query, connection);
-            connection.Open();
-            MySqlDataReader reader = command.ExecuteReader();
-
-            // Define column headers
-            var columnDisplayListProductToOrder = new string[]
-            {
-                "Product's name", "Stock quantity", "Description", "Price", "Category's name", "Brand"
-            };
-
-            int columnWidth = 20; // Column width
-
-            // Display column headers
-            for (int i = 0; i < columnDisplayListProductToOrder.Length; i++)
-            {
-                DisplayProductToOrderForCustomerWin.Add(new Label(columnDisplayListProductToOrder[i])
-                {
-                    X = i * columnWidth,
-                    Y = 0,
-                    Width = columnWidth,
-                    Height = 1
-                });
-            }
-
-            int row = 1;
-            while (reader.Read())
-            {
-                // Read product details from the database
-                int productID = reader.GetInt32("product_id");
-                string productName = reader["product_name"].ToString();
-                decimal productPrice = reader.GetDecimal("product_price");
-
-                // Create labels for each product attribute
-                var productLabel = new Label($"{productName}")
-                {
-                    X = 0,
-                    Y = row,
-                    Width = columnWidth
-                };
-                var stockQuantityLabel = new Label($"{reader["product_stock_quantity"]}")
-                {
-                    X = 1 * columnWidth,
-                    Y = row,
-                    Width = columnWidth
-                };
-                var descriptionLabel = new Label($"{reader["product_description"]}")
-                {
-                    X = 2 * columnWidth,
-                    Y = row,
-                    Width = columnWidth
-                };
-                var priceLabel = new Label($"{productPrice}")
-                {
-                    X = 3 * columnWidth,
-                    Y = row,
-                    Width = columnWidth
-                };
-                var categoryLabel = new Label($"{reader["category_name"]}")
-                {
-                    X = 4 * columnWidth,
-                    Y = row,
-                    Width = columnWidth
-                };
-                var brandLabel = new Label($"{reader["product_brand"]}")
-                {
-                    X = 5 * columnWidth,
-                    Y = row,
-                    Width = columnWidth
-                };
-
-                // Button to order the product
-                var orderButton = new Button("Order")
-                {
-                    X = 6 * columnWidth,
-                    Y = row
-                };
-                orderButton.Clicked += () =>
-                {
-                    top.Remove(DisplayProductToOrderForCustomerWin);
-                    OrderProductForCustomer(productID, productName, productPrice);
-                };
-
-                // Add labels and button to the window
-                DisplayProductToOrderForCustomerWin.Add(productLabel, stockQuantityLabel, descriptionLabel, priceLabel, categoryLabel, brandLabel, orderButton);
-                row++;
-            }
-        }
-
-        // Close button to exit the product display window
-        var btnClose = new Button("Close")
-        {
-            X = Pos.Center(),
-            Y = Pos.Percent(100) - 1
-        };
-        btnClose.Clicked += () =>
-        {
-            top.Remove(DisplayProductToOrderForCustomerWin);
-            admin.AdminMenu(); // Navigate back to admin menu (adjust as needed)
-        };
-
-        // Add close button to the window
-        DisplayProductToOrderForCustomerWin.Add(btnClose);
-    }
-
-    static void OrderProductForCustomer(int productID, string productName, decimal productPrice)
+    public void OrderProductForCustomer(int productID, string productName, decimal productPrice, string role)
     {
         var top = Application.Top;
         var orderWindow = new Window("Order Product")
@@ -718,7 +589,15 @@ public class Orders
 
                         // Close the order window and display the product list again
                         top.Remove(orderWindow);
-                        admin.AdminMenu();
+                        switch(role)
+                        {
+                            case "admin":
+                            pd.DisplayProduct("admin");
+                            break;
+                            case "superadmin":
+                            pd.DisplayProduct("superadmin");
+                            break;
+                        }
                     }
                     else if(quantity > checkquantity)
                     {
@@ -743,7 +622,15 @@ public class Orders
             if (confirmed)
             {
                 top.Remove(orderWindow);
-                order.DisplayProductToOrderForCustomer();
+                switch(role)
+                {
+                    case "admin":
+                    pd.DisplayProduct("admin");
+                    break;
+                    case "superadmin":
+                    pd.DisplayProduct("superadmin");
+                    break;
+                }
             }
         };
 

@@ -6,6 +6,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using Terminal.Gui;
+using Org.BouncyCastle.Asn1.X509;
+using Mysqlx;
 
 public class Categories
 {
@@ -17,6 +19,10 @@ public class Categories
     
     public static Categories cate = new Categories();
     public static SuperAdmin superadmin = new SuperAdmin();
+    public static Customers cus = new Customers();
+    public static Cart userCart = new Cart();
+    public static Orders order = new Orders();
+
     public static string connectionString = Configuration.ConnectionString;
 
     // Method to load categories from the database
@@ -148,118 +154,40 @@ public class Categories
         addCategorytWin.Add(CategoryNameLabel, CategoryNameField, CategoryDescriptionLabel, CategoryDescriptionField,
                         saveButton, closeButton);
     }
-    public void DeleteCategory()
+    public void DeleteCategory(int CategoryID)
     {
-        ListCategories = LoadCategory(connectionString);
-        var top = Application.Top;
-        var deletecategoryWin = new Window("Delete Category")
+        try
         {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        top.Add(deletecategoryWin);
-
-        // Label and field for entering the category ID
-        var categoryIDLabel = new Label("Category ID:")
-        {
-            X = Pos.Center() - 10,
-            Y = Pos.Center() - 3
-        };
-        var categoryIDField = new TextField("")
-        {
-            X = Pos.Center() + 5,
-            Y = Pos.Center() - 3,
-            Width = 20
-        };
-
-        // Button to delete the category
-        var deleteButton = new Button("Delete")
-        {
-            X = Pos.Center(),
-            Y = Pos.Center()
-        };
-        deleteButton.Clicked += () =>
-        {
-            try
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                // Validate and parse the category ID from the text field
-                if (int.TryParse(categoryIDField.Text.ToString(), out int categoryID))
-                {
-                    // Find the category in the list based on the ID
-                    Categories cg = ListCategories.Find(s => s.CategoryID == categoryID);
-
-                    if (cg != null)
-                    {
-                        // Delete the category from the database
-                        using (MySqlConnection connection = new MySqlConnection(connectionString))
-                        {
-                            connection.Open();
-                            string query = "DELETE FROM categories WHERE category_id = @categoryID;" +
-                                            "DELETE FROM products WHERE product_category_id = @categoryID";
-                            MySqlCommand command = new MySqlCommand(query, connection);
-                            command.Parameters.AddWithValue("@categoryID", categoryID);
-                            command.ExecuteNonQuery();
-                        }
-
-                        // Remove the category from the application list
-                        ListCategories.Remove(cg);
-
-                        // Display success message and return to admin menu
-                        MessageBox.Query("Success", "Successfully deleted category!", "OK");
-                        top.Remove(deletecategoryWin);
-                        cate.DeleteCategory();
-                    }
-                    else
-                    {
-                        // Display error if category not found
-                        MessageBox.ErrorQuery("Error", "Category not found!", "OK");
-                    }
-                }
-                else
-                {
-                    // Display error for invalid category ID format
-                    MessageBox.ErrorQuery("Error", "Invalid Category ID!", "OK");
-                }
+                connection.Open();
+                string query = @"UPDATE categories
+                                SET active = FALSE 
+                                WHERE category_id = @CategoryID;
+                                UPDATE products
+                                SET is_active = FALSE
+                                WHERE product_categorry_id = @CategoryID";
+                MySqlCommand command = new MySqlCommand(query, connection);
+                command.Parameters.AddWithValue("@CategoryID", CategoryID);
+                command.ExecuteNonQuery();
             }
-            catch (Exception ex)
-            {
-                // Display error for any exception during deletion process
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
-        };
-
-        // Button to close the window
-        var closeButton = new Button("Close")
+            MessageBox.Query("Success", "Cateogry successfully marked as inactive!", "OK");
+        }
+        catch (Exception ex)
         {
-            X = Pos.Center(),
-            Y = Pos.Center() + 2
-        };
-        closeButton.Clicked += () =>
-        {
-            // Prompt confirmation before closing the window
-            bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to close?", "Yes", "No") == 0;
-            if (confirmed)
-            {
-                top.Remove(deletecategoryWin);
-                superadmin.SuperAdminMenu(); // Return to admin menu
-            }
-        };
-
-        // Add all components to the window
-        deletecategoryWin.Add(categoryIDLabel, categoryIDField, deleteButton, closeButton);
+            MessageBox.ErrorQuery("Error", ex.Message, "OK");
+        }
     }
-    public void Displaycategorys()
+    public void DisplayCategories(string role)
     {
-        // Load the list of categorys from the database using the connection string.
-        List<Categories> categorysList = LoadCategory(connectionString);
+        // Load the list of categories from the database using the connection string.
+        List<Categories> categoriesList = LoadCategory(connectionString);
         
         // Get the top-level window of the application.
         var top = Application.Top;
 
-        // Create a new window titled "Display categorys" with specific dimensions.
-        var displaycategoryWindow = new Window("Display categories")
+        // Create a new window titled "Display Categories" with specific dimensions.
+        var displayCategoryWindow = new Window("Display Categories")
         {
             X = 0,
             Y = 0,
@@ -268,10 +196,10 @@ public class Categories
         };
 
         // Add the display category window to the top-level window.
-        top.Add(displaycategoryWindow);
+        top.Add(displayCategoryWindow);
 
         // Move focus to the next UI element in the window.
-        displaycategoryWindow.FocusNext();
+        displayCategoryWindow.FocusNext();
 
         // Establish a connection to the database.
         using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -292,24 +220,6 @@ public class Categories
             // Execute the query and obtain a data reader to read the results.
             MySqlDataReader reader = command.ExecuteReader();
 
-            // Define the column headers to be displayed in the window.
-            var columnDisplayListcategory = new string[]
-            {
-                "category ID", "Name", "Description"
-            };
-
-            // Add column headers to the window.
-            for (int i = 0; i < columnDisplayListcategory.Length; i++)
-            {
-                displaycategoryWindow.Add(new Label(columnDisplayListcategory[i])
-                {
-                    X = i * 20,
-                    Y = 0,
-                    Width = 20,
-                    Height = 1
-                });
-            }
-
             // Initialize the row offset for displaying data rows.
             int rowOffset = 1;
 
@@ -319,33 +229,43 @@ public class Categories
                 // Retrieve category details from the current row.
                 int categoryId = Convert.ToInt32(reader["category_id"]);
                 string categoryName = reader["category_name"].ToString();
-                string categorydescription = reader["category_decription"].ToString();
+                string categoryDescription = reader["category_description"].ToString();
 
-                // Add category details to the window as labels.
-                displaycategoryWindow.Add(new Label(categoryId.ToString())
+                // Create a button for each category.
+                var categoryButton = new Button(categoryName)
                 {
-                    X = 0,
-                    Y = rowOffset,
-                    Width = 20,
-                    Height = 1
-                });
-                displaycategoryWindow.Add(new Label(categoryName)
+                    X = 1,
+                    Y = rowOffset
+                };
+
+                if(role == "user")
+                {    
+                    // Define the action to be taken when the category button is clicked.
+                    categoryButton.Clicked += () => DisplayProducts(categoryId, categoryName);
+                }
+                else if(role == "superadmin")
                 {
-                    X = 1 * 20,
-                    Y = rowOffset,
-                    Width = 20,
-                    Height = 1
-                });
-                displaycategoryWindow.Add(new Label(categorydescription)
-                {
-                    X = 2 * 20,
-                    Y = rowOffset,
-                    Width = 20,
-                    Height = 1
-                });
+                    bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to disable this category", "Yes", "No") == 0;
+                    if (confirmed)
+                    {
+                        categoryButton.Clicked += () =>
+                        { 
+                            try
+                            {
+                            cate.DeleteCategory(categoryId);
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                            }
+                        };
+                    }
+                }
+                // Add the category button to the window.
+                displayCategoryWindow.Add(categoryButton);
 
                 // Increment the row offset for the next data row.
-                rowOffset++;
+                rowOffset += 2;
             }
 
             // Close the data reader.
@@ -363,11 +283,181 @@ public class Categories
         btnClose.Clicked += () =>
         {
             // Remove the display category window and go back to the admin menu.
-            top.Remove(displaycategoryWindow);
-            superadmin.SuperAdminMenu();
+            top.Remove(displayCategoryWindow);
+            cus.UserMenu();
         };
 
         // Add the close button to the display category window.
-        displaycategoryWindow.Add(btnClose);
+        displayCategoryWindow.Add(btnClose);
+    }
+
+    public void DisplayProducts(int categoryId, string categoryName)
+    {
+        // Get the top-level window of the application.
+        var top = Application.Top;
+
+        // Create a new window titled "Products in {categoryName}" with specific dimensions.
+        var productsWindow = new Window($"Products in {categoryName}")
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+
+        // Create a ScrollView to hold the products.
+        var scrollView = new ScrollView()
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            ContentSize = new Size(0, 0) // Kích thước nội dung sẽ được thiết lập sau
+        };
+
+        productsWindow.Add(scrollView);
+        top.Add(productsWindow); // Add the products window to the top-level window
+
+        var productContainer = new View()
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+
+        scrollView.Add(productContainer);
+
+        int row = 0;
+        int col = 0;
+        int colCount = 2; // Số cột trong ScrollView
+        int colWidth = 40; // Chiều rộng của mỗi cửa sổ sản phẩm
+        int rowHeight = 12; // Chiều cao của mỗi cửa sổ sản phẩm
+        int margin = 2; // Lề giữa các sản phẩm
+
+        // Connect to the database and retrieve products for the selected category.
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {
+            string query = @"SELECT 
+                                p.product_id,
+                                p.product_name,
+                                p.product_brand,
+                                p.product_price
+                            FROM products p
+                            WHERE p.product_category_id = @CategoryId";
+            MySqlCommand command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@CategoryId", categoryId); // Bind category ID parameter
+            connection.Open();
+            MySqlDataReader reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                // Construct the product details string
+                int productID = reader.GetInt32("product_id");
+                string productName = reader["product_name"].ToString();
+                string productBrand = reader["product_brand"].ToString();
+                decimal productPrice = reader.GetDecimal("product_price");
+
+                var productWindow = new Window($"Product {row * colCount + col + 1}")
+                {
+                    X = col * (colWidth + margin),
+                    Y = row * (rowHeight + margin),
+                    Width = colWidth,
+                    Height = rowHeight
+                };
+
+                // Create labels for displaying product details
+                var productNameLabel = new Label($"Name: {productName}")
+                {
+                    X = 1,
+                    Y = 1,
+                    Width = Dim.Fill(),
+                    TextAlignment = TextAlignment.Left // Left text alignment
+                };
+                var productBrandLabel = new Label($"Description: {productBrand}")
+                {
+                    X = 1,
+                    Y = Pos.Bottom(productNameLabel) + 1,
+                    Width = Dim.Fill(),
+                    TextAlignment = TextAlignment.Left // Left text alignment
+                };
+                var productPriceLabel = new Label($"Price: {productPrice:C}")
+                {
+                    X = 1,
+                    Y = Pos.Bottom(productBrandLabel) + 1,
+                    Width = Dim.Fill(),
+                    TextAlignment = TextAlignment.Left // Left text alignment
+                };
+                var addButton = new Button("Add to Cart")
+                {
+                    X = 1,
+                    Y = 7
+                };
+                addButton.Clicked += () =>
+                {
+                    try
+                    {
+                        userCart.AddToCart(productID);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                    }
+                };
+                var orderButton = new Button("Order")
+                {
+                    X = Pos.Right(addButton) + 2,
+                    Y = 7
+                };
+
+                orderButton.Clicked += () =>
+                {
+                    try
+                    {
+                        top.Remove(productsWindow);
+                        order.OrderProduct(productID, productName, productPrice, "category");
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                    }
+                };
+
+                // Add labels to the product window
+                productWindow.Add(productNameLabel, productBrandLabel, productPriceLabel, addButton);
+                productContainer.Add(productWindow);
+
+                col++;
+                if (col >= colCount)
+                {
+                    col = 0;
+                    row++;
+                }
+            }
+
+            // Cập nhật kích thước nội dung của ScrollView
+            scrollView.ContentSize = new Size((colWidth + margin) * colCount, (row + 1) * (rowHeight + margin));
+
+            // Close the data reader.
+            reader.Close();
+        }
+
+        // Create a button labeled "Close" to close the products window.
+        var btnClose = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = Pos.Bottom(scrollView) - 1
+        };
+
+        // Define the action to be taken when the close button is clicked.
+        btnClose.Clicked += () =>
+        {
+            // Remove the products window and go back to the categories window.
+            top.Remove(productsWindow);
+            cate.DisplayCategories("superadmin");
+        };
+
+        // Add the close button to the products window.
+        productsWindow.Add(btnClose);
     }
 }

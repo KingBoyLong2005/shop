@@ -27,7 +27,6 @@ public class Admin
     public static SuperAdmin superadmin = new SuperAdmin();// Represents a superadmin associated with the admin
     public static Program program = new Program();        // Represents a program instance
     public static string connectionString = Configuration.ConnectionString; // Connection string for database access
-    public static int currentCustomerID = SessionData.Instance.CurrentCustomerID; // Current customer ID
 
     // Lists to store users and admins
     public static List<Users> ListUsers = new List<Users>();
@@ -135,7 +134,7 @@ public class Admin
         {
             string query = "SELECT admin_name FROM admins WHERE admin_id = @AdminID";
             MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@AdminID", AdminID); // Use AdminID property
+            command.Parameters.AddWithValue("@AdminID", SessionData.Instance.CurrentCustomerID); // Use AdminID property
             connection.Open();
             MySqlDataReader reader = command.ExecuteReader();
             if (reader.Read())
@@ -143,7 +142,7 @@ public class Admin
                 adminName = reader["admin_name"].ToString();
             }
         }
-        var rightTopFrame = new FrameView("Welcome, "+adminName)
+        var rightTopFrame = new FrameView($"Welcome, {adminName}")
         {
             X = Pos.Percent(30),
             Y = 0,
@@ -160,17 +159,6 @@ public class Admin
             Height = Dim.Fill()
         };
         adminMenu.Add(rightBottomFrame);
-
-        var btnOrderForCustomer = new Button("Order for customer")
-        {
-            X = 2,
-            Y = 2
-        };
-        btnOrderForCustomer.Clicked += () =>
-        {
-            top.Remove(adminMenu);
-            order.DisplayProductToOrderForCustomer();
-        };
 
         var btnDisplayCustomer = new Button("Display Customer")
         {
@@ -191,10 +179,8 @@ public class Admin
         btnFindCustomer.Clicked += () =>
         {
             top.Remove(adminMenu);
-            customer.FindCustomer();
+            customer.FindCustomer("admin");
         };
-
-
         var btnAddCustomer = new Button("Add New Customer")
         {
             X = 2,
@@ -216,8 +202,6 @@ public class Admin
             top.Remove(adminMenu);
             pd.DisplayProduct("admin");
         };
-
-
         var btnAddProduct = new Button("Add Product")
         {
             X = 2,
@@ -262,7 +246,7 @@ public class Admin
             program.Login();
         };
 
-        leftFrame.Add(btnOrderForCustomer, btnDisplayCustomer, btnFindCustomer,
+        leftFrame.Add(btnDisplayCustomer, btnFindCustomer,
                     btnAddCustomer, btnDisplayProduct,
                     btnAddProduct, btnFindProduct, btnUpdateStatus, LogoutButton);
 
@@ -271,8 +255,7 @@ public class Admin
 █████╗  ██║     █████╗  ██║        ██║   ██████╔╝██║   ██║██╔██╗ ██║██║██║         ███████╗███████║██║   ██║██████╔╝
 ██╔══╝  ██║     ██╔══╝  ██║        ██║   ██╔══██╗██║   ██║██║╚██╗██║██║██║         ╚════██║██╔══██║██║   ██║██╔═══╝ 
 ███████╗███████╗███████╗╚██████╗   ██║   ██║  ██║╚██████╔╝██║ ╚████║██║╚██████╗    ███████║██║  ██║╚██████╔╝██║     
-╚══════╝╚══════╝╚══════╝ ╚═════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝ ╚═════╝    ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     
-                                                                                                                    ")
+╚══════╝╚══════╝╚══════╝ ╚═════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝ ╚═════╝    ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     ")
         {
             X = Pos.Center(),
             Y = Pos.Center()
@@ -491,135 +474,235 @@ public class Admin
    
     public void FindStaff()
     {
-        List<string[]> admin = new List<string[]>();
         var top = Application.Top;
-
-        var findAdminWindow = new Window("Find Admin")
+        var findStaffWin = new Window("Find Staff")
         {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
             Height = Dim.Fill()
         };
-        top.Add(findAdminWindow);
-        findAdminWindow.FocusNext();
+        top.Add(findStaffWin);
 
-        var searchLabel = new Label("Enter staff name:")
+        // Label and field for entering the staff name
+        var staffNameLabel = new Label("Staff name:")
         {
-            X = 1,
-            Y = 1
+            X = 2,
+            Y = 2
         };
-        var searchField = new TextField("")
+        var staffNameField = new TextField("")
         {
-            X = Pos.Right(searchLabel) + 1,
-            Y = 1,
+            X = Pos.Right(staffNameLabel) + 1,
+            Y = 2,
             Width = 40
         };
-        var searchButton = new Button("Search")
+
+        // Button to find the staff
+        var findButton = new Button("Find")
         {
-            X = Pos.Right(searchField) + 1,
-            Y = 1
+            X = Pos.Center(),
+            Y = 4
         };
 
-        findAdminWindow.Add(searchLabel, searchField, searchButton);
-
-        var resultLabel = new Label("Results:")
+        // Event handler for the Find button
+        findButton.Clicked += () =>
         {
-            X = 1,
-            Y = 3
-        };
-        findAdminWindow.Add(resultLabel);
-
-        var columnDisplayListAdmin = new string[]
-        {
-            "Admin's name", "Phone number", "Email", "Gender", "Username", "Password"
-        };
-
-        int columnWidth = 20; // Width of each column
-
-        // Add column headers
-        for (int i = 0; i < columnDisplayListAdmin.Length; i++)
-        {
-            findAdminWindow.Add(new Label(columnDisplayListAdmin[i])
+            try
             {
-                X = i * columnWidth,
-                Y = 4,
-                Width = columnWidth,
-                Height = 1
-            });
-        }
+                string staffName = staffNameField.Text.ToString();
 
-        // Handle search button click event
-        searchButton.Clicked += () =>
-        {
-            admin.Clear(); // Clear previous search results
-
-            string searchTerm = searchField.Text.ToString();
-
-            using (MySqlConnection connection = new MySqlConnection(connectionString))
-            {
-                string query = @"
-                    SELECT 
-                        adm.admin_name,
-                        adm.admin_phone AS admin_phone_number,
-                        adm.admin_email,
-                        adm.admin_gender,
-                        usr.username,
-                        usr.password_hash
-                    FROM admins adm
-                    INNER JOIN users usr ON adm.admin_id = usr.user_customer_id
-                    WHERE adm.admin_name LIKE @SearchTerm AND usr.role = 'admin' AND active = TRUE";
-
-                MySqlCommand command = new MySqlCommand(query, connection);
-                command.Parameters.AddWithValue("@SearchTerm", "%" + searchTerm + "%");
-
-                connection.Open();
-                MySqlDataReader reader = command.ExecuteReader();
-
-                while (reader.Read())
+                // Query to retrieve staff information based on staff name
+                using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
-                    admin.Add(new string[]
+                    string query = @"
+                        SELECT 
+                            adm.admin_name,
+                            adm.admin_phone AS admin_phone_number,
+                            adm.admin_email,
+                            adm.admin_gender,
+                            usr.username,
+                            usr.password_hash
+                        FROM admins adm
+                        INNER JOIN users usr ON adm.admin_id = usr.user_customer_id
+                        WHERE adm.admin_name LIKE @SearchTerm AND usr.role = 'admin' AND adm.active = TRUE";
+                    MySqlCommand command = new MySqlCommand(query, connection);
+                    command.Parameters.AddWithValue("@SearchTerm", "%" + staffName + "%");
+                    connection.Open();
+                    MySqlDataReader reader = command.ExecuteReader();
+
+                    ListAdmin.Clear();
+                    ListUsers.Clear();
+
+                    while (reader.Read())
                     {
-                        reader["admin_name"].ToString(),
-                        reader["admin_phone_number"].ToString(),
-                        reader["admin_email"].ToString(),
-                        reader["admin_gender"].ToString(),
-                        reader["username"].ToString(),
-                        reader["password_hash"].ToString()
-                    });
+                        var admin = new Admin
+                        {
+                            AdminName = reader["admin_name"].ToString(),
+                            AdminPhone = reader["admin_phone_number"].ToString(),
+                            AdminEmail = reader["admin_email"].ToString(),
+                            AdminGender = reader["admin_gender"].ToString()
+                        };
+                        var user = new Users
+                        {
+                            Username = reader["username"].ToString(),
+                            PasswordHash = reader["password_hash"].ToString()
+                        };
+
+                        ListAdmin.Add(admin);
+                        ListUsers.Add(user);
+                    }
+
+                    reader.Close();
                 }
 
-                // Display search results
-                for (int i = 0; i < admin.Count; i++)
+                if (ListAdmin.Count == 0)
                 {
-                    for (int j = 0; j < admin[i].Length; j++)
+                    // Display error if no staff found
+                    MessageBox.ErrorQuery("Error", "Staff not found!", "OK");
+                    return;
+                }
+
+                top.Remove(findStaffWin);
+
+                // Create a new window to display the staff
+                var staffWindow = new Window("Staff")
+                {
+                    X = 0,
+                    Y = 0,
+                    Width = Dim.Fill(),
+                    Height = Dim.Fill()
+                };
+                top.Add(staffWindow);
+
+                var scrollView = new ScrollView()
+                {
+                    X = 0,
+                    Y = 0,
+                    Width = Dim.Fill(),
+                    Height = Dim.Fill(),
+                    ContentSize = new Size(0, 0) // Content size will be set later
+                };
+                staffWindow.Add(scrollView);
+
+                var staffContainer = new View()
+                {
+                    X = 0,
+                    Y = 0,
+                    Width = Dim.Fill(),
+                    Height = Dim.Fill()
+                };
+                scrollView.Add(staffContainer);
+
+                int row = 0;
+                int col = 0;
+                int colCount = 2; // Number of columns in the ScrollView
+                int colWidth = 40; // Width of each staff window
+                int rowHeight = 10; // Height of each staff window
+                int margin = 2; // Margin between staff windows
+
+                foreach (var admin in ListAdmin)
+                {
+                    var AdminWindow = new Window($"Staff {row * colCount + col + 1}")
                     {
-                        findAdminWindow.Add(new Label(admin[i][j])
-                        {
-                            X = j * columnWidth,
-                            Y = i + 5,
-                            Width = columnWidth,
-                            Height = 1
-                        });
+                        X = col * (colWidth + margin),
+                        Y = row * (rowHeight + margin),
+                        Width = colWidth,
+                        Height = rowHeight
+                    };
+
+                    var staffNameLabel = new Label($"Name: {admin.AdminName}")
+                    {
+                        X = 1,
+                        Y = 1,
+                        Width = Dim.Fill(),
+                        TextAlignment = TextAlignment.Left
+                    };
+                    var staffPhoneLabel = new Label($"Phone: {admin.AdminPhone}")
+                    {
+                        X = 1,
+                        Y = Pos.Bottom(staffNameLabel) + 1,
+                        Width = Dim.Fill(),
+                        TextAlignment = TextAlignment.Left
+                    };
+                    var staffEmailLabel = new Label($"Email: {admin.AdminEmail}")
+                    {
+                        X = 1,
+                        Y = Pos.Bottom(staffPhoneLabel) + 1,
+                        Width = Dim.Fill(),
+                        TextAlignment = TextAlignment.Left
+                    };
+                    var staffGenderLabel = new Label($"Gender: {admin.AdminGender}")
+                    {
+                        X = 1,
+                        Y = Pos.Bottom(staffEmailLabel) + 1,
+                        Width = Dim.Fill(),
+                        TextAlignment = TextAlignment.Left
+                    };
+
+                    var user = ListUsers[row * colCount + col];
+                    var usernameLabel = new Label($"Username: {user.Username}")
+                    {
+                        X = 1,
+                        Y = Pos.Bottom(staffGenderLabel) + 1,
+                        Width = Dim.Fill(),
+                        TextAlignment = TextAlignment.Left
+                    };
+                    var passwordHashLabel = new Label($"Password Hash: {user.PasswordHash}")
+                    {
+                        X = 1,
+                        Y = Pos.Bottom(usernameLabel) + 1,
+                        Width = Dim.Fill(),
+                        TextAlignment = TextAlignment.Left
+                    };
+
+                    AdminWindow.Add(staffNameLabel, staffPhoneLabel, staffEmailLabel, staffGenderLabel, usernameLabel, passwordHashLabel);
+                    staffContainer.Add(AdminWindow);
+
+                    col++;
+                    if (col >= colCount)
+                    {
+                        col = 0;
+                        row++;
                     }
                 }
+
+                scrollView.ContentSize = new Size((colWidth + margin) * colCount, (row + 1) * (rowHeight + margin));
+
+                var btnClose = new Button("Close")
+                {
+                    X = Pos.Center(),
+                    Y = 1
+                };
+                btnClose.Clicked += () =>
+                {
+                    ListAdmin.Clear();
+                    ListUsers.Clear();
+                    top.Remove(staffWindow);
+                    FindStaff();
+                };
+                staffWindow.Add(btnClose);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
             }
         };
 
-        var btnClose = new Button("Close")
+        var closeButton = new Button("Close")
         {
             X = Pos.Center(),
             Y = Pos.Percent(100) - 1
         };
-        btnClose.Clicked += () =>
+        closeButton.Clicked += () =>
         {
-            top.Remove(findAdminWindow);
+            ListAdmin.Clear();
+            ListUsers.Clear();
+            top.Remove(findStaffWin);
             superadmin.SuperAdminMenu();
         };
 
-        findAdminWindow.Add(btnClose);
+        findStaffWin.Add(staffNameLabel, staffNameField, findButton, closeButton);
     }
-
     public void DeleteStaff(int AdminID)
     {
         try
@@ -780,7 +863,7 @@ public class Admin
                 };
                 deleteButton.Clicked += () =>
                 {
-                    bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to delete this staff?", "Yes", "No") == 0;
+                    bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to disable this staff?", "Yes", "No") == 0;
                     if (confirmed)
                     {
                         try

@@ -22,7 +22,6 @@ public class Cart
 
 
     public static string connectionString = Configuration.ConnectionString;
-    public static int currentCustomerID = SessionData.Instance.CurrentCustomerID;
 
     public static Customers customer = new Customers();
     public static Cart userCart = new Cart();
@@ -85,6 +84,7 @@ public class Cart
     {
         var top = Application.Top;
 
+        // Tạo cửa sổ chính
         var cartWindow = new Window("Cart")
         {
             X = 0,
@@ -92,31 +92,29 @@ public class Cart
             Width = Dim.Fill(),
             Height = Dim.Fill()
         };
+
+        var scrollView = new ScrollView()
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            ContentSize = new Size(0, 0) // Kích thước nội dung sẽ được thiết lập sau
+        };
+
+        cartWindow.Add(scrollView);
         top.Add(cartWindow);
 
-        // FrameView để căn giữa toàn bộ bảng
-        var frame = new FrameView("Your Cart")
+        // Tạo một View để chứa tất cả các sản phẩm trong giỏ hàng
+        var cartContainer = new View()
         {
-            X = Pos.Center(),
-            Y = Pos.Center(),
-            Width = Dim.Percent(80),
-            Height = Dim.Percent(80)
-        };
-        cartWindow.Add(frame);
-
-        // Tiêu đề cột
-        var lblNameHeader = new Label("Name")
-        {
-            X = 1,
-            Y = 0
-        };
-        var lblPriceHeader = new Label("Price")
-        {
-            X = Pos.Right(lblNameHeader) + 20,
-            Y = 0
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
         };
 
-        frame.Add(lblNameHeader, lblPriceHeader);
+        scrollView.Add(cartContainer);
 
         int row = 1;
 
@@ -126,41 +124,65 @@ public class Cart
             string query = @"SELECT 
                                 p.product_id,
                                 p.product_name, 
-                                p.product_price
+                                p.product_price,
+                                p.product_brand
                             FROM cart c
                             INNER JOIN products p ON c.cart_product_id = p.product_id
-                            WHERE c.cart_customer_id = @CustomerID";
+                            WHERE c.cart_customer_id = @CustomerID AND active = TRUE";
             MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@CustomerID", currentCustomerID);
+            command.Parameters.AddWithValue("@CustomerID", SessionData.Instance.CurrentCustomerID);
             connection.Open();
             MySqlDataReader reader = command.ExecuteReader();
+
+            int colCount = 1; // Number of columns per row
+            int colWidth = 30; // Width of each product window
+            int rowHeight = 9; // Height of each product window
+            int margin = 2; // Margin between products
+
+            int col = 0;
 
             while (reader.Read())
             {
                 int productID = reader.GetInt32("product_id");
                 string productName = reader["product_name"].ToString();
                 decimal productPrice = reader.GetDecimal("product_price");
+                string productbrand = reader["product_brand"].ToString();
 
-                // Display product details and buttons for interaction
-                var productLabel = new Label(productName)
+                var productWindow = new Window($"{productName}")
+                {
+                    X = col * (colWidth + margin),
+                    Y = row * (rowHeight + margin),
+                    Width = colWidth,
+                    Height = rowHeight
+                };
+
+                var productLabel = new Label($"Name: {productName}")
                 {
                     X = 1,
-                    Y = row
+                    Y = 1,
+                    Width = Dim.Fill()
                 };
-                var priceLabel = new Label($"{productPrice:C}")
+                var priceLabel = new Label($"Price: {productPrice:C}")
                 {
-                    X = Pos.Right(lblNameHeader) + 20,
-                    Y = row
+                    X = 1,
+                    Y = 2,
+                    Width = Dim.Fill()
+                };
+                var brandlabel = new Label($"Brand: {productbrand}")
+                {
+                    X = 1,
+                    Y = 3,
+                    Width = Dim.Fill()
                 };
                 var removeButton = new Button("Remove")
                 {
-                    X = Pos.Right(priceLabel) + 10,
-                    Y = row
+                    X = 1,
+                    Y = 5
                 };
                 var orderButton = new Button("Order")
                 {
                     X = Pos.Right(removeButton) + 2,
-                    Y = row
+                    Y = 5
                 };
 
                 // Handle click events for removing and ordering products
@@ -177,17 +199,28 @@ public class Cart
                     order.OrderProduct(productID, productName, productPrice, "cart");
                 };
 
-                // Add labels and buttons to the frame
-                frame.Add(productLabel, priceLabel, removeButton, orderButton);
-                row++;
+                productWindow.Add(productLabel, priceLabel, brandlabel, removeButton, orderButton);
+                cartContainer.Add(productWindow);
+
+                col++;
+                if (col >= colCount)
+                {
+                    col = 0;
+                    row++;
+                }
             }
+
+            reader.Close();
+
+            // Cập nhật kích thước nội dung của ScrollView
+            scrollView.ContentSize = new Size((colWidth + margin) * colCount, (row + 1) * (rowHeight + margin));
         }
 
-        // Add a back button to return to the user menu
+        // Đặt nút Back ở dưới cùng
         var btnBack = new Button("Back")
         {
             X = Pos.Center(),
-            Y = row + 2
+            Y = Pos.Top(scrollView) + 1,
         };
         btnBack.Clicked += () =>
         {
@@ -195,17 +228,18 @@ public class Cart
             customer.UserMenu();
         };
 
-        frame.Add(btnBack);
+        cartWindow.Add(btnBack);
     }
+
     // Remove an item from the database cart and update the UI
     public void RemoveItemFromCart(int productID)
     {
         userCart.RemoveItem(productID);
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
-            string query = "DELETE FROM cart WHERE cart_customer_id = @CustomerID AND cart_product_id = @ProductID";
+            string query = "UPDATE cart SET active = FALSE WHERE cart_customer_id = @CustomerID AND cart_product_id = @ProductID";
             MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@CustomerID", currentCustomerID);
+            command.Parameters.AddWithValue("@CustomerID", SessionData.Instance.CurrentCustomerID);
             command.Parameters.AddWithValue("@ProductID", productID);
             connection.Open();
             command.ExecuteNonQuery();
@@ -227,7 +261,7 @@ public class Cart
                             "VALUES(@CartCustomerID, @CartProductID, 0, 0, 0)";
                 MySqlCommand command = new MySqlCommand(query, connection);
                 command.Parameters.AddWithValue("@CartProductID", productID);
-                command.Parameters.AddWithValue("@CartCustomerID", currentCustomerID);
+                command.Parameters.AddWithValue("@CartCustomerID", SessionData.Instance.CurrentCustomerID);
 
                 try
                 {
