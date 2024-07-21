@@ -178,9 +178,9 @@ public class Products
                     {
                         userCart.AddToCart(productID);
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                        MessageBox.ErrorQuery("Error", "An error occurred while adding the product to the cart.", "OK");
                     }
                 };
 
@@ -196,9 +196,9 @@ public class Products
                         top.Remove(displayWindow);
                         pd.EditProductInformations(role, productID, productName, productQuantity,productPrice, categoryID, productBrand);
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                        MessageBox.ErrorQuery("Error", "An error occurred while editing the product information.", "OK");
                     }
                 };
 
@@ -215,9 +215,9 @@ public class Products
                         top.Remove(displayWindow);
                         order.OrderProduct(productID, productName, productPrice, "display");
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                        MessageBox.ErrorQuery("Error", "An error occurred while processing the order.", "OK");
                     }
                 };
 
@@ -236,9 +236,9 @@ public class Products
                         pd.DeleteProduct(productID);
                         }
                     }
-                    catch (Exception ex)
+                    catch 
                     {
-                        MessageBox.ErrorQuery("Error", ex.Message,"OK");
+                        MessageBox.ErrorQuery("Error", "An error occurred while disabling the product.","OK");
                     }
                 };
                 var OrderForCustomerbutton = new Button("Order For Customer")
@@ -246,18 +246,18 @@ public class Products
                     X = 1,
                     Y = Pos.Bottom(orderButton) + 1,
                 };
-                OrderForCustomerbutton.Clicked += () =>
-                {
-                    try
+                    OrderForCustomerbutton.Clicked += () =>
                     {
-                        top.Remove(displayWindow);
-                        order.OrderProductForCustomer(productID, productName, productPrice, role);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.ErrorQuery("Error", ex.Message, "OK");
-                    }
-                };
+                        try
+                        {
+                            top.Remove(displayWindow);
+                            order.OrderProductForCustomer(productID, productName, productPrice, role);
+                        }
+                        catch 
+                        {
+                            MessageBox.ErrorQuery("Error", "An error occurred while processing the order for the customer.", "OK");
+                        }
+                    };
 
                 productWindow.Add(nameLabel, quantityLabel, priceLabel, categoryLabel, brandLabel, addButton, orderButton, editproductButton, OrderForCustomerbutton);
                 productContainer.Add(productWindow);
@@ -403,11 +403,41 @@ public class Products
         {
             try
             {
+                // Validate that all fields are filled
+                if (string.IsNullOrWhiteSpace(productNameField.Text.ToString()) ||
+                    string.IsNullOrWhiteSpace(productStockQuantityField.Text.ToString()) ||
+                    string.IsNullOrWhiteSpace(productCategoryIDField.Text.ToString()) ||
+                    string.IsNullOrWhiteSpace(productPriceField.Text.ToString()) ||
+                    string.IsNullOrWhiteSpace(productBrandField.Text.ToString()))
+                {
+                    MessageBox.ErrorQuery("Error", "All fields must be filled.", "OK");
+                    return;
+                }
+
+                // Validate numeric fields
+                if (!int.TryParse(productStockQuantityField.Text.ToString(), out int stockQuantity))
+                {
+                    MessageBox.ErrorQuery("Error", "Stock Quantity must be a valid number.", "OK");
+                    return;
+                }
+
+                if (!int.TryParse(productCategoryIDField.Text.ToString(), out int categoryID))
+                {
+                    MessageBox.ErrorQuery("Error", "Category ID must be a valid number.", "OK");
+                    return;
+                }
+
+                if (!decimal.TryParse(productPriceField.Text.ToString(), out decimal price))
+                {
+                    MessageBox.ErrorQuery("Error", "Price must be a valid decimal number.", "OK");
+                    return;
+                }
+
                 // Assign input values to the product object
                 pd.ProductName = productNameField.Text.ToString();
-                pd.ProductStockQuantity = int.Parse(productStockQuantityField.Text.ToString());
-                pd.ProductCategoryID = int.Parse(productCategoryIDField.Text.ToString());
-                pd.ProductPrice = decimal.Parse(productPriceField.Text.ToString());
+                pd.ProductStockQuantity = stockQuantity;
+                pd.ProductCategoryID = categoryID;
+                pd.ProductPrice = price;
                 pd.ProductBrand = productBrandField.Text.ToString();
 
                 // Insert the new product into the database
@@ -432,10 +462,10 @@ public class Products
                 top.Remove(addProductWin);
                 admin.AdminMenu();
             }
-            catch (Exception ex)
+            catch
             {
                 // Display error message if an exception occurs
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                MessageBox.ErrorQuery("Error", "An error occurred while adding the new product. Please try again.", "OK");
             }
         };
 
@@ -485,68 +515,68 @@ public class Products
 
         var editProductNameField = new TextField(productName) // Khởi tạo với giá trị hiện tại
         {
-            X = 18,
-            Y = Pos.Right(editProductNameLabel),
-            Width = 100
+            X = 20,
+            Y = 2,
+            Width = 40
         };
 
         var editProductStockQuantityLabel = new Label("Stock Quantity:")
         {
             X = 2,
-            Y = Pos.Bottom(editProductNameLabel) + 1
+            Y = 4
         };
 
         var editProductStockQuantityField = new TextField(quantity.ToString()) // Khởi tạo với giá trị hiện tại
         {
-            X = 18,
-            Y = Pos.Right(editProductStockQuantityLabel),
-            Width = 100
+            X = 20,
+            Y = 4,
+            Width = 40
         };
 
         var editProductCategoryIDLabel = new Label("Category ID:")
         {
             X = 2,
-            Y = Pos.Bottom(editProductStockQuantityLabel) + 1
+            Y = 6
         };
 
         var editProductCategoryIDField = new TextField(categoryID.ToString()) // Khởi tạo với giá trị hiện tại
         {
-            X = 18,
-            Y = Pos.Right(editProductCategoryIDLabel),
-            Width = 100
+            X = 20,
+            Y = 6,
+            Width = 40
         };
 
         var editProductPriceLabel = new Label("Price:")
         {
             X = 2,
-            Y = Pos.Bottom(editProductCategoryIDLabel) + 1
+            Y = 8
         };
 
         var editProductPriceField = new TextField(price.ToString("F2")) // Khởi tạo với giá trị hiện tại
         {
-            X = 18,
-            Y = Pos.Right(editProductPriceLabel),
-            Width = 100
+            X = 20,
+            Y = 8,
+            Width = 40
         };
 
         var editProductBrandLabel = new Label("Brand:")
         {
             X = 2,
-            Y = Pos.Bottom(editProductPriceLabel) + 1
+            Y = 10
         };
 
         var editProductBrandField = new TextField(brand) // Khởi tạo với giá trị hiện tại
         {
-            X = 18,
-            Y = Pos.Right(editProductBrandLabel),
-            Width = 100
+            X = 20,
+            Y = 10,
+            Width = 40
         };
 
         // Button to save edited product information
         var saveButton = new Button("Save")
         {
-            X = Pos.Center(),
-            Y = Pos.Bottom(editProductBrandField) + 2
+            X = 20,
+            Y = 12
         };
         saveButton.Clicked += () =>
         {
@@ -583,20 +613,18 @@ public class Products
                 // Hiển thị thông báo thành công và đóng cửa sổ chỉnh sửa
                 MessageBox.Query("Success", "Successfully edited product!", "OK");
                 top.Remove(editProductWin);
-                // Cập nhật danh sách sản phẩm hoặc làm gì đó sau khi lưu thành công
-                // Ví dụ: pd.DisplayProduct("admin");
             }
-            catch (Exception ex)
+            catch
             {
                 // Hiển thị thông báo lỗi nếu có lỗi xảy ra
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                MessageBox.ErrorQuery("Error", "An error occurred while editing the product. Please try again.", "OK");
             }
         };
 
         // Button to close the window
         var closeButton = new Button("Close")
         {
-            X = Pos.Center(),
+            X = 20,
             Y = Pos.Bottom(saveButton) + 1
         };
         closeButton.Clicked += () =>
@@ -609,11 +637,11 @@ public class Products
                 switch (role)
                 {
                     case "admin":
-                    DisplayProduct("admin");
-                    break;
+                        DisplayProduct("admin");
+                        break;
                     case "superadmin":
-                    DisplayProduct("superadmin");
-                    break;
+                        DisplayProduct("superadmin");
+                        break;
                 }
             }
         };
@@ -626,7 +654,6 @@ public class Products
                         editProductBrandLabel, editProductBrandField,
                         saveButton, closeButton);
     }
-
     public void DeleteProduct(int productID)
     {
         try
@@ -644,9 +671,9 @@ public class Products
 
             MessageBox.Query("Success", "Product successfully marked as inactive!", "OK");
         }
-        catch (Exception ex)
+        catch
         {
-            MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            MessageBox.ErrorQuery("Error", "An error occurred while marking the product as inactive. Please try again.", "OK");
         }
     }
     public void FindProduct(string role)
@@ -867,10 +894,10 @@ public class Products
                 }
 
             }
-            catch (Exception ex)
+            catch
             {
                 // Display error message for any exception
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                MessageBox.ErrorQuery("Error", "An error occurred while searching for products. Please try again.", "OK");
             }
         };
 

@@ -129,20 +129,7 @@ public class Admin
         };
         adminMenu.Add(leftFrame);
 
-        string adminName = "";
-        using (MySqlConnection connection = new MySqlConnection(connectionString))
-        {
-            string query = "SELECT admin_name FROM admins WHERE admin_id = @AdminID";
-            MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@AdminID", SessionData.Instance.CurrentCustomerID); // Use AdminID property
-            connection.Open();
-            MySqlDataReader reader = command.ExecuteReader();
-            if (reader.Read())
-            {
-                adminName = reader["admin_name"].ToString();
-            }
-        }
-        var rightTopFrame = new FrameView($"Welcome, {adminName}")
+        var rightTopFrame = new FrameView("Welcome back")
         {
             X = Pos.Percent(30),
             Y = 0,
@@ -167,74 +154,124 @@ public class Admin
         };
         btnDisplayCustomer.Clicked += () =>
         {
-            top.Remove(adminMenu);
-            customer.DisplayCustomers("admin");
+            try
+            {
+                top.Remove(adminMenu);
+                customer.DisplayCustomers("admin");
+            }
+            catch
+            {
+                MessageBox.ErrorQuery("Error", "An error occurred while displaying customers. Please try again.", "OK");
+            }
         };
 
         var btnFindCustomer = new Button("Find Customer")
         {
             X = 2,
-            Y = 6
+            Y = 5
         };
         btnFindCustomer.Clicked += () =>
         {
-            top.Remove(adminMenu);
-            customer.FindCustomer("admin");
+            try
+            {
+                top.Remove(adminMenu);
+                customer.FindCustomer("admin");
+            }
+            catch
+            {
+                MessageBox.ErrorQuery("Error", "An error occurred while finding a customer. Please try again.", "OK");
+            }
         };
+
         var btnAddCustomer = new Button("Add New Customer")
         {
             X = 2,
-            Y = 10
+            Y = 6
         };
         btnAddCustomer.Clicked += () =>
         {
-            top.Remove(adminMenu);
-            customer.AddCustomer();
+            try
+            {
+                top.Remove(adminMenu);
+                customer.AddCustomer();
+            }
+            catch
+            {
+                MessageBox.ErrorQuery("Error", "An error occurred while adding a new customer. Please try again.", "OK");
+            }
         };
 
         var btnDisplayProduct = new Button("Display Products")
         {
             X = 2,
-            Y = 14
+            Y = 7
         };
         btnDisplayProduct.Clicked += () =>
         {
-            top.Remove(adminMenu);
-            pd.DisplayProduct("admin");
+            try
+            {
+                top.Remove(adminMenu);
+                pd.DisplayProduct("admin");
+            }
+            catch
+            {
+                MessageBox.ErrorQuery("Error", "An error occurred while displaying products. Please try again.", "OK");
+            }
         };
+
         var btnAddProduct = new Button("Add Product")
         {
             X = 2,
-            Y = 18
+            Y = 8
         };
         btnAddProduct.Clicked += () =>
         {
-            top.Remove(adminMenu);
-            pd.AddProduct();
+            try
+            {
+                top.Remove(adminMenu);
+                pd.AddProduct();
+            }
+            catch
+            {
+                MessageBox.ErrorQuery("Error", "An error occurred while adding a new product. Please try again.", "OK");
+            }
         };
 
         var btnFindProduct = new Button("Find Product")
         {
             X = 2,
-            Y = 20
+            Y = 9
         };
         btnFindProduct.Clicked += () =>
         {
-            top.Remove(adminMenu);
-            pd.FindProduct("admin");
+            try
+            {
+                top.Remove(adminMenu);
+                pd.FindProduct("admin");
+            }
+            catch
+            {
+                MessageBox.ErrorQuery("Error", "An error occurred while finding a product. Please try again.", "OK");
+            }
         };
 
         var btnUpdateStatus = new Button("Update Status")
         {
             X = 2,
-            Y = 24
+            Y = 10
         };
         btnUpdateStatus.Clicked += () =>
         {
-            top.Remove(adminMenu);
-            order.UpdateStatus();
+            try
+            {
+                top.Remove(adminMenu);
+                order.UpdateStatus();
+            }
+            catch
+            {
+                MessageBox.ErrorQuery("Error", "An error occurred while updating the status. Please try again.", "OK");
+            }
         };
-
         var LogoutButton = new Button("Logout")
         {
             X = Pos.Center(),
@@ -243,7 +280,7 @@ public class Admin
         LogoutButton.Clicked += () =>
         {
             top.Remove(adminMenu);
-            program.Login();
+            user.Login();
         };
 
         leftFrame.Add(btnDisplayCustomer, btnFindCustomer,
@@ -402,20 +439,53 @@ public class Admin
         };
         registerButton.Clicked += () =>
         {
+            // Validate input values
+            if (string.IsNullOrWhiteSpace(usernameField.Text.ToString()) ||
+                string.IsNullOrWhiteSpace(passwordField.Text.ToString()) ||
+                string.IsNullOrWhiteSpace(adminNameField.Text.ToString()) ||
+                string.IsNullOrWhiteSpace(adminPhoneNumberField.Text.ToString()) ||
+                string.IsNullOrWhiteSpace(adminEmailField.Text.ToString()) ||
+                string.IsNullOrWhiteSpace(adminGenderField.Text.ToString()))
+            {
+                MessageBox.ErrorQuery("Error", "All fields must be filled.", "OK");
+                return;
+            }
+
+            if (!IsValidEmail(adminEmailField.Text.ToString()))
+            {
+                MessageBox.ErrorQuery("Error", "Invalid email format.", "OK");
+                return;
+            }
+
             us.Username = usernameField.Text.ToString();
-            us.PasswordHash = passwordField.Text.ToString();
+            us.PasswordHash = HashPassword(passwordField.Text.ToString());
             ad.AdminName = adminNameField.Text.ToString();
             ad.AdminPhone = adminPhoneNumberField.Text.ToString();
             ad.AdminEmail = adminEmailField.Text.ToString();
             ad.AdminGender = adminGenderField.Text.ToString();
 
-            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            MySqlConnection connection = null;
+            try
             {
+                connection = new MySqlConnection(connectionString);
                 connection.Open();
                 MySqlTransaction transaction = connection.BeginTransaction();
                 try
                 {
-                    // Insert into admins table
+                    // Check if the username already exists
+                    string checkUserQuery = "SELECT COUNT(*) FROM users WHERE username = @Username";
+                    MySqlCommand checkUserCommand = new MySqlCommand(checkUserQuery, connection, transaction);
+                    checkUserCommand.Parameters.AddWithValue("@Username", us.Username);
+                    int userCount = Convert.ToInt32(checkUserCommand.ExecuteScalar());
+
+                    if (userCount > 0)
+                    {
+                        // Username is duplicated
+                        MessageBox.ErrorQuery("Error", "Username is duplicated. Please choose a different username.", "OK");
+                        return;
+                    }
+
+                    // Insert admin data
                     string adminQuery = "INSERT INTO admins (admin_name, admin_phone, admin_email, admin_gender)" +
                                         " VALUES (@adminname, @adminphonenumber, @adminemail, @admingender)";
                     MySqlCommand adminCommand = new MySqlCommand(adminQuery, connection, transaction);
@@ -428,7 +498,7 @@ public class Admin
                     // Retrieve the last inserted admin ID
                     long adminId = adminCommand.LastInsertedId;
 
-                    // Insert into users table
+                    // Insert user data linked to the admin
                     string userQuery = "INSERT INTO users (username, password_hash, role, user_customer_id) " +
                                     "VALUES (@Username, @PasswordHash, 'admin', @AdminId)";
                     MySqlCommand userCommand = new MySqlCommand(userQuery, connection, transaction);
@@ -448,11 +518,19 @@ public class Admin
                     top.Remove(registerWin);
                     superadmin.SuperAdminMenu();
                 }
-                catch (Exception ex)
+                catch
                 {
                     transaction.Rollback();
-                    MessageBox.ErrorQuery("Error", ex.Message, "OK");   
+                    MessageBox.ErrorQuery("Error", "An error occurred during registration. Please try again.", "OK");
                 }
+            }
+            catch
+            {
+                MessageBox.ErrorQuery("Error", "Could not connect to the database. Please try again later.", "OK");
+            }
+            finally
+            {
+                connection?.Close();
             }
         };
 
@@ -464,6 +542,7 @@ public class Admin
         closeButton.Clicked += () =>
         {
             top.Remove(registerWin);
+            superadmin.SuperAdminMenu();
         };
 
         registerWin.Add(usernameLabel, usernameField, passwordLabel, passwordField,
@@ -471,6 +550,31 @@ public class Admin
                         adminEmailLabel, adminEmailField, adminGenderLabel, adminGenderField,
                         registerButton, closeButton);
     }
+
+    // Helper method for email validation
+    private bool IsValidEmail(string email)
+    {
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    // Helper method for hashing password
+    private string HashPassword(string password)
+    {
+        using (var sha256 = System.Security.Cryptography.SHA256.Create())
+        {
+            var bytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+            return Convert.ToBase64String(bytes);
+        }
+    }
+
    
     public void FindStaff()
     {
@@ -682,9 +786,9 @@ public class Admin
                 };
                 staffWindow.Add(btnClose);
             }
-            catch (Exception ex)
+            catch 
             {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                MessageBox.ErrorQuery("Error", "An error occurred while searching for staff.", "OK");
             }
         };
 
@@ -703,30 +807,59 @@ public class Admin
 
         findStaffWin.Add(staffNameLabel, staffNameField, findButton, closeButton);
     }
-    public void DeleteStaff(int AdminID)
+    public void DeleteStaff(int adminID)
     {
         try
         {
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 connection.Open();
-                string query = @"UPDATE admins
-                                SET active = FALSE 
-                                WHERE admin_id = @AdminID;
-                                UPDATE users
-                                SET active = FALSE
-                                WHERE user_customer_id = @AdminID";
-                MySqlCommand command = new MySqlCommand(query, connection);
-                command.Parameters.AddWithValue("@AdminID", AdminID);
-                command.ExecuteNonQuery();
+                using (MySqlTransaction transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        string query = @"
+                            UPDATE admins
+                            SET active = FALSE 
+                            WHERE admin_id = @AdminID;
+                            
+                            UPDATE users
+                            SET active = FALSE
+                            WHERE user_customer_id = @AdminID";
+                        
+                        MySqlCommand command = new MySqlCommand(query, connection, transaction);
+                        command.Parameters.AddWithValue("@AdminID", adminID);
+                        int rowsAffected = command.ExecuteNonQuery();
+                        
+                        if (rowsAffected > 0)
+                        {
+                            // Commit the transaction if the update was successful
+                            transaction.Commit();
+                            MessageBox.Query("Success", "Staff successfully marked as inactive!", "OK");
+                        }
+                        else
+                        {
+                            // Rollback the transaction if no rows were affected
+                            transaction.Rollback();
+                            MessageBox.ErrorQuery("Error", "No staff found with the provided ID.", "OK");
+                        }
+                    }
+                    catch 
+                    {
+                        // Rollback the transaction in case of an error
+                        transaction.Rollback();
+                        MessageBox.ErrorQuery("Error", "An unexpected error occurred while updating the staff. Please try again later.", "OK");
+                    }
+                }
             }
-            MessageBox.Query("Success", "Staff successfully marked as inactive!", "OK");
         }
-        catch (Exception ex)
+        catch 
         {
-            MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            // Handle any issues with opening the connection or starting the transaction
+            MessageBox.ErrorQuery("Error", "An unexpected error occurred while connecting to the database. Please try again later.", "OK");
         }
     }
+
     public void DisplayStaff()
     {
         var top = Application.Top;
@@ -871,9 +1004,9 @@ public class Admin
                             admin.DeleteStaff(adminId);
                             staffWindow.Dispose(); // Remove staff window from view
                         }
-                        catch (Exception ex)
+                        catch
                         {
-                            MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                            MessageBox.ErrorQuery("Error", "An unexpected error occurred while trying to disable the staff. Please try again later.", "OK");
                         }
                     }
                 };
@@ -912,8 +1045,6 @@ public class Admin
 
         displayWindow.Add(backButton);
     }
-
-
     public void EditStaff(int adminID, string adminName, string adminPhone, string adminEmail, string adminGender, string username, string password)
     {
         var top = Application.Top;
@@ -937,67 +1068,67 @@ public class Admin
         var editAdminNameField = new TextField(adminName)
         {
             X = 18,
-            Y = Pos.Right(editAdminNameLabel),
+            Y = 2,
             Width = 100
         };
 
         var editAdminPhoneLabel = new Label("Staff Phone:")
         {
             X = 2,
-            Y = Pos.Bottom(editAdminNameField) + 1
+            Y = 4
         };
         var editAdminPhoneField = new TextField(adminPhone)
         {
             X = 18,
-            Y = Pos.Right(editAdminPhoneLabel),
+            Y = 4,
             Width = 100
         };
 
         var editAdminEmailLabel = new Label("Staff Email:")
         {
             X = 2,
-            Y = Pos.Bottom(editAdminPhoneField) + 1
+            Y = 6
         };
         var editAdminEmailField = new TextField(adminEmail)
         {
             X = 18,
-            Y = Pos.Right(editAdminEmailLabel),
+            Y = 6,
             Width = 100
         };
 
         var editAdminGenderLabel = new Label("Staff Gender:")
         {
             X = 2,
-            Y = Pos.Bottom(editAdminEmailField) + 1
+            Y = 8
         };
         var editAdminGenderField = new TextField(adminGender)
         {
             X = 18,
-            Y = Pos.Right(editAdminGenderLabel),
+            Y = 8,
             Width = 100
         };
 
         var editAdminUserNameLabel = new Label("Username:")
         {
             X = 2,
-            Y = Pos.Bottom(editAdminGenderField) + 1
+            Y = 10
         };
         var editAdminUserNameField = new TextField(username)
         {
             X = 18,
-            Y = Pos.Right(editAdminUserNameLabel),
+            Y = 10,
             Width = 100
         };
 
         var editAdminPasswordLabel = new Label("Password:")
         {
             X = 2,
-            Y = Pos.Bottom(editAdminUserNameField) + 1
+            Y = 12
         };
         var editAdminPasswordField = new TextField(password)
         {
             X = 18,
-            Y = Pos.Right(editAdminPasswordLabel),
+            Y = 12,
             Width = 100,
             Secret = true
         };
@@ -1005,8 +1136,8 @@ public class Admin
         // Button to save edited staff information
         var saveButton = new Button("Save")
         {
-            X = Pos.Center(),
-            Y = Pos.Bottom(editAdminPasswordField) + 2
+            X = 20,
+            Y = 14
         };
         saveButton.Clicked += () =>
         {
@@ -1053,17 +1184,17 @@ public class Admin
                 // Refresh the staff list or do something else after saving
                 // Example: superadmin.SuperAdminMenu();
             }
-            catch (Exception ex)
+            catch 
             {
                 // Display an error message if the update fails
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                MessageBox.ErrorQuery("Error", "An unexpected error occurred while updating the staff information. Please try again later.", "OK");
             }
         };
 
         // Button to close the window
         var closeButton = new Button("Close")
         {
-            X = Pos.Center(),
+            X = 20,
             Y = Pos.Bottom(saveButton) + 1
         };
         closeButton.Clicked += () =>

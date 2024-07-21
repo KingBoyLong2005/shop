@@ -256,7 +256,7 @@ public class Orders
 
     public void OrderProduct(int productID, string productName, decimal productPrice, string window)
     {
-        var top = Application.Top; // Get the top-level application window
+        var top = Application.Top;
         Application.Init();
         var orderWindow = new Window("Order Product")
         {
@@ -265,17 +265,15 @@ public class Orders
             Width = Dim.Fill(),
             Height = Dim.Fill()
         };
-        top.Add(orderWindow); // Add the order window to the top-level application
+        top.Add(orderWindow);
 
-        // Label to display the selected product's name
         var lblProductName = new Label($"Product: {productName}")
         {
             X = Pos.Center(),
             Y = Pos.Percent(10)
         };
-        orderWindow.Add(lblProductName); // Add the product name label to the order window
+        orderWindow.Add(lblProductName);
 
-        // Label and text field for entering the quantity to order
         var lblQuantity = new Label("Quantity:")
         {
             X = Pos.Center() - 15,
@@ -287,9 +285,8 @@ public class Orders
             Y = Pos.Percent(25),
             Width = 20
         };
-        orderWindow.Add(lblQuantity, txtQuantity); // Add quantity label and text field to the order window
+        orderWindow.Add(lblQuantity, txtQuantity);
 
-        // Label and text field for entering the delivery address
         var lblDeliveryAddress = new Label("Delivery Address:")
         {
             X = Pos.Center() - 17,
@@ -301,9 +298,8 @@ public class Orders
             Y = Pos.Percent(40),
             Width = 40
         };
-        orderWindow.Add(lblDeliveryAddress, txtDeliveryAddress); // Add delivery address label and text field to the order window
+        orderWindow.Add(lblDeliveryAddress, txtDeliveryAddress);
 
-        // Label and text field for selecting the payment method
         var lblPaymentMethod = new Label("Payment Method:")
         {
             X = Pos.Center() - 15,
@@ -315,9 +311,8 @@ public class Orders
             Y = Pos.Percent(55),
             Width = 20
         };
-        orderWindow.Add(lblPaymentMethod, txtPaymentMethod); // Add payment method label and text field to the order window
+        orderWindow.Add(lblPaymentMethod, txtPaymentMethod);
 
-        // Button to submit the order
         var btnSubmitOrder = new Button("Submit Order")
         {
             X = Pos.Center() - 10,
@@ -325,46 +320,52 @@ public class Orders
         };
         btnSubmitOrder.Clicked += () =>
         {
-            int quantity;
-            int checkquantity;
-            if (int.TryParse(txtQuantity.Text.ToString(), out quantity) && quantity > 0)
+            if (string.IsNullOrWhiteSpace(txtQuantity.Text.ToString()) ||
+                string.IsNullOrWhiteSpace(txtDeliveryAddress.Text.ToString()) ||
+                string.IsNullOrWhiteSpace(txtPaymentMethod.Text.ToString()))
+            {
+                MessageBox.ErrorQuery("Error", "All fields must be filled.", "OK");
+                return;
+            }
+
+            if (int.TryParse(txtQuantity.Text.ToString(), out int quantity) && quantity > 0)
             {
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
-                    string query = @"SELECT 
-                                        p.product_stock_quantity
-                                    FROM products p
-                                WHERE product_id = @productid";
-                    MySqlCommand command = new MySqlCommand(query, connection);
-                    command.Parameters.AddWithValue("@productid", productID);
                     connection.Open();
-                    MySqlDataReader reader = command.ExecuteReader();
-                    reader.Read();
-                    checkquantity = reader.GetInt32("product_stock_quantity");
-                    
-                    if (quantity < checkquantity)
+                    string query = "SELECT product_stock_quantity FROM products WHERE product_id = @productID";
+                    using (MySqlCommand command = new MySqlCommand(query, connection))
                     {
-                        // Remove the ordered item from the cart
-                        cart.RemoveItemFromCart(productID);
-
-                        // Place the order
-                        PlaceOrderDirectly(productID, quantity, txtDeliveryAddress.Text.ToString(), txtPaymentMethod.Text.ToString());
-
-                        // Close the order window and display the product list again
-                        top.Remove(orderWindow);
-                        switch (window)
+                        command.Parameters.AddWithValue("@productID", productID);
+                        using (MySqlDataReader reader = command.ExecuteReader())
                         {
-                            case "display":
-                            pd.DisplayProduct("user");
-                            break;
-                            case "cart":
-                            cart.DisplayCart();
-                            break;
+                            if (reader.Read())
+                            {
+                                int stockQuantity = reader.GetInt32("product_stock_quantity");
+                                if (quantity <= stockQuantity)
+                                {
+                                    cart.RemoveItemFromCart(productID);
+                                    PlaceOrderDirectly(productID, quantity, txtDeliveryAddress.Text.ToString(), txtPaymentMethod.Text.ToString());
+                                    top.Remove(orderWindow);
+                                    switch (window)
+                                    {
+                                        case "display":
+                                            pd.DisplayProduct("user");
+                                            break;
+                                        case "cart":
+                                            cart.DisplayCart();
+                                            break;
+                                        case "category":
+                                            cate.DisplayCategories("superadmins");
+                                            break;
+                                    }
+                                }
+                                else
+                                {
+                                    MessageBox.ErrorQuery("Error", "Not enough product in stock.", "OK");
+                                }
+                            }
                         }
-                    }
-                    else if(quantity > checkquantity)
-                    {
-                        MessageBox.ErrorQuery("Error", "Product not enough in stock","OK");
                     }
                 }
             }
@@ -374,7 +375,6 @@ public class Orders
             }
         };
 
-        // Button to cancel the order
         var btnCancel = new Button("Cancel")
         {
             X = Pos.Right(btnSubmitOrder) + 2,
@@ -382,72 +382,77 @@ public class Orders
         };
         btnCancel.Clicked += () =>
         {
-            // Prompt for confirmation before closing the order window
             bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to close?", "Yes", "No") == 0;
             if (confirmed)
             {
-                // Close the order window and display the product list again
                 top.Remove(orderWindow);
                 switch (window)
                 {
-                    case "display" :
-                    pd.DisplayProduct("user");
-                    break;
+                    case "display":
+                        pd.DisplayProduct("user");
+                        break;
                     case "cart":
-                    cart.DisplayCart();
-                    break;
+                        cart.DisplayCart();
+                        break;
                     case "category":
-                    cate.DisplayCategories("superadmins");
-                    break;
+                        cate.DisplayCategories("superadmins");
+                        break;
                 }
             }
         };
 
-        orderWindow.Add(btnSubmitOrder, btnCancel); // Add submit and cancel buttons to the order window
+        orderWindow.Add(btnSubmitOrder, btnCancel);
     }
-
-
     static void PlaceOrderDirectly(int productID, int quantity, string deliveryAddress, string paymentMethod)
     {
-        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        try
         {
-            connection.Open();
-            
-            // SQL query to insert a new order and update the order total price
-            string query = @"INSERT INTO orders 
-                                (order_customer_id, order_product_id, order_quantity, order_payment_method, order_status, order_delivery_address) 
-                            VALUES 
-                                (@CustomerID, @ProductID, @Quantity, @PaymentMethod, @OrderStatus, @DeliveryAddress);
-
-                            UPDATE `orders` o 
-                            JOIN `products` p ON o.order_product_id = p.product_id 
-                            SET 
-                                o.order_total_price = o.order_quantity * p.product_price;";
-
-            MySqlCommand command = new MySqlCommand(query, connection);
-
-            // Parameters for the INSERT INTO orders statement
-            command.Parameters.AddWithValue("@CustomerID", SessionData.Instance.CurrentCustomerID);  // Using static currentCustomerID
-            command.Parameters.AddWithValue("@ProductID", productID);
-            command.Parameters.AddWithValue("@Quantity", quantity);
-            command.Parameters.AddWithValue("@PaymentMethod", paymentMethod);
-            command.Parameters.AddWithValue("@OrderStatus", "Pending");
-            command.Parameters.AddWithValue("@DeliveryAddress", deliveryAddress);
-
-            try
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
+                connection.Open();
+                
+                // SQL query to insert a new order and update the order total price
+                string query = @"
+                    INSERT INTO orders 
+                        (order_customer_id, order_product_id, order_quantity, order_payment_method, order_status, order_delivery_address) 
+                    VALUES 
+                        (@CustomerID, @ProductID, @Quantity, @PaymentMethod, @OrderStatus, @DeliveryAddress);
+
+                    UPDATE orders o 
+                    JOIN products p ON o.order_product_id = p.product_id 
+                    SET 
+                        o.order_total_price = o.order_quantity * p.product_price
+                    WHERE 
+                        o.order_product_id = @ProductID AND o.order_customer_id = @CustomerID AND o.order_quantity = @Quantity;";
+
+                MySqlCommand command = new MySqlCommand(query, connection);
+
+                // Parameters for the INSERT INTO orders statement
+                command.Parameters.AddWithValue("@CustomerID", SessionData.Instance.CurrentCustomerID);
+                command.Parameters.AddWithValue("@ProductID", productID);
+                command.Parameters.AddWithValue("@Quantity", quantity);
+                command.Parameters.AddWithValue("@PaymentMethod", paymentMethod);
+                command.Parameters.AddWithValue("@OrderStatus", "Pending");
+                command.Parameters.AddWithValue("@DeliveryAddress", deliveryAddress);
+
                 // Execute the INSERT INTO and UPDATE queries
                 command.ExecuteNonQuery();
                 MessageBox.Query("Success", "Order placed successfully.", "OK");
             }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-            }
+        }
+        catch (MySqlException)
+        {
+            // Handle specific SQL exceptions
+            MessageBox.ErrorQuery("Database Error", "An error occurred while accessing the database. Please try again later.", "OK");
+        }
+        catch (Exception)
+        {
+            // Handle all other exceptions
+            MessageBox.ErrorQuery("Error", "An unexpected error occurred while placing the order. Please try again later.", "OK");
         }
     }
 
-    public void OrderProductForCustomer(int productID, string productName, decimal productPrice, string role)
+   public void OrderProductForCustomer(int productID, string productName, decimal productPrice, string role)
     {
         var top = Application.Top;
         var orderWindow = new Window("Order Product")
@@ -525,10 +530,14 @@ public class Orders
         };
         ConfirmCustomer.Clicked += () =>
         {
-            int customerID;
-            if (int.TryParse(txtCustomerID.Text.ToString(), out customerID))
+            if (string.IsNullOrWhiteSpace(txtCustomerID.Text.ToString()))
             {
-                // Check if customer exists in the database
+                MessageBox.ErrorQuery("Error", "Customer ID cannot be empty.", "OK");
+                return;
+            }
+
+            if (int.TryParse(txtCustomerID.Text.ToString(), out int customerID))
+            {
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
                     connection.Open();
@@ -538,7 +547,6 @@ public class Orders
                     object customerExists = command.ExecuteScalar();
                     if (customerExists != null)
                     {
-                        // Hide unnecessary fields after customer confirmation
                         lblQuantity.Visible = false;
                         txtQuantity.Visible = false;
                         lblDeliveryAddress.Visible = false;
@@ -565,43 +573,49 @@ public class Orders
         };
         btnSubmitOrder.Clicked += () =>
         {
-            int quantity;
-            int checkquantity;
-            if (int.TryParse(txtQuantity.Text.ToString(), out quantity) && quantity > 0)
+            if (string.IsNullOrWhiteSpace(txtQuantity.Text.ToString()) ||
+                string.IsNullOrWhiteSpace(txtDeliveryAddress.Text.ToString()) ||
+                string.IsNullOrWhiteSpace(txtPaymentMethod.Text.ToString()))
+            {
+                MessageBox.ErrorQuery("Error", "All fields must be filled.", "OK");
+                return;
+            }
+
+            if (int.TryParse(txtQuantity.Text.ToString(), out int quantity) && quantity > 0)
             {
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
-                    string query = @"SELECT 
-                                        p.product_stock_quantity 
-                                    FROM products p
-                                WHERE product_id = @productid";
-                    MySqlCommand command = new MySqlCommand(query, connection);
-                    command.Parameters.AddWithValue("@productid", productID);
                     connection.Open();
-                    MySqlDataReader reader = command.ExecuteReader();
-                    reader.Read();
-                    checkquantity = int.Parse(reader["product_stock_quantity"].ToString());
-                    
-                    if (quantity < checkquantity)
+                    string query = "SELECT product_stock_quantity FROM products WHERE product_id = @productID";
+                    using (MySqlCommand command = new MySqlCommand(query, connection))
                     {
-                        // Place the order
-                        PlaceOrderDirectly(productID, quantity, txtDeliveryAddress.Text.ToString(), txtPaymentMethod.Text.ToString());
-
-                        // Close the order window and display the product list again
-                        top.Remove(orderWindow);
-                        switch(role)
+                        command.Parameters.AddWithValue("@productID", productID);
+                        using (MySqlDataReader reader = command.ExecuteReader())
                         {
-                            case "admin":
-                            pd.DisplayProduct("admin");
-                            break;
-                            case "superadmin":
-                            pd.DisplayProduct("superadmin");
-                            break;
+                            if (reader.Read())
+                            {
+                                int stockQuantity = reader.GetInt32("product_stock_quantity");
+                                if (quantity <= stockQuantity)
+                                {
+                                    cart.RemoveItemFromCart(productID);
+                                    PlaceOrderDirectly(productID, quantity, txtDeliveryAddress.Text.ToString(), txtPaymentMethod.Text.ToString());
+                                    top.Remove(orderWindow);
+                                    switch (role)
+                                    {
+                                        case "user":
+                                            pd.DisplayProduct("user");
+                                            break;
+                                        case "superadmins":
+                                            cate.DisplayCategories("superadmins");
+                                            break;
+                                    }
+                                }
+                                else
+                                {
+                                    MessageBox.ErrorQuery("Error", "Not enough product in stock.", "OK");
+                                }
+                            }
                         }
-                    }
-                    else if(quantity > checkquantity)
-                    {
-                        MessageBox.ErrorQuery("Error", "Product not enough in stock","OK");
                     }
                 }
             }
@@ -622,19 +636,19 @@ public class Orders
             if (confirmed)
             {
                 top.Remove(orderWindow);
-                switch(role)
+                switch (role)
                 {
-                    case "admin":
-                    pd.DisplayProduct("admin");
-                    break;
-                    case "superadmin":
-                    pd.DisplayProduct("superadmin");
-                    break;
+                    case "user":
+                        pd.DisplayProduct("user");
+                        break;
+                    case "superadmins":
+                        cate.DisplayCategories("superadmins");
+                        break;
                 }
             }
         };
 
-        orderWindow.Add(ConfirmCustomer, btnSubmitOrder, btnCancel);
+        orderWindow.Add(btnSubmitOrder, btnCancel, ConfirmCustomer);
     }
 
     static void PlaceOrderForCustomer(int customerID, int productID, int quantity, string deliveryAddress, string paymentMethod)
@@ -642,12 +656,13 @@ public class Orders
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
             connection.Open();
-
+            
             // Insert query to add the order details
-            string insertQuery = @"INSERT INTO orders 
-                                    (order_customer_id, order_product_id, order_quantity, order_payment_method, order_status, order_delivery_address) 
-                                VALUES 
-                                    (@CustomerID, @ProductID, @Quantity,  @PaymentMethod, @OrderStatus, @DeliveryAddress);";
+            string insertQuery = @"
+                INSERT INTO orders 
+                    (order_customer_id, order_product_id, order_quantity, order_payment_method, order_status, order_delivery_address) 
+                VALUES 
+                    (@CustomerID, @ProductID, @Quantity, @PaymentMethod, @OrderStatus, @DeliveryAddress);";
 
             MySqlCommand insertCommand = new MySqlCommand(insertQuery, connection);
             insertCommand.Parameters.AddWithValue("@CustomerID", customerID);
@@ -659,21 +674,35 @@ public class Orders
 
             try
             {
+                // Execute the INSERT command
                 insertCommand.ExecuteNonQuery();
 
                 // Update query to calculate and update the order total price based on product price
-                string updateQuery = @"UPDATE orders o 
-                                    JOIN products p ON o.order_product_id = p.product_id 
-                                    SET o.order_total_price = o.order_quantity * p.product_price;";
+                string updateQuery = @"
+                    UPDATE orders o 
+                    JOIN products p ON o.order_product_id = p.product_id 
+                    SET o.order_total_price = o.order_quantity * p.product_price
+                    WHERE o.order_customer_id = @CustomerID AND o.order_product_id = @ProductID AND o.order_quantity = @Quantity;";
 
                 MySqlCommand updateCommand = new MySqlCommand(updateQuery, connection);
+                updateCommand.Parameters.AddWithValue("@CustomerID", customerID);
+                updateCommand.Parameters.AddWithValue("@ProductID", productID);
+                updateCommand.Parameters.AddWithValue("@Quantity", quantity);
+
+                // Execute the UPDATE command
                 updateCommand.ExecuteNonQuery();
 
                 MessageBox.Query("Success", "Order placed successfully.", "OK");
             }
-            catch (Exception ex)
+            catch (MySqlException)
             {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                // Handle specific SQL exceptions
+                MessageBox.ErrorQuery("Database Error", "An error occurred while accessing the database. Please try again later.", "OK");
+            }
+            catch (Exception)
+            {
+                // Handle all other exceptions
+                MessageBox.ErrorQuery("Error", "An unexpected error occurred while placing the order. Please try again later.", "OK");
             }
         }
     }
@@ -702,18 +731,18 @@ public class Orders
 
         var lblOrderId = new Label("Order ID:")
         {
-            X = 0,
-            Y = 0
+            X = 2,
+            Y = 2
         };
         var txtOrderId = new TextField("")
         {
-            X = Pos.Right(lblOrderId) + 1,
-            Y = Pos.Top(lblOrderId),
+            X = 11,
+            Y = 2,
             Width = 40
         };
         var btnUpdateStatus = new Button("Update Status")
         {
-            X = 0,
+            X = 2,
             Y = Pos.Bottom(lblOrderId) + 2
         };
         var btnClose = new Button("Close")
@@ -773,7 +802,7 @@ public class Orders
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                        MessageBox.ErrorQuery("Error", "An error occurred while updating the order status. Please try again later.", "OK");
                     }
                 }
                 else

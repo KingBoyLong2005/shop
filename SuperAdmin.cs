@@ -17,6 +17,7 @@ public class SuperAdmin
     public static Admin admin= new Admin();
     public static Program program = new Program();
     public static Categories cate = new Categories();
+    public static Users user = new Users();
 
     public static string connectionString = Configuration.ConnectionString;
 
@@ -79,16 +80,17 @@ public class SuperAdmin
                 top.Remove(SuperAdminMenu);
                 pd.DisplayProduct("superadmin");
             }
-            catch 
+            catch
             {
-                MessageBox.ErrorQuery("Error","", "OK");
+                MessageBox.ErrorQuery("Error", "An error occurred while displaying the product. Please try again.", "OK");
             }
         };
+
         var btnFindProduct = new Button("FindProduct")
         {
             X = 2,
             Y = 3
-         };
+        };
         btnFindProduct.Clicked += () =>
         {
             try
@@ -96,11 +98,12 @@ public class SuperAdmin
                 top.Remove(SuperAdminMenu);
                 pd.FindProduct("superadmin");
             }
-            catch 
+            catch
             {
-                MessageBox.ErrorQuery("Error","", "OK");
+                MessageBox.ErrorQuery("Error", "An error occurred while finding the product. Please try again.", "OK");
             }
         };
+
         var btnAddStaff = new Button("Add Staff")
         {
             X = 2,
@@ -113,12 +116,13 @@ public class SuperAdmin
                 top.Remove(SuperAdminMenu);
                 admin.AddStaff();
             }
-            catch 
+            catch
             {
-                MessageBox.ErrorQuery("Error","", "OK");
+                MessageBox.ErrorQuery("Error", "An error occurred while adding staff. Please try again.", "OK");
             }
         };
-        var btnDisplayStaff = new Button("Dispplay Staff")
+
+        var btnDisplayStaff = new Button("Display Staff")
         {
             X = 2,
             Y = 5
@@ -130,11 +134,12 @@ public class SuperAdmin
                 top.Remove(SuperAdminMenu);
                 admin.DisplayStaff();
             }
-            catch 
+            catch
             {
-                MessageBox.ErrorQuery("Error","", "OK");
+                MessageBox.ErrorQuery("Error", "An error occurred while displaying staff. Please try again.", "OK");
             }
         };
+
         var btnAddCategory = new Button("Add Category")
         {
             X = 2,
@@ -147,11 +152,12 @@ public class SuperAdmin
                 top.Remove(SuperAdminMenu);
                 cate.AddCategory();
             }
-            catch 
+            catch
             {
-                MessageBox.ErrorQuery("Error","", "OK");
+                MessageBox.ErrorQuery("Error", "An error occurred while adding the category. Please try again.", "OK");
             }
         };
+
         var btnDisplayCategory = new Button("Display Category")
         {
             X = 2,
@@ -164,11 +170,12 @@ public class SuperAdmin
                 top.Remove(SuperAdminMenu);
                 cate.DisplayCategories("superadmin");
             }
-            catch 
+            catch
             {
-                MessageBox.ErrorQuery("Error","", "OK");
+                MessageBox.ErrorQuery("Error", "An error occurred while displaying categories. Please try again.", "OK");
             }
         };
+
         var btnAddCustomer = new Button("Add Customer")
         {
             X = 2,
@@ -181,12 +188,13 @@ public class SuperAdmin
                 top.Remove(SuperAdminMenu);
                 cus.AddCustomer();
             }
-            catch 
+            catch
             {
-                MessageBox.ErrorQuery("Error","", "OK");
+                MessageBox.ErrorQuery("Error", "An error occurred while adding the customer. Please try again.", "OK");
             }
         };
-        var btnDisplayCustomer = new Button("Add Customer")
+
+        var btnDisplayCustomer = new Button("Display Customer")
         {
             X = 2,
             Y = 9
@@ -198,11 +206,12 @@ public class SuperAdmin
                 top.Remove(SuperAdminMenu);
                 cus.DisplayCustomers("superadmin");
             }
-            catch 
+            catch
             {
-                MessageBox.ErrorQuery("Error","", "OK");
+                MessageBox.ErrorQuery("Error", "An error occurred while displaying customers. Please try again.", "OK");
             }
         };
+
         // Add logout button
         var btnLogout = new Button("Logout")
         {
@@ -212,7 +221,7 @@ public class SuperAdmin
         btnLogout.Clicked += () =>
         {
             top.Remove(SuperAdminMenu);
-            program.Login();
+            user.Login();
         };
 
         // Add all buttons to the left frame

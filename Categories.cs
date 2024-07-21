@@ -65,7 +65,7 @@ public class Categories
         top.Add(addCategorytWin);
         addCategorytWin.FocusNext();
 
-        // Labels and text fields for inputting cateogory details
+        // Labels and text fields for inputting category details
         var CategoryNameLabel = new Label("Category Name:")
         {
             X = 2,
@@ -90,7 +90,6 @@ public class Categories
             Width = 100
         };
 
-
         // Button to save the new category
         var saveButton = new Button("Save")
         {
@@ -99,12 +98,19 @@ public class Categories
         };
         saveButton.Clicked += () =>
         {
+            // Check if any fields are empty
+            if (string.IsNullOrWhiteSpace(CategoryNameField.Text.ToString()) || 
+                string.IsNullOrWhiteSpace(CategoryDescriptionField.Text.ToString()))
+            {
+                MessageBox.ErrorQuery("Error", "All fields must be filled.", "OK");
+                return;
+            }
+
             try
             {
                 // Assign input values to the category object
                 cg.CategoryName = CategoryNameField.Text.ToString();
                 cg.CategoryDescription = CategoryDescriptionField.Text.ToString();
-
 
                 // Insert the new category into the database
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -126,10 +132,10 @@ public class Categories
                 top.Remove(addCategorytWin);
                 superadmin.SuperAdminMenu();
             }
-            catch (Exception ex)
+            catch 
             {
-                // Display error message if an exception occurs
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                // Display a generic error message if an exception occurs
+                MessageBox.ErrorQuery("Error", "An error occurred while adding the category. Please try again later.", "OK");
             }
         };
 
@@ -152,8 +158,8 @@ public class Categories
 
         // Add labels, text fields, and buttons to the window
         addCategorytWin.Add(CategoryNameLabel, CategoryNameField, CategoryDescriptionLabel, CategoryDescriptionField,
-                        saveButton, closeButton);
-    }
+                            saveButton, closeButton);
+}
     public void DeleteCategory(int CategoryID)
     {
         try
@@ -173,9 +179,9 @@ public class Categories
             }
             MessageBox.Query("Success", "Cateogry successfully marked as inactive!", "OK");
         }
-        catch (Exception ex)
+        catch 
         {
-            MessageBox.ErrorQuery("Error", ex.Message, "OK");
+            MessageBox.ErrorQuery("Error", "An error occurred while deleting the category. Please try again later.", "OK");
         }
     }
     public void DisplayCategories(string role)
@@ -209,7 +215,8 @@ public class Categories
                                 cate.category_id, 
                                 cate.category_name, 
                                 cate.category_description
-                            FROM categories cate";
+                            FROM categories cate 
+                            WHERE active = TRUE";
 
             // Create a command object to execute the query.
             MySqlCommand command = new MySqlCommand(query, connection);
@@ -237,32 +244,45 @@ public class Categories
                     X = 1,
                     Y = rowOffset
                 };
+                categoryButton.Clicked += () => 
+                {
+                    // Define the action to be taken when the category button is clicked.
+                    top.Remove(displayCategoryWindow);
+                    DisplayProducts(categoryId, categoryName);
+                };
+                var deleteCategoryButton = new Button(categoryName)
+                {
+                    X = 1,
+                    Y = rowOffset
+                };
+                deleteCategoryButton.Clicked += () =>
+                { 
+                    bool confirmed = MessageBox.Query("Comfirm", "Are you sure want to disable this category", "Yes", "N") == 0;
+                    if (confirmed)
+                    {
+                        try
+                        {
+                        cate.DeleteCategory(categoryId);
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                        }
+                    }
+                };
 
                 if(role == "user")
                 {    
-                    // Define the action to be taken when the category button is clicked.
-                    categoryButton.Clicked += () => DisplayProducts(categoryId, categoryName);
+                    categoryButton.Visible = true;
+                    deleteCategoryButton.Visible = false;
                 }
                 else if(role == "superadmin")
                 {
-                    bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to disable this category", "Yes", "No") == 0;
-                    if (confirmed)
-                    {
-                        categoryButton.Clicked += () =>
-                        { 
-                            try
-                            {
-                            cate.DeleteCategory(categoryId);
-                            }
-                            catch (Exception ex)
-                            {
-                                MessageBox.ErrorQuery("Error", ex.Message, "OK");
-                            }
-                        };
-                    }
+                    categoryButton.Visible = false;
+                    deleteCategoryButton.Visible = true;
                 }
                 // Add the category button to the window.
-                displayCategoryWindow.Add(categoryButton);
+                displayCategoryWindow.Add(categoryButton, deleteCategoryButton);
 
                 // Increment the row offset for the next data row.
                 rowOffset += 2;
@@ -398,12 +418,14 @@ public class Categories
                     try
                     {
                         userCart.AddToCart(productID);
+                        MessageBox.Query("Success", "Product successfully added to cart!", "OK");
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                        MessageBox.ErrorQuery("Error", "An error occurred while adding the product to the cart. Please try again later.", "OK");
                     }
                 };
+
                 var orderButton = new Button("Order")
                 {
                     X = Pos.Right(addButton) + 2,
@@ -416,13 +438,13 @@ public class Categories
                     {
                         top.Remove(productsWindow);
                         order.OrderProduct(productID, productName, productPrice, "category");
+                        MessageBox.Query("Success", "Order placed successfully!", "OK");
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                        MessageBox.ErrorQuery("Error", "An error occurred while placing the order. Please try again later.", "OK");
                     }
                 };
-
                 // Add labels to the product window
                 productWindow.Add(productNameLabel, productBrandLabel, productPriceLabel, addButton);
                 productContainer.Add(productWindow);

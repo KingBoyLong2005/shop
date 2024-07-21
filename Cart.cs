@@ -188,17 +188,32 @@ public class Cart
                 // Handle click events for removing and ordering products
                 removeButton.Clicked += () =>
                 {
-                    RemoveItemFromCart(productID);
-                    top.Remove(cartWindow);
-                    DisplayCart();
+                    try
+                    {
+                        RemoveItemFromCart(productID);
+                        top.Remove(cartWindow);
+                        DisplayCart();
+                    }
+                    catch
+                    {
+                        // Display a generic error message if the remove operation fails
+                        MessageBox.ErrorQuery("Error", "An unexpected error occurred while removing the item from the cart. Please try again later.", "OK");
+                    }
                 };
 
                 orderButton.Clicked += () =>
                 {
-                    top.Remove(cartWindow);
-                    order.OrderProduct(productID, productName, productPrice, "cart");
+                    try
+                    {
+                        top.Remove(cartWindow);
+                        order.OrderProduct(productID, productName, productPrice, "cart");
+                    }
+                    catch
+                    {
+                        // Display a generic error message if the order operation fails
+                        MessageBox.ErrorQuery("Error", "An unexpected error occurred while placing the order. Please try again later.", "OK");
+                    }
                 };
-
                 productWindow.Add(productLabel, priceLabel, brandlabel, removeButton, orderButton);
                 cartContainer.Add(productWindow);
 
@@ -269,9 +284,9 @@ public class Cart
                     ListCarts.Add(userCart);
                     MessageBox.Query("Success", "Product added to cart.", "OK");
                 }
-                catch (Exception ex)
+                catch 
                 {
-                    MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                    MessageBox.ErrorQuery("Error", "An unexpected error occurred while adding the product to the cart. Please try again later.", "OK");
                 }
             }
         }
