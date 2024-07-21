@@ -1311,7 +1311,7 @@ public class Customers
         btnLogout.Clicked += () =>
         {
             top.Remove(userMenu);
-            user.Login();
+            program.Login();
         };
 
         // Add buttons to the left frame

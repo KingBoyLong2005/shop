@@ -221,7 +221,7 @@ public class SuperAdmin
         btnLogout.Clicked += () =>
         {
             top.Remove(SuperAdminMenu);
-            user.Login();
+            program.Login();
         };
 
         // Add all buttons to the left frame

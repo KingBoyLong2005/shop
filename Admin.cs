@@ -280,7 +280,7 @@ public class Admin
         LogoutButton.Clicked += () =>
         {
             top.Remove(adminMenu);
-            user.Login();
+            program.Login();
         };
 
         leftFrame.Add(btnDisplayCustomer, btnFindCustomer,
