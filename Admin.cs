@@ -147,7 +147,7 @@ public class Admin
         };
         adminMenu.Add(rightBottomFrame);
 
-        var btnDisplayCustomer = new Button("Display Customer")
+        var btnDisplayCustomer = new Button("Management Customer")
         {
             X = 2,
             Y = 4
@@ -201,7 +201,7 @@ public class Admin
             }
         };
 
-        var btnDisplayProduct = new Button("Display Products")
+        var btnDisplayProduct = new Button("Management Products")
         {
             X = 2,
             Y = 7
@@ -575,7 +575,6 @@ public class Admin
         }
     }
 
-   
     public void FindStaff()
     {
         var top = Application.Top;
@@ -1002,7 +1001,6 @@ public class Admin
                         try
                         {
                             admin.DeleteStaff(adminId);
-                            staffWindow.Dispose(); // Remove staff window from view
                         }
                         catch
                         {
@@ -1034,7 +1032,7 @@ public class Admin
         var backButton = new Button("Back")
         {
             X = Pos.Center(),
-            Y = Pos.Bottom(displayWindow) - 3
+            Y = Pos.Top(scrollView)
         };
         backButton.Clicked += () =>
         {

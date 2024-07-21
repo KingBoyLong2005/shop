@@ -1213,7 +1213,7 @@ public class Customers
         };
         userMenu.Add(rightBottomFrame);
 
-        var btnDisplayProduct = new Button("Display Product")
+        var btnDisplayProduct = new Button("View Product")
         {
             X = 2,
             Y = 2
@@ -1285,7 +1285,7 @@ public class Customers
             }
         };
 
-        var btnDisplayCategory = new Button("Display Category")
+        var btnDisplayCategory = new Button("View Category")
         {
             X = 2,
             Y = 6

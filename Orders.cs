@@ -641,8 +641,8 @@ public class Orders
                     case "user":
                         pd.DisplayProduct("user");
                         break;
-                    case "superadmins":
-                        cate.DisplayCategories("superadmins");
+                    case "superadmin":
+                        cate.DisplayCategories("superadmin");
                         break;
                 }
             }
@@ -747,8 +747,8 @@ public class Orders
         };
         var btnClose = new Button("Close")
         {
-            X = Pos.Center(),
-            Y = Pos.Percent(100) + 1
+            X = 2,
+            Y = Pos.Bottom(btnUpdateStatus) + 1
         };
         btnClose.Clicked += () =>
         {

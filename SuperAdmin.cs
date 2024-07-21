@@ -68,7 +68,7 @@ public class SuperAdmin
             Height = Dim.Fill() // Occupy the remaining height
         };
         SuperAdminMenu.Add(rightBottomFrame);
-        var btnDisplayProduct = new Button("Display Product")
+        var btnDisplayProduct = new Button("Management Product")
         {
             X = 2,
             Y = 2
@@ -86,7 +86,7 @@ public class SuperAdmin
             }
         };
 
-        var btnFindProduct = new Button("FindProduct")
+        var btnFindProduct = new Button("Find Product")
         {
             X = 2,
             Y = 3
@@ -122,7 +122,7 @@ public class SuperAdmin
             }
         };
 
-        var btnDisplayStaff = new Button("Display Staff")
+        var btnDisplayStaff = new Button("Management Staff")
         {
             X = 2,
             Y = 5
@@ -158,7 +158,7 @@ public class SuperAdmin
             }
         };
 
-        var btnDisplayCategory = new Button("Display Category")
+        var btnDisplayCategory = new Button("Management Category")
         {
             X = 2,
             Y = 7
@@ -194,7 +194,7 @@ public class SuperAdmin
             }
         };
 
-        var btnDisplayCustomer = new Button("Display Customer")
+        var btnDisplayCustomer = new Button("Management Customer")
         {
             X = 2,
             Y = 9

@@ -276,7 +276,15 @@ public class Products
                     addButton.Visible = true;
                     orderButton.Visible = true;
                 }
-                else if (role == "admin" || role == "superadmin")
+                else if (role == "admin")
+                {
+                    editproductButton.Visible = true;
+                    blockproductButton.Visible = true;
+                    OrderForCustomerbutton.Visible = true;
+                    addButton.Visible = false;
+                    orderButton.Visible = false;
+                }
+                else if( role == "superadmin")
                 {
                     editproductButton.Visible = true;
                     blockproductButton.Visible = true;
