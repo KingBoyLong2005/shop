@@ -186,7 +186,7 @@ public class SuperAdmin
             try
             {
                 top.Remove(SuperAdminMenu);
-                cus.AddCustomer();
+                cus.AddCustomer("superadmin");
             }
             catch
             {
@@ -212,6 +212,23 @@ public class SuperAdmin
             }
         };
 
+        var btnFindStaff = new Button("Find Staff")
+        {
+            X = 2,
+            Y = 10,
+        };
+        btnFindStaff.Clicked += () =>
+        {
+            try
+            {
+                top.Remove(SuperAdminMenu);
+                admin.FindStaff();
+            }
+            catch
+            {
+                MessageBox.ErrorQuery("Error", "An error occurred while Find staff. Please try again.", "OK");
+            }
+        };
         // Add logout button
         var btnLogout = new Button("Logout")
         {
@@ -225,7 +242,7 @@ public class SuperAdmin
         };
 
         // Add all buttons to the left frame
-        leftFrame.Add(btnDisplayProduct, btnFindProduct, btnAddStaff, btnDisplayStaff, btnAddCategory, btnDisplayCategory, btnAddCustomer, btnDisplayCustomer, btnLogout);
+        leftFrame.Add(btnDisplayProduct, btnFindProduct, btnAddStaff, btnDisplayStaff, btnAddCategory, btnDisplayCategory, btnAddCustomer, btnDisplayCustomer, btnFindStaff, btnLogout);
 
         // Add a welcome label to the top right frame
         var rightTopLabel = new Label(@"███████╗██╗     ███████╗ ██████╗████████╗██████╗  ██████╗ ███╗   ██╗██╗ ██████╗    ███████╗██╗  ██╗ ██████╗ ██████╗ 

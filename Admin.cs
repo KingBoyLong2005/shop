@@ -193,7 +193,7 @@ public class Admin
             try
             {
                 top.Remove(adminMenu);
-                customer.AddCustomer();
+                customer.AddCustomer("admin");
             }
             catch
             {
@@ -516,7 +516,7 @@ public class Admin
                     MessageBox.Query("Success", "Registration successful!", "OK");
 
                     top.Remove(registerWin);
-                    superadmin.SuperAdminMenu();
+                    admin.AddStaff();
                 }
                 catch
                 {
@@ -550,7 +550,6 @@ public class Admin
                         adminEmailLabel, adminEmailField, adminGenderLabel, adminGenderField,
                         registerButton, closeButton);
     }
-
     // Helper method for email validation
     private bool IsValidEmail(string email)
     {
@@ -564,7 +563,6 @@ public class Admin
             return false;
         }
     }
-
     // Helper method for hashing password
     private string HashPassword(string password)
     {
@@ -812,7 +810,7 @@ public class Admin
 
         findStaffWin.Add(staffNameLabel, staffNameField, findButton, closeButton);
     }
-    public void DeleteStaff(int adminID)
+    public void DisableStaff(int adminID)
     {
         try
         {
@@ -1006,7 +1004,10 @@ public class Admin
                     {
                         try
                         {
-                            admin.DeleteStaff(adminId);
+                            admin.DisableStaff(adminId);
+                            MessageBox.Query("Success", "Staff has been successfully marked as inactive.", "OK");
+                            top.Remove(displayWindow);
+                            admin.DisplayStaff();
                         }
                         catch
                         {
@@ -1044,7 +1045,6 @@ public class Admin
         {
             top.Remove(displayWindow);
             superadmin.SuperAdminMenu(); // Gọi menu superadmin
-
         };
 
         displayWindow.Add(backButton);
@@ -1185,8 +1185,7 @@ public class Admin
                 // Display a success message and close the window
                 MessageBox.Query("Success", "Staff information has been updated!", "OK");
                 top.Remove(editStaffWin);
-                // Refresh the staff list or do something else after saving
-                // Example: superadmin.SuperAdminMenu();
+                admin.DisplayStaff();
             }
             catch 
             {
@@ -1208,8 +1207,7 @@ public class Admin
             if (confirmed)
             {
                 top.Remove(editStaffWin);
-                // Return to the admin menu or do something else after closing
-                // Example: superadmin.SuperAdminMenu();
+                admin.DisplayStaff();
             }
         };
 

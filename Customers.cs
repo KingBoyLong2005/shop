@@ -80,7 +80,7 @@ public class Customers
         return ListCustomers;
     }
 
-    public void AddCustomer()
+    public void AddCustomer(string role)
     {
         // Initialize user and customer objects
         Users us = new Users();
@@ -294,7 +294,7 @@ public class Customers
                     
                     // Close the registration window and go back to admin menu
                     top.Remove(registerWin);
-                    cus.AddCustomer();
+                    cus.AddCustomer(role);
                 }
                 catch
                 {
@@ -321,7 +321,15 @@ public class Customers
         closeButton.Clicked += () =>
         {
             top.Remove(registerWin);
-            admin.AdminMenu();
+            switch(role)
+            {
+                case "admin":
+                admin.AdminMenu();
+                break;
+                case "superadmin":
+                superadmin.SuperAdminMenu();
+                break;
+            }
         };
 
         // Add all controls to the registration window
@@ -354,7 +362,7 @@ public class Customers
         }
     }
 
-    public void EditCustomer(int customerID, string customerName, string customerPhone, string customerAddress, string customerEmail, string customerGender, DateTime customerDateOfBirth, string username, string password)
+    public void EditCustomer(string role, int customerID, string customerName, string customerPhone, string customerAddress, string customerEmail, string customerGender, DateTime customerDateOfBirth, string username, string password)
     {
         var top = Application.Top;
 
@@ -541,7 +549,15 @@ public class Customers
                             // Display a success message and close the window
                             MessageBox.Query("Success", "Customer information has been updated successfully!", "OK");
                             top.Remove(editCustomerWin);
-                            cus.DisplayCustomers("admin");
+                            switch (role)
+                            {
+                                case "admin":
+                                cus.DisplayCustomers("admin");
+                                break;
+                                case "superadmin":
+                                cus.DisplayCustomers("superadmin");
+                                break;
+                            }
                         }
                         catch
                         {
@@ -571,7 +587,15 @@ public class Customers
             if (confirmed)
             {
                 top.Remove(editCustomerWin);
-                DisplayCustomers("admin");
+                switch(role)
+                {
+                    case "admin":
+                    cus.DisplayCustomers("admin");
+                    break;
+                    case "superadmin":
+                    cus.DisplayCustomers("superadmin");
+                    break;
+                }
             }
         };
 
@@ -585,14 +609,14 @@ public class Customers
                             usernameLabel, usernamefield, passLabel, passfield,
                             saveButton, closeButton);
     }
-    public void DeleteCustomer(int customerID)
+    public void DisableCustomer(int customerID)
     {
         try
         {
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 connection.Open();
-                string query = @"UPDATE customer
+                string query = @"UPDATE customers
                                 SET active = FALSE 
                                 WHERE customer_id = @CustomerID;
                                 UPDATE users
@@ -769,7 +793,7 @@ public class Customers
                     try
                     {
                         top.Remove(displayWindow);
-                        cus.EditCustomer(customerId, customerName, customerPhone, customerAddress, customerEmail, customerGender, customerDateOfBirth, username, password);
+                        cus.EditCustomer(role, customerId, customerName, customerPhone, customerAddress, customerEmail, customerGender, customerDateOfBirth, username, password);
                     }
                     catch 
                     {
@@ -790,9 +814,19 @@ public class Customers
                     {
                         try
                         {
-                            cus.DeleteCustomer(customerId);
-                            customerWindow.Dispose(); // Remove customer window from view
+                            cus.DisableCustomer(customerId);
+                            top.Remove(displayWindow);
                             MessageBox.Query("Success", "Customer has been successfully marked as inactive.", "OK");
+                            switch(role)
+                            {
+                                case "admin":
+                                cus.DisplayCustomers("admin");
+                                break;
+                                case "superadmin":
+                                cus.DisplayCustomers("superadmin");
+                                break;
+                            }
+                        
                         }
                         catch 
                         {

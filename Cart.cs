@@ -67,8 +67,6 @@ public class Cart
             CartItems.Add(new CartItem { Product = product});
         
     }
-
-
     // Remove an item from the shopping cart
     public void RemoveItem(int productID)
     {
@@ -78,7 +76,6 @@ public class Cart
             CartItems.Remove(cartItem);
         }
     }
-
     // Display the shopping cart contents
     public void DisplayCart()
     {
@@ -245,7 +242,6 @@ public class Cart
 
         cartWindow.Add(btnBack);
     }
-
     // Remove an item from the database cart and update the UI
     public void RemoveItemFromCart(int productID)
     {

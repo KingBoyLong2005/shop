@@ -51,116 +51,116 @@ public class Categories
         return ListCategory;
     }
     
-    public void AddCategory()
-    {
-        Categories cg = new Categories();
-        var top = Application.Top;
-        var addCategorytWin = new Window("Add Category")
+        public void AddCategory()
         {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        top.Add(addCategorytWin);
-        addCategorytWin.FocusNext();
-
-        // Labels and text fields for inputting category details
-        var CategoryNameLabel = new Label("Category Name:")
-        {
-            X = 2,
-            Y = 2
-        };
-        var CategoryNameField = new TextField("")
-        {
-            X = 18,
-            Y = 2,
-            Width = 100
-        };
-
-        var CategoryDescriptionLabel = new Label("Description:")
-        {
-            X = 2,
-            Y = 4
-        };
-        var CategoryDescriptionField = new TextField("")
-        {
-            X = 18,
-            Y = 4,
-            Width = 100
-        };
-
-        // Button to save the new category
-        var saveButton = new Button("Save")
-        {
-            X = Pos.Center(),
-            Y = 14
-        };
-        saveButton.Clicked += () =>
-        {
-            // Check if any fields are empty
-            if (string.IsNullOrWhiteSpace(CategoryNameField.Text.ToString()) || 
-                string.IsNullOrWhiteSpace(CategoryDescriptionField.Text.ToString()))
+            Categories cg = new Categories();
+            var top = Application.Top;
+            var addCategorytWin = new Window("Add Category")
             {
-                MessageBox.ErrorQuery("Error", "All fields must be filled.", "OK");
-                return;
-            }
+                X = 0,
+                Y = 0,
+                Width = Dim.Fill(),
+                Height = Dim.Fill()
+            };
+            top.Add(addCategorytWin);
+            addCategorytWin.FocusNext();
 
-            try
+            // Labels and text fields for inputting category details
+            var CategoryNameLabel = new Label("Category Name:")
             {
-                // Assign input values to the category object
-                cg.CategoryName = CategoryNameField.Text.ToString();
-                cg.CategoryDescription = CategoryDescriptionField.Text.ToString();
+                X = 2,
+                Y = 2
+            };
+            var CategoryNameField = new TextField("")
+            {
+                X = 18,
+                Y = 2,
+                Width = 100
+            };
 
-                // Insert the new category into the database
-                using (MySqlConnection connection = new MySqlConnection(connectionString))
+            var CategoryDescriptionLabel = new Label("Description:")
+            {
+                X = 2,
+                Y = 4
+            };
+            var CategoryDescriptionField = new TextField("")
+            {
+                X = 18,
+                Y = 4,
+                Width = 100
+            };
+
+            // Button to save the new category
+            var saveButton = new Button("Save")
+            {
+                X = Pos.Center(),
+                Y = 14
+            };
+            saveButton.Clicked += () =>
+            {
+                // Check if any fields are empty
+                if (string.IsNullOrWhiteSpace(CategoryNameField.Text.ToString()) || 
+                    string.IsNullOrWhiteSpace(CategoryDescriptionField.Text.ToString()))
                 {
-                    connection.Open();
-                    string query = "INSERT INTO categories (category_name, category_description) VALUES (@CategoryName, @CategoryDescription)";
-                    MySqlCommand command = new MySqlCommand(query, connection);
-                    command.Parameters.AddWithValue("@CategoryName", cg.CategoryName);
-                    command.Parameters.AddWithValue("@CategoryDescription", cg.CategoryDescription);
-
-                    command.ExecuteNonQuery();
+                    MessageBox.ErrorQuery("Error", "All fields must be filled.", "OK");
+                    return;
                 }
 
-                // Add the new category to the static list
-                ListCategories.Add(cg);
+                try
+                {
+                    // Assign input values to the category object
+                    cg.CategoryName = CategoryNameField.Text.ToString();
+                    cg.CategoryDescription = CategoryDescriptionField.Text.ToString();
 
-                // Show success message and return to superadmin menu
-                MessageBox.Query("Success", "Successfully added new category!", "OK");
-                top.Remove(addCategorytWin);
-                superadmin.SuperAdminMenu();
-            }
-            catch 
+                    // Insert the new category into the database
+                    using (MySqlConnection connection = new MySqlConnection(connectionString))
+                    {
+                        connection.Open();
+                        string query = "INSERT INTO categories (category_name, category_description) VALUES (@CategoryName, @CategoryDescription)";
+                        MySqlCommand command = new MySqlCommand(query, connection);
+                        command.Parameters.AddWithValue("@CategoryName", cg.CategoryName);
+                        command.Parameters.AddWithValue("@CategoryDescription", cg.CategoryDescription);
+
+                        command.ExecuteNonQuery();
+                    }
+
+                    // Add the new category to the static list
+                    ListCategories.Add(cg);
+
+                    // Show success message and return to superadmin menu
+                    MessageBox.Query("Success", "Successfully added new category!", "OK");
+                    top.Remove(addCategorytWin);
+                    cate.AddCategory();
+                }
+                catch 
+                {
+                    // Display a generic error message if an exception occurs
+                    MessageBox.ErrorQuery("Error", "An error occurred while adding the category. Please try again later.", "OK");
+                }
+            };
+
+            // Button to close the window
+            var closeButton = new Button("Close")
             {
-                // Display a generic error message if an exception occurs
-                MessageBox.ErrorQuery("Error", "An error occurred while adding the category. Please try again later.", "OK");
-            }
-        };
-
-        // Button to close the window
-        var closeButton = new Button("Close")
-        {
-            X = Pos.Center(),
-            Y = Pos.Bottom(saveButton) + 1
-        };
-        closeButton.Clicked += () =>
-        {
-            // Prompt confirmation before closing the window
-            bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to close?", "Yes", "No") == 0;
-            if (confirmed)
+                X = Pos.Center(),
+                Y = Pos.Bottom(saveButton) + 1
+            };
+            closeButton.Clicked += () =>
             {
-                top.Remove(addCategorytWin);
-                superadmin.SuperAdminMenu(); // Return to superadmin menu
-            }
-        };
+                // Prompt confirmation before closing the window
+                bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to close?", "Yes", "No") == 0;
+                if (confirmed)
+                {
+                    top.Remove(addCategorytWin);
+                    superadmin.SuperAdminMenu(); // Return to superadmin menu
+                }
+            };
 
-        // Add labels, text fields, and buttons to the window
-        addCategorytWin.Add(CategoryNameLabel, CategoryNameField, CategoryDescriptionLabel, CategoryDescriptionField,
-                            saveButton, closeButton);
-}
-    public void DeleteCategory(int CategoryID)
+            // Add labels, text fields, and buttons to the window
+            addCategorytWin.Add(CategoryNameLabel, CategoryNameField, CategoryDescriptionLabel, CategoryDescriptionField,
+                                saveButton, closeButton);
+    }
+    public void DisableCategory(int CategoryID)
     {
         try
         {
@@ -250,19 +250,21 @@ public class Categories
                     top.Remove(displayCategoryWindow);
                     DisplayProducts(categoryId, categoryName);
                 };
-                var deleteCategoryButton = new Button(categoryName)
+                var DisableCategoryButton = new Button(categoryName)
                 {
                     X = 1,
                     Y = rowOffset
                 };
-                deleteCategoryButton.Clicked += () =>
+                DisableCategoryButton.Clicked += () =>
                 { 
                     bool confirmed = MessageBox.Query("Comfirm", "Are you sure want to disable this category", "Yes", "No") == 0;
                     if (confirmed)
                     {
                         try
                         {
-                        cate.DeleteCategory(categoryId);
+                            cate.DisableCategory(categoryId);
+                            top.Remove(displayCategoryWindow);
+                            cate.DisplayCategories("superadmin");
                         }
                         catch (Exception ex)
                         {
@@ -274,15 +276,15 @@ public class Categories
                 if(role == "user")
                 {    
                     categoryButton.Visible = true;
-                    deleteCategoryButton.Visible = false;
+                    DisableCategoryButton.Visible = false;
                 }
                 else if(role == "superadmin")
                 {
                     categoryButton.Visible = false;
-                    deleteCategoryButton.Visible = true;
+                    DisableCategoryButton.Visible = true;
                 }
                 // Add the category button to the window.
-                displayCategoryWindow.Add(categoryButton, deleteCategoryButton);
+                displayCategoryWindow.Add(categoryButton, DisableCategoryButton);
 
                 // Increment the row offset for the next data row.
                 rowOffset += 2;
@@ -450,7 +452,6 @@ public class Categories
                     {
                         top.Remove(productsWindow);
                         order.OrderProduct(productID, productName, productPrice, "category");
-                        MessageBox.Query("Success", "Order placed successfully!", "OK");
                     }
                     catch
                     {

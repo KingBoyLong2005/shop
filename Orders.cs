@@ -119,8 +119,6 @@ public class Orders
         // Return the populated list of Products objects
         return ListProduct;
     }
-
-
     public void DisplayMyOrder()
     {
         var top = Application.Top; // Get the top-level window
@@ -356,7 +354,7 @@ public class Orders
                                             cart.DisplayCart();
                                             break;
                                         case "category":
-                                            cate.DisplayCategories("superadmins");
+                                            cate.DisplayCategories("user");
                                             break;
                                     }
                                 }
@@ -395,7 +393,7 @@ public class Orders
                         cart.DisplayCart();
                         break;
                     case "category":
-                        cate.DisplayCategories("superadmins");
+                        cate.DisplayCategories("user");
                         break;
                 }
             }
@@ -647,11 +645,11 @@ public class Orders
                 top.Remove(orderWindow);
                 switch (role)
                 {
-                    case "user":
-                        pd.DisplayProduct("user");
+                    case "admin":
+                        pd.DisplayProduct("admin");
                         break;
                     case "superadmin":
-                        cate.DisplayCategories("superadmin");
+                        pd.DisplayProduct("superadmin");
                         break;
                 }
             }
@@ -809,7 +807,7 @@ public class Orders
                         updateCommand.ExecuteNonQuery();
                         MessageBox.Query("Success", "Order status updated to 'Successful delivery'.", "OK");
                     }
-                    catch (Exception ex)
+                    catch
                     {
                         MessageBox.ErrorQuery("Error", "An error occurred while updating the order status. Please try again later.", "OK");
                     }

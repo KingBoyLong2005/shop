@@ -233,7 +233,22 @@ public class Products
                         bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to disable product?", "Yes", "No") == 0;
                         if (confirmed)
                         {
-                        pd.DeleteProduct(productID);
+                            top.Remove(displayWindow);
+                            pd.DisableProduct(productID);
+                            switch (role)
+                            {
+                                case "user":
+                                    // Gọi menu user
+                                    pd.DisplayProduct("user");
+                                    break;
+                                case "admin":
+                                    // Gọi menu admin
+                                    pd.DisplayProduct("admin");
+                                    break;
+                                case "superadmin":
+                                    pd.DisplayProduct("superadmin");
+                                    break;
+                            }
                         }
                     }
                     catch 
@@ -624,10 +639,10 @@ public class Products
                 switch (role)
                 {
                     case "admin":
-                        DisplayProduct("admin");
+                        pd.DisplayProduct("admin");
                         break;
                     case "superadmin":
-                        DisplayProduct("superadmin");
+                        pd.DisplayProduct("superadmin");
                         break;
                 }
             }
@@ -654,10 +669,10 @@ public class Products
                 switch (role)
                 {
                     case "admin":
-                        DisplayProduct("admin");
+                        pd.DisplayProduct("admin");
                         break;
                     case "superadmin":
-                        DisplayProduct("superadmin");
+                        pd.DisplayProduct("superadmin");
                         break;
                 }
             }
@@ -671,7 +686,7 @@ public class Products
                         editProductBrandLabel, editProductBrandField,
                         saveButton, closeButton);
     }
-    public void DeleteProduct(int productID)
+    public void DisableProduct(int productID)
     {
         try
         {
@@ -956,6 +971,5 @@ public class Products
         // Add components to the window
         findProductWin.Add(productNameLabel, productNameField, findButton, closeButton);
     }
-
 
 }
