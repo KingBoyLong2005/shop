@@ -525,47 +525,10 @@ public class Orders
 
         var ConfirmCustomer = new Button("Confirm")
         {
-            X = Pos.Center() + 15,
+            X = Pos.Center() + 18,
             Y = 5
         };
-        ConfirmCustomer.Clicked += () =>
-        {
-            if (string.IsNullOrWhiteSpace(txtCustomerID.Text.ToString()))
-            {
-                MessageBox.ErrorQuery("Error", "Customer ID cannot be empty.", "OK");
-                return;
-            }
-
-            if (int.TryParse(txtCustomerID.Text.ToString(), out int customerID))
-            {
-                using (MySqlConnection connection = new MySqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string query = "SELECT * FROM customers WHERE customer_id = @CustomerID";
-                    MySqlCommand command = new MySqlCommand(query, connection);
-                    command.Parameters.AddWithValue("@CustomerID", customerID);
-                    object customerExists = command.ExecuteScalar();
-                    if (customerExists != null)
-                    {
-                        lblQuantity.Visible = false;
-                        txtQuantity.Visible = false;
-                        lblDeliveryAddress.Visible = false;
-                        txtDeliveryAddress.Visible = false;
-                        lblPaymentMethod.Visible = false;
-                        txtPaymentMethod.Visible = false;
-                    }
-                    else
-                    {
-                        MessageBox.ErrorQuery("Error", "Customer ID does not exist.", "OK");
-                    }
-                }
-            }
-            else
-            {
-                MessageBox.ErrorQuery("Error", "Invalid Customer ID.", "OK");
-            }
-        };
-
+        
         var btnSubmitOrder = new Button("Submit Order")
         {
             X = Pos.Center() - 10,
@@ -602,11 +565,11 @@ public class Orders
                                     top.Remove(orderWindow);
                                     switch (role)
                                     {
-                                        case "user":
-                                            pd.DisplayProduct("user");
+                                        case "admin":
+                                            pd.DisplayProduct("admin");
                                             break;
-                                        case "superadmins":
-                                            cate.DisplayCategories("superadmins");
+                                        case "superadmin":
+                                            pd.DisplayProduct("superadmin");
                                             break;
                                     }
                                 }
@@ -622,6 +585,52 @@ public class Orders
             else
             {
                 MessageBox.ErrorQuery("Error", "Invalid quantity.", "OK");
+            }
+        };
+        lblQuantity.Visible = false;
+        txtQuantity.Visible = false;
+        lblDeliveryAddress.Visible = false;
+        txtDeliveryAddress.Visible = false;
+        lblPaymentMethod.Visible = false;
+        txtPaymentMethod.Visible = false;
+        btnSubmitOrder.Visible = false;
+
+        ConfirmCustomer.Clicked += () =>
+        {
+            if (string.IsNullOrWhiteSpace(txtCustomerID.Text.ToString()))
+            {
+                MessageBox.ErrorQuery("Error", "Customer ID cannot be empty.", "OK");
+                return;
+            }
+
+            if (int.TryParse(txtCustomerID.Text.ToString(), out int customerID))
+            {
+                using (MySqlConnection connection = new MySqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string query = "SELECT * FROM customers WHERE customer_id = @CustomerID";
+                    MySqlCommand command = new MySqlCommand(query, connection);
+                    command.Parameters.AddWithValue("@CustomerID", customerID);
+                    object customerExists = command.ExecuteScalar();
+                    if (customerExists != null)
+                    {
+                        lblQuantity.Visible = true;
+                        txtQuantity.Visible = true;
+                        lblDeliveryAddress.Visible = true;
+                        txtDeliveryAddress.Visible = true;
+                        lblPaymentMethod.Visible = true;
+                        txtPaymentMethod.Visible = true;
+                        btnSubmitOrder.Visible = true;
+                    }
+                    else
+                    {
+                        MessageBox.ErrorQuery("Error", "Customer ID does not exist.", "OK");
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.ErrorQuery("Error", "Invalid Customer ID.", "OK");
             }
         };
 

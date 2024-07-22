@@ -87,7 +87,7 @@ public class Admin
                     us.UserId = reader.GetInt32("user_id");
                     us.Username = reader.GetString("username");
                     us.PasswordHash = reader.GetString("password_hash");
-                    us.CustomerID = reader.GetInt32("user_customer_id");
+                    us.CustomerID = reader.GetInt32("user_customer_admin_id");
                     us.Roles = reader.GetString("role");
 
                     ListUsers.Add(us);
@@ -499,7 +499,7 @@ public class Admin
                     long adminId = adminCommand.LastInsertedId;
 
                     // Insert user data linked to the admin
-                    string userQuery = "INSERT INTO users (username, password_hash, role, user_customer_id) " +
+                    string userQuery = "INSERT INTO users (username, password_hash, role, user_customer_admin_id) " +
                                     "VALUES (@Username, @PasswordHash, 'admin', @AdminId)";
                     MySqlCommand userCommand = new MySqlCommand(userQuery, connection, transaction);
                     userCommand.Parameters.AddWithValue("@Username", us.Username);
@@ -614,6 +614,12 @@ public class Admin
             {
                 string staffName = staffNameField.Text.ToString();
 
+                if (string.IsNullOrWhiteSpace(staffName))
+                {
+                    MessageBox.ErrorQuery("Error", "You must enter the staff name you want to find.", "OK");
+                    return;
+                }
+                top.Remove(findStaffWin);
                 // Query to retrieve staff information based on staff name
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
@@ -626,7 +632,7 @@ public class Admin
                             usr.username,
                             usr.password_hash
                         FROM admins adm
-                        INNER JOIN users usr ON adm.admin_id = usr.user_customer_id
+                        INNER JOIN users usr ON adm.admin_id = usr.user_customer_admin_id
                         WHERE adm.admin_name LIKE @SearchTerm AND usr.role = 'admin' AND adm.active = TRUE";
                     MySqlCommand command = new MySqlCommand(query, connection);
                     command.Parameters.AddWithValue("@SearchTerm", "%" + staffName + "%");
@@ -824,7 +830,7 @@ public class Admin
                             
                             UPDATE users
                             SET active = FALSE
-                            WHERE user_customer_id = @AdminID";
+                            WHERE user_customer_admin_id = @AdminID";
                         
                         MySqlCommand command = new MySqlCommand(query, connection, transaction);
                         command.Parameters.AddWithValue("@AdminID", adminID);
@@ -907,7 +913,7 @@ public class Admin
                     usr.username,
                     usr.password_hash
                 FROM admins adm
-                INNER JOIN users usr ON adm.admin_id = usr.user_customer_id
+                INNER JOIN users usr ON adm.admin_id = usr.user_customer_admin_id
                 WHERE usr.role = 'admin'";
 
             MySqlCommand command = new MySqlCommand(query, connection);
@@ -1163,7 +1169,7 @@ public class Admin
                                     UPDATE users 
                                     SET username = @UserName, 
                                         password_hash = @Pass 
-                                    WHERE user_customer_id = @AdminID";
+                                    WHERE user_customer_admin_id = @AdminID";
                     MySqlCommand command = new MySqlCommand(query, connection);
                     command.Parameters.AddWithValue("@AdminID", adminID);
                     command.Parameters.AddWithValue("@AdminName", updatedAdminName);

@@ -621,6 +621,15 @@ public class Products
                 // Hiển thị thông báo thành công và đóng cửa sổ chỉnh sửa
                 MessageBox.Query("Success", "Successfully edited product!", "OK");
                 top.Remove(editProductWin);
+                switch (role)
+                {
+                    case "admin":
+                        DisplayProduct("admin");
+                        break;
+                    case "superadmin":
+                        DisplayProduct("superadmin");
+                        break;
+                }
             }
             catch
             {
@@ -721,8 +730,15 @@ public class Products
         {
             try
             {
-                top.Remove(findProductWin);
                 string productName = productNameField.Text.ToString();
+
+                // Check if the product name field is empty
+                if (string.IsNullOrWhiteSpace(productName))
+                {
+                    MessageBox.ErrorQuery("Error", "You must enter the product name you want to find.", "OK");
+                    return;
+                }
+                top.Remove(findProductWin);
 
                 // Query to retrieve product information based on product name
                 using (MySqlConnection connection = new MySqlConnection(connectionString))

@@ -257,7 +257,7 @@ public class Categories
                 };
                 deleteCategoryButton.Clicked += () =>
                 { 
-                    bool confirmed = MessageBox.Query("Comfirm", "Are you sure want to disable this category", "Yes", "N") == 0;
+                    bool confirmed = MessageBox.Query("Comfirm", "Are you sure want to disable this category", "Yes", "No") == 0;
                     if (confirmed)
                     {
                         try
@@ -302,9 +302,21 @@ public class Categories
         // Define the action to be taken when the close button is clicked.
         btnClose.Clicked += () =>
         {
-            // Remove the display category window and go back to the admin menu.
-            top.Remove(displayCategoryWindow);
-            cus.UserMenu();
+            bool confirmed = MessageBox.Query("Confirm", "Are you sure you want to close?", "Yes", "No") == 0;
+            if (confirmed)
+            {
+                // Remove the display category window and go back to the menu.
+                top.Remove(displayCategoryWindow);
+                switch(role)
+                {
+                    case "user":
+                    cus.UserMenu();
+                    break;
+                    case "superadmin":
+                    superadmin.SuperAdminMenu();
+                    break;
+                }
+            }
         };
 
         // Add the close button to the display category window.
@@ -476,7 +488,7 @@ public class Categories
         {
             // Remove the products window and go back to the categories window.
             top.Remove(productsWindow);
-            cate.DisplayCategories("superadmin");
+            cate.DisplayCategories("user");
         };
 
         // Add the close button to the products window.

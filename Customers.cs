@@ -272,12 +272,12 @@ public class Customers
                     customerCommand.Parameters.AddWithValue("@CustomerAddress", cus.CustomerAddress);
                     customerCommand.Parameters.AddWithValue("@CustomerEmail", cus.CustomerEmail);
                     customerCommand.Parameters.AddWithValue("@CustomerGender", cus.CustomerGender);
-                    customerCommand.Parameters.AddWithValue("@CustomerDateOfBirth", cus.CustomerDateOfBirth);
+                    customerCommand.Parameters.AddWithValue("@CustomerDateOfBirth", cus.CustomerDateOfBirth.ToString("yyyy-MM-dd"));
                     customerCommand.ExecuteNonQuery();
                     
                     // Insert user data linked to the customer
                     long customerId = customerCommand.LastInsertedId;
-                    string userQuery = "INSERT INTO users (username, password_hash, role, user_customer_id) VALUES (@Username, @PasswordHash, 'user', @CustomerId)";
+                    string userQuery = "INSERT INTO users (username, password_hash, role, user_customer_admin_id) VALUES (@Username, @PasswordHash, 'user', @CustomerId)";
                     MySqlCommand userCommand = new MySqlCommand(userQuery, connection, transaction);
                     userCommand.Parameters.AddWithValue("@Username", us.Username);
                     userCommand.Parameters.AddWithValue("@PasswordHash", us.PasswordHash);
@@ -294,7 +294,7 @@ public class Customers
                     
                     // Close the registration window and go back to admin menu
                     top.Remove(registerWin);
-                    admin.AdminMenu();
+                    cus.AddCustomer();
                 }
                 catch
                 {
@@ -344,7 +344,6 @@ public class Customers
             return false;
         }
     }
-
     // Helper method for hashing password
     private string HashPassword(string password)
     {
@@ -377,7 +376,7 @@ public class Customers
         };
         var editCustomerNameField = new TextField(customerName)
         {
-            X = 25,
+            X = 40,
             Y = 2,
             Width = 100
         };
@@ -389,7 +388,7 @@ public class Customers
         };
         var editCustomerPhoneField = new TextField(customerPhone)
         {
-            X = 25,
+            X = 40,
             Y = 4,
             Width = 100
         };
@@ -401,7 +400,7 @@ public class Customers
         };
         var editCustomerAddressField = new TextField(customerAddress)
         {
-            X = 25,
+            X = 40,
             Y = 6,
             Width = 100
         };
@@ -413,7 +412,7 @@ public class Customers
         };
         var editCustomerEmailField = new TextField(customerEmail)
         {
-            X = 25,
+            X = 40,
             Y = 8,
             Width = 100
         };
@@ -425,7 +424,7 @@ public class Customers
         };
         var editCustomerGenderField = new TextField(customerGender)
         {
-            X = 25,
+            X = 40,
             Y = 10,
             Width = 100
         };
@@ -437,7 +436,7 @@ public class Customers
         };
         var editCustomerDateOfBirthField = new TextField(customerDateOfBirth.ToString("dd-MM-yyyy"))
         {
-            X = 25,
+            X = 40,
             Y = 12,
             Width = 100
         };
@@ -449,7 +448,7 @@ public class Customers
         };
         var usernamefield = new TextField(username)
         {
-            X = 25,
+            X = 40,
             Y = 14,
             Width = 100
         };
@@ -461,7 +460,7 @@ public class Customers
         };
         var passfield = new TextField(password)
         {
-            X = 25,
+            X = 40,
             Y = 16,
             Width = 100
         };
@@ -519,7 +518,7 @@ public class Customers
                                 customerCommand.Parameters.AddWithValue("@CustomerAddress", cus.CustomerAddress);
                                 customerCommand.Parameters.AddWithValue("@CustomerEmail", cus.CustomerEmail);
                                 customerCommand.Parameters.AddWithValue("@CustomerGender", cus.CustomerGender);
-                                customerCommand.Parameters.AddWithValue("@CustomerDateOfBirth", cus.CustomerDateOfBirth);
+                                customerCommand.Parameters.AddWithValue("@CustomerDateOfBirth", cus.CustomerDateOfBirth.ToString("yyyy-MM-dd"));
                                 customerCommand.ExecuteNonQuery();
                             }
 
@@ -527,7 +526,7 @@ public class Customers
                             string userQuery = @"UPDATE users
                                                 SET username = @UserName,
                                                     password_hash = @Pass
-                                                WHERE user_customer_id = @CustomerID";
+                                                WHERE user_customer_admin_id = @CustomerID";
                             using (MySqlCommand userCommand = new MySqlCommand(userQuery, connection, transaction))
                             {
                                 userCommand.Parameters.AddWithValue("@CustomerID", customerID);
@@ -598,7 +597,7 @@ public class Customers
                                 WHERE customer_id = @CustomerID;
                                 UPDATE users
                                 SET active = FALSE
-                                WHERE user_customer_id = @CustomerID";
+                                WHERE user_customer_admin_id = @CustomerID";
                 MySqlCommand command = new MySqlCommand(query, connection);
                 command.Parameters.AddWithValue("@CustomerID", customerID);
                 command.ExecuteNonQuery();
@@ -663,7 +662,7 @@ public class Customers
                                 u.username,
                                 u.password_hash
                             FROM customers c
-                            INNER JOIN users u ON c.customer_id = u.user_customer_id
+                            INNER JOIN users u ON c.customer_id = u.user_customer_admin_id
                             WHERE c.active = TRUE AND u.active = TRUE AND u.role = 'user';";
 
             MySqlCommand command = new MySqlCommand(query, connection);
@@ -881,9 +880,14 @@ public class Customers
         {
             try
             {
-                top.Remove(findCustomerWin);
                 string customerName = customerNameField.Text.ToString();
-        
+                if (string.IsNullOrWhiteSpace(customerName))
+                {
+                    MessageBox.ErrorQuery("Error", "You must enter the customer name you want to find.", "OK");
+                    return;
+                }
+                
+                top.Remove(findCustomerWin);
                 // Query to retrieve customer information based on customer name
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
@@ -900,7 +904,7 @@ public class Customers
                             usr.username,
                             usr.password_hash
                         FROM customers cus
-                        INNER JOIN users usr ON cus.customer_id = usr.user_customer_id
+                        INNER JOIN users usr ON cus.customer_id = usr.user_customer_admin_id
                         WHERE cus.customer_name LIKE @SearchTerm AND usr.role = 'user' AND cus.active = TRUE";
                     
                     MySqlCommand command = new MySqlCommand(query, connection);

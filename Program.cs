@@ -165,7 +165,7 @@ public class Program
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
                     connection.Open();
-                    string query = "SELECT user_customer_id, password_hash, role FROM users WHERE username = @Username AND active = TRUE";
+                    string query = "SELECT user_customer_admin_id, password_hash, role FROM users WHERE username = @Username AND active = TRUE";
                     MySqlCommand command = new MySqlCommand(query, connection);
                     command.Parameters.AddWithValue("@Username", username);
 
@@ -179,7 +179,7 @@ public class Program
                         {
                             isAuthenticated = true;
                             role = reader.GetString("role");
-                            int currentCustomerID = reader.GetInt32("user_customer_id");
+                            int currentCustomerID = reader.GetInt32("user_customer_admin_id");
                             SessionData.Instance.CurrentCustomerID = currentCustomerID;
                         }
                     }
@@ -443,12 +443,12 @@ public class Program
                     customerCommand.Parameters.AddWithValue("@CustomerAddress", cus.CustomerAddress);
                     customerCommand.Parameters.AddWithValue("@CustomerEmail", cus.CustomerEmail);
                     customerCommand.Parameters.AddWithValue("@CustomerGender", cus.CustomerGender);
-                    customerCommand.Parameters.AddWithValue("@CustomerDateOfBirth", cus.CustomerDateOfBirth);
+                    customerCommand.Parameters.AddWithValue("@CustomerDateOfBirth", cus.CustomerDateOfBirth.ToString("yyyy-MM-dd"));
                     customerCommand.ExecuteNonQuery();
                     
                     // Insert user data linked to the customer
                     long customerId = customerCommand.LastInsertedId;
-                    string userQuery = "INSERT INTO users (username, password_hash, role, user_customer_id) VALUES (@Username, @PasswordHash, 'user', @CustomerId)";
+                    string userQuery = "INSERT INTO users (username, password_hash, role, user_customer_admin_id) VALUES (@Username, @PasswordHash, 'user', @CustomerId)";
                     MySqlCommand userCommand = new MySqlCommand(userQuery, connection, transaction);
                     userCommand.Parameters.AddWithValue("@Username", us.Username);
                     userCommand.Parameters.AddWithValue("@PasswordHash", us.PasswordHash);
