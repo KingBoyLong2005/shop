@@ -452,7 +452,7 @@ public class Orders
         }
     }
 
-   public void OrderProductForCustomer(int productID, string productName, decimal productPrice, string role)
+    public void OrderProductForCustomer(int productID, string productName, decimal productPrice, string role)
     {
         var top = Application.Top;
         var orderWindow = new Window("Order Product")
