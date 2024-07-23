@@ -148,7 +148,7 @@ public class Products
                     Y = 2,
                     Width = Dim.Fill()
                 };
-                var priceLabel = new Label($"Price: {productPrice} $")
+                var priceLabel = new Label($"Price: {productPrice:C} ")
                 {
                     X = 1,
                     Y = 3,
@@ -753,7 +753,6 @@ public class Products
                     MessageBox.ErrorQuery("Error", "You must enter the product name you want to find.", "OK");
                     return;
                 }
-                top.Remove(findProductWin);
 
                 // Query to retrieve product information based on product name
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -799,7 +798,7 @@ public class Products
                 }
                 else
                 {
-
+                    top.Remove(findProductWin);
                     // Create a new window to display the products
                     var productsWindow = new Window("Products")
                     {

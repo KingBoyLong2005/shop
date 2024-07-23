@@ -275,29 +275,16 @@ public class SuperAdmin
                     decimal totalRevenue = reader.GetDecimal("TotalRevenue");
                     int totalQuantity = reader.GetInt32("TotalQuantity");
 
-                    // Add the total order count label to the bottom right frame
-                    var countOrder = new Label($"Total orders: {totalOrders}")
+                    var Statisticallabel = new Label()
                     {
-                        X = Pos.Center(),
-                        Y = Pos.Center() - 2 // Adjust position as needed
+                        Text = string.Format(
+                            "Total Order: {0}\n"+
+                            "Total Revenue: {1:C}\n"+
+                            "Total sold: {2}", totalOrders, totalRevenue, totalQuantity),
+                            X = Pos.Center(),
+                            Y = Pos.Center(),
                     };
-                    rightBottomFrame.Add(countOrder);
-
-                    // Add the total revenue label to the bottom right frame
-                    var totalRevenueLabel = new Label($"Total revenue: {totalRevenue:C}")
-                    {
-                        X = Pos.Center(),
-                        Y = Pos.Center() // Adjust position as needed
-                    };
-                    rightBottomFrame.Add(totalRevenueLabel);
-
-                    // Add the total quantity label to the bottom right frame
-                    var totalQuantityLabel = new Label($"Total sold: {totalQuantity}")
-                    {
-                        X = Pos.Center(),
-                        Y = Pos.Center() + 2 // Adjust position as needed
-                    };
-                    rightBottomFrame.Add(totalQuantityLabel);
+                    rightBottomFrame.Add(Statisticallabel);
                 }
             }
         }

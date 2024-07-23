@@ -559,7 +559,7 @@ public class Customers
                                 break;
                             }
                         }
-                        catch
+                        catch 
                         {
                             // Rollback the transaction in case of an error
                             transaction.Rollback();
@@ -921,7 +921,6 @@ public class Customers
                     return;
                 }
                 
-                top.Remove(findCustomerWin);
                 // Query to retrieve customer information based on customer name
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
@@ -990,6 +989,7 @@ public class Customers
                 }
                 else
                 {
+                    top.Remove(findCustomerWin);
                     // Create a new window to display the customers
                     var customersWindow = new Window("Customers")
                     {

@@ -35,15 +35,11 @@ public class Program
     // Static constructor to initialize the connection string
     static Program()
     {
-        // Prompt user for database password
-        Console.Write("Enter the database password: ");
-        string password = Console.ReadLine();
-
         // Base connection string with a placeholder for the password
-        string baseConnectionString = "Server=localhost;Database=shop;Uid=root;Pwd=@pass";
+        string baseConnectionString = "Server=localhost;Database=shop;Uid=root;Pwd=1597538426";
 
         // Replace the placeholder with the actual password
-        connectionString = baseConnectionString.Replace("@pass", password);
+        connectionString = baseConnectionString.Replace("@pass", "1597538426");
         Configuration.ConnectionString = connectionString;
     }
     // Main method
@@ -93,7 +89,6 @@ public class Program
     public void Login()
     {
         SessionData.Instance.ResetCustomerID();
-        // Create and configure the login window
         var top = Application.Top;
         Application.Init();
         var loginWin = new Window()
@@ -106,20 +101,17 @@ public class Program
         };
         top.Add(loginWin);
 
-        // Create and configure the ASCII art label
         var asciiArt = new Label(@"███████╗██╗     ███████╗ ██████╗████████╗██████╗  ██████╗ ███╗   ██╗██╗ ██████╗    ███████╗██╗  ██╗ ██████╗ ██████╗ 
 ██╔════╝██║     ██╔════╝██╔════╝╚══██╔══╝██╔══██╗██╔═══██╗████╗  ██║██║██╔════╝    ██╔════╝██║  ██║██╔═══██╗██╔══██╗
 █████╗  ██║     █████╗  ██║        ██║   ██████╔╝██║   ██║██╔██╗ ██║██║██║         ███████╗███████║██║   ██║██████╔╝
 ██╔══╝  ██║     ██╔══╝  ██║        ██║   ██╔══██╗██║   ██║██║╚██╗██║██║██║         ╚════██║██╔══██║██║   ██║██╔═══╝ 
 ███████╗███████╗███████╗╚██████╗   ██║   ██║  ██║╚██████╔╝██║ ╚████║██║╚██████╗    ███████║██║  ██║╚██████╔╝██║     
-╚══════╝╚══════╝╚══════╝ ╚═════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝ ╚═════╝    ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     
-                                                                                                                    ")
+╚══════╝╚══════╝╚══════╝ ╚═════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝ ╚═════╝    ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     ")
         {
             X = Pos.Center(),
             Y = 0,
         };
 
-        // Create and configure the username label and field
         var usernameLabel = new Label("Username:")
         {
             X = 2,
@@ -132,7 +124,6 @@ public class Program
             Width = Dim.Fill() - 4
         };
 
-        // Create and configure the password label and field
         var passwordLabel = new Label("Password:")
         {
             X = 2,
@@ -146,7 +137,6 @@ public class Program
             Width = Dim.Fill() - 4
         };
 
-        // Create and configure the login button
         var loginButton = new Button("Login")
         {
             X = Pos.Center(),
@@ -154,52 +144,66 @@ public class Program
         };
         loginButton.Clicked += () =>
         {
+            string username = usernameField.Text?.ToString() ?? "";
+            string password = passwordField.Text?.ToString() ?? "";
+
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            {
+                MessageBox.ErrorQuery("Error", "Username and password cannot be empty!", "OK");
+                return;
+            }
+
             try
             {
-                string username = usernameField.Text.ToString();
-                string password = passwordField.Text.ToString();
                 bool isAuthenticated = false;
                 string role = "";
+                int currentCustomerID = 0;
 
-                // Authenticate the user
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
+                using (MySqlCommand command = new MySqlCommand("SELECT user_customer_admin_id, password_hash, role FROM users WHERE username = @Username AND active = TRUE", connection))
                 {
-                    connection.Open();
-                    string query = "SELECT user_customer_admin_id, password_hash, role FROM users WHERE username = @Username AND active = TRUE";
-                    MySqlCommand command = new MySqlCommand(query, connection);
                     command.Parameters.AddWithValue("@Username", username);
 
-                    MySqlDataReader reader = command.ExecuteReader();
-                    while (reader.Read())
-                    {
-                        string storedHash = reader.GetString("password_hash");
+                    connection.Open();
 
-                        // Use a method to compare the provided password with the stored hash
-                        if (storedHash == password )
+                    using (MySqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.Read())
                         {
-                            isAuthenticated = true;
-                            role = reader.GetString("role");
-                            int currentCustomerID = reader.GetInt32("user_customer_admin_id");
-                            SessionData.Instance.CurrentCustomerID = currentCustomerID;
+                            if (!reader.IsDBNull(reader.GetOrdinal("password_hash")))
+                            {
+                                string storedHash = reader.GetString("password_hash");
+
+                                // TODO: Use a proper password hashing and verification method
+                                if (storedHash == password)
+                                {
+                                    isAuthenticated = true;
+                                    role = reader.GetString("role");
+                                    currentCustomerID = reader.GetInt32("user_customer_admin_id");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.ErrorQuery("Error", "User not found!", "OK");
+                            return;
                         }
                     }
                 }
 
-                // Handle authentication result
                 if (isAuthenticated)
                 {
-                    if (role == "user")
+                    SessionData.Instance.CurrentCustomerID = currentCustomerID;
+
+                    string welcomeMessage = role switch
                     {
-                        MessageBox.Query("Success", "Welcome to our Electronic Shop!", "OK");
-                    }
-                    else if (role == "admin")
-                    {
-                        MessageBox.Query("Success", "Welcome staff!", "OK");
-                    }
-                    else if (role == "Manager")
-                    {
-                        MessageBox.Query("Success", "Welcome Manager!", "OK");
-                    }
+                        "user" => "Welcome to our Electronic Shop!",
+                        "admin" => "Welcome staff!",
+                        "Manager" => "Welcome Manager!",
+                        _ => "Welcome!"
+                    };
+
+                    MessageBox.Query("Success", welcomeMessage, "OK");
 
                     top.Remove(loginWin);
                     switch (role)
@@ -220,13 +224,16 @@ public class Program
                     MessageBox.ErrorQuery("Error", "Invalid username or password!", "OK");
                 }
             }
-            catch
+            catch (MySqlException ex)
             {
-                MessageBox.ErrorQuery("Error", "An error occurred during the login process. Please try again.", "OK");
+                MessageBox.ErrorQuery("Database Error", "An error occurred during the database login process. Please try again.", "OK");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", ex.Message, "OK");
             }
         };
 
-        // Create and configure the register button
         var btnRegister = new Button("Register")
         {
             X = Pos.Center(),
@@ -238,7 +245,6 @@ public class Program
             program.Register();
         };
 
-        // Create and configure the close button
         var closeButton = new Button("Close")
         {
             X = Pos.Center(),
@@ -250,7 +256,6 @@ public class Program
             Application.Shutdown();
         };
 
-        // Add controls to the login window
         loginWin.Add(asciiArt, usernameLabel, usernameField, passwordLabel, passwordField, loginButton, btnRegister, closeButton);
     }
     public void Register()

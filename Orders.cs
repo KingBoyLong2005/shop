@@ -497,7 +497,7 @@ public class Orders
 
         var lblDeliveryAddress = new Label("Delivery Address:")
         {
-            X = Pos.Center() - 14,
+            X = Pos.Center() - 10,
             Y = 9
         };
         var txtDeliveryAddress = new TextField("")
