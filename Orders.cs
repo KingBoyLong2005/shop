@@ -469,18 +469,18 @@ public class Orders
         };
         orderWindow.Add(lblProductName);
 
-        var lblCustomerID = new Label("Customer ID:")
+        var lblCustomerPhone = new Label("Customer phone:")
         {
             X = Pos.Center() - 10,
             Y = 5
         };
-        var txtCustomerID = new TextField("")
+        var txtCustomerPhone = new TextField("")
         {
-            X = Pos.Center() + 5,
+            X = Pos.Center() + 6,
             Y = 5,
             Width = 20
         };
-        orderWindow.Add(lblCustomerID, txtCustomerID);
+        orderWindow.Add(lblCustomerPhone, txtCustomerPhone);
 
         var lblQuantity = new Label("Quantity:")
         {
@@ -521,12 +521,13 @@ public class Orders
         };
         orderWindow.Add(lblPaymentMethod, txtPaymentMethod);
 
-        var ConfirmCustomer = new Button("Confirm")
+        var btnConfirmCustomer = new Button("Confirm")
         {
-            X = Pos.Center() + 18,
+            X = Pos.Center() + 20,
             Y = 5
         };
         
+        int customerID = 0;
         var btnSubmitOrder = new Button("Submit Order")
         {
             X = Pos.Center() - 10,
@@ -559,7 +560,7 @@ public class Orders
                                 if (quantity <= stockQuantity)
                                 {
                                     cart.RemoveItemFromCart(productID);
-                                    PlaceOrderDirectly(productID, quantity, txtDeliveryAddress.Text.ToString(), txtPaymentMethod.Text.ToString());
+                                    PlaceOrderForCustomer(customerID, productID, quantity, txtDeliveryAddress.Text.ToString(), txtPaymentMethod.Text.ToString());
                                     top.Remove(orderWindow);
                                     switch (role)
                                     {
@@ -585,6 +586,7 @@ public class Orders
                 MessageBox.ErrorQuery("Error", "Invalid quantity.", "OK");
             }
         };
+
         lblQuantity.Visible = false;
         txtQuantity.Visible = false;
         lblDeliveryAddress.Visible = false;
@@ -593,25 +595,25 @@ public class Orders
         txtPaymentMethod.Visible = false;
         btnSubmitOrder.Visible = false;
 
-        ConfirmCustomer.Clicked += () =>
+        btnConfirmCustomer.Clicked += () =>
         {
-            if (string.IsNullOrWhiteSpace(txtCustomerID.Text.ToString()))
+            if (string.IsNullOrWhiteSpace(txtCustomerPhone.Text.ToString()))
             {
-                MessageBox.ErrorQuery("Error", "Customer ID cannot be empty.", "OK");
+                MessageBox.ErrorQuery("Error", "Customer phone cannot be empty.", "OK");
                 return;
             }
 
-            if (int.TryParse(txtCustomerID.Text.ToString(), out int customerID))
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                using (MySqlConnection connection = new MySqlConnection(connectionString))
+                connection.Open();
+                string query = "SELECT customer_id FROM customers WHERE customer_phone_number = @CustomerPhone";
+                using (MySqlCommand command = new MySqlCommand(query, connection))
                 {
-                    connection.Open();
-                    string query = "SELECT * FROM customers WHERE customer_id = @CustomerID";
-                    MySqlCommand command = new MySqlCommand(query, connection);
-                    command.Parameters.AddWithValue("@CustomerID", customerID);
-                    object customerExists = command.ExecuteScalar();
-                    if (customerExists != null)
+                    command.Parameters.AddWithValue("@CustomerPhone", txtCustomerPhone.Text.ToString());
+                    var customerIDObj = command.ExecuteScalar();
+                    if (customerIDObj != null)
                     {
+                        customerID = Convert.ToInt32(customerIDObj);
                         lblQuantity.Visible = true;
                         txtQuantity.Visible = true;
                         lblDeliveryAddress.Visible = true;
@@ -622,13 +624,9 @@ public class Orders
                     }
                     else
                     {
-                        MessageBox.ErrorQuery("Error", "Customer ID does not exist.", "OK");
+                        MessageBox.ErrorQuery("Error", "Customer Phone does not exist.", "OK");
                     }
                 }
-            }
-            else
-            {
-                MessageBox.ErrorQuery("Error", "Invalid Customer ID.", "OK");
             }
         };
 
@@ -655,7 +653,7 @@ public class Orders
             }
         };
 
-        orderWindow.Add(btnSubmitOrder, btnCancel, ConfirmCustomer);
+        orderWindow.Add(btnSubmitOrder, btnCancel, btnConfirmCustomer);
     }
 
     static void PlaceOrderForCustomer(int customerID, int productID, int quantity, string deliveryAddress, string paymentMethod)
