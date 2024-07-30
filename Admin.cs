@@ -272,6 +272,17 @@ public class Admin
                 MessageBox.ErrorQuery("Error", "An error occurred while updating the status. Please try again.", "OK");
             }
         };
+
+        var displayOrderBtn = new Button("Display Order")
+        {
+            X = 2,
+            Y = 11
+        };
+        displayOrderBtn.Clicked += () =>
+        {
+            top.Remove(adminMenu);
+            order.DisplayCustomerOrder("admin");
+        };
         var LogoutButton = new Button("Logout")
         {
             X = Pos.Center(),
@@ -285,7 +296,7 @@ public class Admin
 
         leftFrame.Add(btnDisplayCustomer, btnFindCustomer,
                     btnAddCustomer, btnDisplayProduct,
-                    btnAddProduct, btnFindProduct, btnUpdateStatus, LogoutButton);
+                    btnAddProduct, btnFindProduct, btnUpdateStatus, displayOrderBtn, LogoutButton);
 
         var rightTopLabel = new Label(@"███████╗██╗     ███████╗ ██████╗████████╗██████╗  ██████╗ ███╗   ██╗██╗ ██████╗    ███████╗██╗  ██╗ ██████╗ ██████╗ 
 ██╔════╝██║     ██╔════╝██╔════╝╚══██╔══╝██╔══██╗██╔═══██╗████╗  ██║██║██╔════╝    ██╔════╝██║  ██║██╔═══██╗██╔══██╗
@@ -321,7 +332,7 @@ public class Admin
                     {
                         Text = string.Format(
                             "Total Order: {0}\n"+
-                            "Total Revenue: {1:C}\n"+
+                            "Total Revenue: {1} VND\n"+
                             "Total sold: {2}", totalOrders, totalRevenue, totalQuantity),
                             X = Pos.Center(),
                             Y = Pos.Center()

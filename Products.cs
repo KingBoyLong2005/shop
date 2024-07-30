@@ -274,7 +274,7 @@ public class Products
                         }
                     };
 
-                productWindow.Add(nameLabel, quantityLabel, priceLabel, categoryLabel, brandLabel, addButton, orderButton, editproductButton, OrderForCustomerbutton);
+                productWindow.Add(nameLabel, quantityLabel, priceLabel, categoryLabel, brandLabel, addButton, orderButton, editproductButton, OrderForCustomerbutton, blockproductButton);
                 productContainer.Add(productWindow);
 
                 col++;

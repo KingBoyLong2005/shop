@@ -230,7 +230,7 @@ public class Program
             }
             catch (Exception ex)
             {
-                MessageBox.ErrorQuery("Error", ex.Message, "OK");
+                MessageBox.ErrorQuery("Error", "An error occurred during the database login process. Please try again.", "OK");
             }
         };
 

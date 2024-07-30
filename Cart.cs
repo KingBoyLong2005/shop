@@ -159,7 +159,7 @@ public class Cart
                     Y = 1,
                     Width = Dim.Fill()
                 };
-                var priceLabel = new Label($"Price: {productPrice:C}")
+                var priceLabel = new Label($"Price: {productPrice} VND")
                 {
                     X = 1,
                     Y = 2,

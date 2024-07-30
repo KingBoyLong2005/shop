@@ -819,4 +819,145 @@ public class Orders
             }
         }
     }
+    public void DisplayCustomerOrder(string role)
+    {
+        var top = Application.Top; // Get the top-level window
+
+        var DisplayOrder = new Window("Orders")
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+
+        var scrollView = new ScrollView()
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            ContentSize = new Size(0, 0) // Kích thước nội dung sẽ được thiết lập sau
+        };
+
+        DisplayOrder.Add(scrollView);
+        top.Add(DisplayOrder); // Add the main window to the application
+
+        int row = 0;
+        int col = 0;
+        int colCount = 2; // Số cột trong ScrollView
+        int colWidth = 40; // Chiều rộng của mỗi cửa sổ sản phẩm
+        int rowHeight = 12; // Chiều cao của mỗi cửa sổ sản phẩm
+        int margin = 2; // Lề giữa các sản phẩm
+
+        // Connect to the database and retrieve orders for the current customer
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {
+            string query = @"SELECT 
+                                o.order_quantity,
+                                o.order_payment_method,
+                                o.order_status,
+                                o.order_total_price,
+                                p.product_name
+                            FROM orders o
+                            JOIN products p ON o.order_product_id = p.product_id";
+
+            MySqlCommand command = new MySqlCommand(query, connection);
+            connection.Open();
+            MySqlDataReader reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                // Construct the order details string
+                string productName = reader["product_name"].ToString();
+                int productQuantity = reader.GetInt32("order_quantity");
+                string payment = reader["order_payment_method"].ToString();
+                string status = reader["order_status"].ToString();
+                decimal totalPrice = reader.GetDecimal("order_total_price");
+
+                var orderWindow = new Window($"Order {row * colCount + col + 1}")
+                {
+                    X = col * (colWidth + margin),
+                    Y = row * (rowHeight + margin),
+                    Width = colWidth,
+                    Height = rowHeight
+                };
+
+                // Create labels for displaying order details
+                var productNameLabel = new Label($"Product Name: {productName}")
+                {
+                    X = 1,
+                    Y = 1,
+                    Width = Dim.Fill(),
+                    TextAlignment = TextAlignment.Left // Left text alignment
+                };
+                var productQuantityLabel = new Label($"Quantity: {productQuantity}")
+                {
+                    X = 1,
+                    Y = Pos.Bottom(productNameLabel) + 1,
+                    Width = Dim.Fill(),
+                    TextAlignment = TextAlignment.Left // Left text alignment
+                };
+                var productPaymentLabel = new Label($"Payment: {payment}")
+                {
+                    X = 1,
+                    Y = Pos.Bottom(productQuantityLabel) + 1,
+                    Width = Dim.Fill(),
+                    TextAlignment = TextAlignment.Left // Left text alignment
+                };
+                var productStatusLabel = new Label($"Status: {status}")
+                {
+                    X = 1,
+                    Y = Pos.Bottom(productPaymentLabel) + 1,
+                    Width = Dim.Fill(),
+                    TextAlignment = TextAlignment.Left // Left text alignment
+                };
+                var productTotalPriceLabel = new Label($"Total Price: {totalPrice:C}")
+                {
+                    X = 1,
+                    Y = Pos.Bottom(productStatusLabel) + 1,
+                    Width = Dim.Fill(),
+                    TextAlignment = TextAlignment.Left // Left text alignment
+                };
+
+                // Add labels to the order window
+                orderWindow.Add(productNameLabel, productQuantityLabel, productPaymentLabel, productStatusLabel, productTotalPriceLabel);
+                scrollView.Add(orderWindow);
+
+                col++;
+                if (col >= colCount)
+                {
+                    col = 0;
+                    row++;
+                }
+            }
+        }
+
+        // Cập nhật kích thước nội dung của ScrollView
+        scrollView.ContentSize = new Size((colWidth + margin) * colCount, (row + 1) * (rowHeight + margin));
+
+        // Create a Close button to exit the order display window
+        var closeButton = new Button("Close")
+        {
+            X = Pos.Center(),
+            Y = Pos.Bottom(scrollView) - 1
+        };
+        closeButton.Clicked += () =>
+        {
+            top.Remove(DisplayOrder); // Remove the order window from the top application
+            switch (role)
+            {
+                
+                case "admin":
+                admin.AdminMenu();
+                break;
+                case "superadmin":
+                superadmin.SuperAdminMenu();
+                break;
+            } 
+        };
+
+        DisplayOrder.Add(closeButton); // Add the Close button to the order window
+    }
+
 }
